@@ -1,0 +1,1 @@
+from mantle.firestore.model import Model

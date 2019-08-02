@@ -1,8 +1,8 @@
 from google.cloud.firestore import Client
 from google.cloud.firestore import DocumentReference
-from mantle.firestore.db.errors import InvalidPropertyError, SubCollectionError, ReferenceFieldError
-from mantle.firestore.db.fields import _Field, ReferenceField
-from mantle.firestore.db.query import Query
+from mantle.firestore.errors import SubCollectionError
+from mantle.db import InvalidPropertyError, ReferenceFieldError, _Field, ReferenceField
+from mantle.firestore.query import Query
 
 
 class Model(object):
