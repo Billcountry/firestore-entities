@@ -1,6 +1,5 @@
 from google.cloud.firestore import Query as FSQuery
-from mantle.firestore.db.errors import MalformedQueryError
-from mantle.firestore.db.fields import ListField
+from mantle.db import MalformedQueryError, ListField
 
 
 class Query(object):
