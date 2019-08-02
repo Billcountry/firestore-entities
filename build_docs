@@ -1,4 +1,5 @@
 [ -e docs ] && rm -r docs
 pdoc --html mantle
 mv html/mantle docs
+pdoc --pdf mantle>docs/README.md
 rm -r html
