@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.6.3" />
 <title>mantle.db API documentation</title>
-<meta name="description" content="" />
+<meta name="description" content="This is a collection of tools used by mantle Database packages, the include field types and common errors" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
@@ -20,17 +20,22 @@
 <h1 class="title">Module <code>mantle.db</code></h1>
 </header>
 <section id="section-intro">
+<p>This is a collection of tools used by mantle Database packages, the include field types and common errors</p>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">import json
+<pre><code class="python">&#34;&#34;&#34;
+This is a collection of tools used by mantle Database packages, the include field types and common errors
+&#34;&#34;&#34;
+
+import json
 from datetime import datetime, date
 from google.cloud.firestore import SERVER_TIMESTAMP
 
 
-class _Field(object):
+class Property(object):
     def __init__(self, field_type, default=None, required=False):
-        if type(self) is _Field:
-            raise Exception(&#34;You must extend _Field&#34;)
+        if type(self) is Property:
+            raise Exception(&#34;You must extend Property&#34;)
         self.type = field_type
         self.default = default
         self.required = required
@@ -48,53 +53,53 @@ class _Field(object):
         return value
 
 
-class StringField(_Field):
+class StringProperty(Property):
     &#34;&#34;&#34;
     A string field
     &#34;&#34;&#34;
     def __init__(self, default=None, length=None, required=False):
-        super(StringField, self).__init__(str, default=default, required=required)
+        super(StringProperty, self).__init__(str, default=default, required=required)
         self.length = length
 
     def validate(self, value):
-        value = super(StringField, self).validate(value)
+        value = super(StringProperty, self).validate(value)
         if self.length and value is not None and len(value) &gt; self.length:
             raise InvalidValueError(self, value)
         return value
 
 
-class IntegerField(_Field):
+class IntegerProperty(Property):
     &#34;&#34;&#34;This field stores a 64-bit signed integer&#34;&#34;&#34;
     def __init__(self, default=None, required=False):
-        super(IntegerField, self).__init__(int, default=default, required=required)
+        super(IntegerProperty, self).__init__(int, default=default, required=required)
 
 
-class FloatingPointNumberField(_Field):
+class FloatingPointNumberProperty(Property):
     &#34;&#34;&#34;Stores a 64-bit double precision floating number&#34;&#34;&#34;
     def __init__(self, default=None, required=False):
-        super(FloatingPointNumberField, self).__init__((float, int), default=default, required=required)
+        super(FloatingPointNumberProperty, self).__init__((float, int), default=default, required=required)
 
 
-class BytesField(_Field):
+class BytesProperty(Property):
     &#34;&#34;&#34;Stores values as bytes, can be used to save a blob&#34;&#34;&#34;
     def __init__(self, default=None, required=False):
-        super(BytesField, self).__init__(bytes, default=default, required=required)
+        super(BytesProperty, self).__init__(bytes, default=default, required=required)
 
 
-class ListField(_Field, list):
+class ListProperty(Property, list):
     &#34;&#34;&#34;A List field&#34;&#34;&#34;
     def __init__(self, field_type):
-        super(ListField, self).__init__(list, default=[])
+        super(ListProperty, self).__init__(list, default=[])
         self.field_type = field_type
 
     def validate(self, value):
-        value = super(ListField, self).validate(value)
+        value = super(ListProperty, self).validate(value)
         for item in value:
             self.field_type.validate(item)
         return value
 
 
-class ReferenceField(_Field):
+class ReferenceProperty(Property):
     &#34;&#34;&#34;
     A field referencing/pointing to another model.
 
@@ -108,27 +113,27 @@ class ReferenceField(_Field):
         required (bool): Enforce that this model not store empty data
     &#34;&#34;&#34;
     def __init__(self, model, required=False):
-        from mantle.firestore.db.model import Model
+        from mantle.firestore import Model
         if not issubclass(model, Model):
-            raise ReferenceFieldError(&#34;A reference field must reference another model&#34;)
-        super(ReferenceField, self).__init__(model, required=required)
+            raise ReferencePropertyError(&#34;A reference field must reference another model&#34;)
+        super(ReferenceProperty, self).__init__(model, required=required)
         self.model = model
 
     def validate(self, value):
-        value = super(ReferenceField, self).validate(value)
+        value = super(ReferenceProperty, self).validate(value)
         if not value:
             return
         return value.__document__()
 
 
-class DictField(_Field):
+class DictProperty(Property):
     &#34;&#34;&#34;
     Holds an Dictionary of JSON serializable field data usually
 
     The value of this field can be a dict or a valid json string. The string will be converted to a dict
     &#34;&#34;&#34;
     def __init__(self, required=False, default=None):
-        super(DictField, self).__init__(dict, required=required, default=default)
+        super(DictProperty, self).__init__(dict, required=required, default=default)
 
     def validate(self, value):
         # Accept valid JSON as a value
@@ -137,7 +142,7 @@ class DictField(_Field):
                 value = json.loads(value)
             except json.JSONDecodeError:
                 raise InvalidValueError(self, value)
-        value = super(DictField, self).validate(value)
+        value = super(DictProperty, self).validate(value)
         if not value:
             return value
         # This will raise any errors if the data is not convertible to valid JSON
@@ -148,13 +153,13 @@ class DictField(_Field):
         return value
 
 
-class BooleanField(_Field):
+class BooleanProperty(Property):
     &#34;&#34;&#34;A boolean field, holds True or False&#34;&#34;&#34;
     def __init__(self, default=None, required=False):
-        super(BooleanField, self).__init__(bool, default=default, required=required)
+        super(BooleanProperty, self).__init__(bool, default=default, required=required)
 
 
-class DateTimeField(_Field):
+class DateTimeProperty(Property):
     &#34;&#34;&#34;
     Holds a date time value, if `auto_now` is true the value you set will be overwritten with the current server value
 
@@ -167,7 +172,7 @@ class DateTimeField(_Field):
     def __init__(self, default=None, required=False, auto_now=False, auto_add_now=False):
         if not default and auto_add_now:
             default = SERVER_TIMESTAMP
-        super(DateTimeField, self).__init__((datetime, date), default=default, required=required)
+        super(DateTimeProperty, self).__init__((datetime, date), default=default, required=required)
         self.auto_now = auto_now
 
     def validate(self, value):
@@ -176,7 +181,7 @@ class DateTimeField(_Field):
             return SERVER_TIMESTAMP
         if value is None and self.default == SERVER_TIMESTAMP:
             return SERVER_TIMESTAMP
-        return super(DateTimeField, self).validate(value)
+        return super(DateTimeProperty, self).validate(value)
 
 
 class InvalidValueError(ValueError):
@@ -210,7 +215,7 @@ class InvalidPropertyError(Exception):
         return &#34;%s not found in model %s&#34; % (self.prop_name, self.model_name)
 
 
-class ReferenceFieldError(Exception):
+class ReferencePropertyError(Exception):
     &#34;&#34;&#34;Raised when a reference field point&#39;s to a location the model can&#39;t resolve&#34;&#34;&#34;
     def __init__(self, message):
         self.message = message
@@ -228,44 +233,44 @@ class ReferenceFieldError(Exception):
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="mantle.db.BooleanField"><code class="flex name class">
-<span>class <span class="ident">BooleanField</span></span>
+<dt id="mantle.db.BooleanProperty"><code class="flex name class">
+<span>class <span class="ident">BooleanProperty</span></span>
 <span>(</span><span>default=None, required=False)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>A boolean field, holds True or False</p></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">class BooleanField(_Field):
+<pre><code class="python">class BooleanProperty(Property):
     &#34;&#34;&#34;A boolean field, holds True or False&#34;&#34;&#34;
     def __init__(self, default=None, required=False):
-        super(BooleanField, self).__init__(bool, default=default, required=required)</code></pre>
+        super(BooleanProperty, self).__init__(bool, default=default, required=required)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li>mantle.db._Field</li>
+<li><a title="mantle.db.Property" href="#mantle.db.Property">Property</a></li>
 </ul>
 </dd>
-<dt id="mantle.db.BytesField"><code class="flex name class">
-<span>class <span class="ident">BytesField</span></span>
+<dt id="mantle.db.BytesProperty"><code class="flex name class">
+<span>class <span class="ident">BytesProperty</span></span>
 <span>(</span><span>default=None, required=False)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Stores values as bytes, can be used to save a blob</p></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">class BytesField(_Field):
+<pre><code class="python">class BytesProperty(Property):
     &#34;&#34;&#34;Stores values as bytes, can be used to save a blob&#34;&#34;&#34;
     def __init__(self, default=None, required=False):
-        super(BytesField, self).__init__(bytes, default=default, required=required)</code></pre>
+        super(BytesProperty, self).__init__(bytes, default=default, required=required)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li>mantle.db._Field</li>
+<li><a title="mantle.db.Property" href="#mantle.db.Property">Property</a></li>
 </ul>
 </dd>
-<dt id="mantle.db.DateTimeField"><code class="flex name class">
-<span>class <span class="ident">DateTimeField</span></span>
+<dt id="mantle.db.DateTimeProperty"><code class="flex name class">
+<span>class <span class="ident">DateTimeProperty</span></span>
 <span>(</span><span>default=None, required=False, auto_now=False, auto_add_now=False)</span>
 </code></dt>
 <dd>
@@ -282,7 +287,7 @@ class ReferenceFieldError(Exception):
 </dl></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">class DateTimeField(_Field):
+<pre><code class="python">class DateTimeProperty(Property):
     &#34;&#34;&#34;
     Holds a date time value, if `auto_now` is true the value you set will be overwritten with the current server value
 
@@ -295,7 +300,7 @@ class ReferenceFieldError(Exception):
     def __init__(self, default=None, required=False, auto_now=False, auto_add_now=False):
         if not default and auto_add_now:
             default = SERVER_TIMESTAMP
-        super(DateTimeField, self).__init__((datetime, date), default=default, required=required)
+        super(DateTimeProperty, self).__init__((datetime, date), default=default, required=required)
         self.auto_now = auto_now
 
     def validate(self, value):
@@ -304,15 +309,15 @@ class ReferenceFieldError(Exception):
             return SERVER_TIMESTAMP
         if value is None and self.default == SERVER_TIMESTAMP:
             return SERVER_TIMESTAMP
-        return super(DateTimeField, self).validate(value)</code></pre>
+        return super(DateTimeProperty, self).validate(value)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li>mantle.db._Field</li>
+<li><a title="mantle.db.Property" href="#mantle.db.Property">Property</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
-<dt id="mantle.db.DateTimeField.validate"><code class="name flex">
+<dt id="mantle.db.DateTimeProperty.validate"><code class="name flex">
 <span>def <span class="ident">validate</span></span>(<span>self, value)</span>
 </code></dt>
 <dd>
@@ -325,13 +330,13 @@ class ReferenceFieldError(Exception):
         return SERVER_TIMESTAMP
     if value is None and self.default == SERVER_TIMESTAMP:
         return SERVER_TIMESTAMP
-    return super(DateTimeField, self).validate(value)</code></pre>
+    return super(DateTimeProperty, self).validate(value)</code></pre>
 </details>
 </dd>
 </dl>
 </dd>
-<dt id="mantle.db.DictField"><code class="flex name class">
-<span>class <span class="ident">DictField</span></span>
+<dt id="mantle.db.DictProperty"><code class="flex name class">
+<span>class <span class="ident">DictProperty</span></span>
 <span>(</span><span>required=False, default=None)</span>
 </code></dt>
 <dd>
@@ -339,14 +344,14 @@ class ReferenceFieldError(Exception):
 <p>The value of this field can be a dict or a valid json string. The string will be converted to a dict</p></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">class DictField(_Field):
+<pre><code class="python">class DictProperty(Property):
     &#34;&#34;&#34;
     Holds an Dictionary of JSON serializable field data usually
 
     The value of this field can be a dict or a valid json string. The string will be converted to a dict
     &#34;&#34;&#34;
     def __init__(self, required=False, default=None):
-        super(DictField, self).__init__(dict, required=required, default=default)
+        super(DictProperty, self).__init__(dict, required=required, default=default)
 
     def validate(self, value):
         # Accept valid JSON as a value
@@ -355,7 +360,7 @@ class ReferenceFieldError(Exception):
                 value = json.loads(value)
             except json.JSONDecodeError:
                 raise InvalidValueError(self, value)
-        value = super(DictField, self).validate(value)
+        value = super(DictProperty, self).validate(value)
         if not value:
             return value
         # This will raise any errors if the data is not convertible to valid JSON
@@ -367,11 +372,11 @@ class ReferenceFieldError(Exception):
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li>mantle.db._Field</li>
+<li><a title="mantle.db.Property" href="#mantle.db.Property">Property</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
-<dt id="mantle.db.DictField.validate"><code class="name flex">
+<dt id="mantle.db.DictProperty.validate"><code class="name flex">
 <span>def <span class="ident">validate</span></span>(<span>self, value)</span>
 </code></dt>
 <dd>
@@ -385,7 +390,7 @@ class ReferenceFieldError(Exception):
             value = json.loads(value)
         except json.JSONDecodeError:
             raise InvalidValueError(self, value)
-    value = super(DictField, self).validate(value)
+    value = super(DictProperty, self).validate(value)
     if not value:
         return value
     # This will raise any errors if the data is not convertible to valid JSON
@@ -398,40 +403,40 @@ class ReferenceFieldError(Exception):
 </dd>
 </dl>
 </dd>
-<dt id="mantle.db.FloatingPointNumberField"><code class="flex name class">
-<span>class <span class="ident">FloatingPointNumberField</span></span>
+<dt id="mantle.db.FloatingPointNumberProperty"><code class="flex name class">
+<span>class <span class="ident">FloatingPointNumberProperty</span></span>
 <span>(</span><span>default=None, required=False)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Stores a 64-bit double precision floating number</p></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">class FloatingPointNumberField(_Field):
+<pre><code class="python">class FloatingPointNumberProperty(Property):
     &#34;&#34;&#34;Stores a 64-bit double precision floating number&#34;&#34;&#34;
     def __init__(self, default=None, required=False):
-        super(FloatingPointNumberField, self).__init__((float, int), default=default, required=required)</code></pre>
+        super(FloatingPointNumberProperty, self).__init__((float, int), default=default, required=required)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li>mantle.db._Field</li>
+<li><a title="mantle.db.Property" href="#mantle.db.Property">Property</a></li>
 </ul>
 </dd>
-<dt id="mantle.db.IntegerField"><code class="flex name class">
-<span>class <span class="ident">IntegerField</span></span>
+<dt id="mantle.db.IntegerProperty"><code class="flex name class">
+<span>class <span class="ident">IntegerProperty</span></span>
 <span>(</span><span>default=None, required=False)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>This field stores a 64-bit signed integer</p></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">class IntegerField(_Field):
+<pre><code class="python">class IntegerProperty(Property):
     &#34;&#34;&#34;This field stores a 64-bit signed integer&#34;&#34;&#34;
     def __init__(self, default=None, required=False):
-        super(IntegerField, self).__init__(int, default=default, required=required)</code></pre>
+        super(IntegerProperty, self).__init__(int, default=default, required=required)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li>mantle.db._Field</li>
+<li><a title="mantle.db.Property" href="#mantle.db.Property">Property</a></li>
 </ul>
 </dd>
 <dt id="mantle.db.InvalidPropertyError"><code class="flex name class">
@@ -484,34 +489,34 @@ class ReferenceFieldError(Exception):
 <li>builtins.BaseException</li>
 </ul>
 </dd>
-<dt id="mantle.db.ListField"><code class="flex name class">
-<span>class <span class="ident">ListField</span></span>
+<dt id="mantle.db.ListProperty"><code class="flex name class">
+<span>class <span class="ident">ListProperty</span></span>
 <span>(</span><span>field_type)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>A List field</p></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">class ListField(_Field, list):
+<pre><code class="python">class ListProperty(Property, list):
     &#34;&#34;&#34;A List field&#34;&#34;&#34;
     def __init__(self, field_type):
-        super(ListField, self).__init__(list, default=[])
+        super(ListProperty, self).__init__(list, default=[])
         self.field_type = field_type
 
     def validate(self, value):
-        value = super(ListField, self).validate(value)
+        value = super(ListProperty, self).validate(value)
         for item in value:
             self.field_type.validate(item)
         return value</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li>mantle.db._Field</li>
+<li><a title="mantle.db.Property" href="#mantle.db.Property">Property</a></li>
 <li>builtins.list</li>
 </ul>
 <h3>Methods</h3>
 <dl>
-<dt id="mantle.db.ListField.validate"><code class="name flex">
+<dt id="mantle.db.ListProperty.validate"><code class="name flex">
 <span>def <span class="ident">validate</span></span>(<span>self, value)</span>
 </code></dt>
 <dd>
@@ -519,7 +524,7 @@ class ReferenceFieldError(Exception):
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def validate(self, value):
-    value = super(ListField, self).validate(value)
+    value = super(ListProperty, self).validate(value)
     for item in value:
         self.field_type.validate(item)
     return value</code></pre>
@@ -550,8 +555,71 @@ class ReferenceFieldError(Exception):
 <li>builtins.BaseException</li>
 </ul>
 </dd>
-<dt id="mantle.db.ReferenceField"><code class="flex name class">
-<span>class <span class="ident">ReferenceField</span></span>
+<dt id="mantle.db.Property"><code class="flex name class">
+<span>class <span class="ident">Property</span></span>
+<span>(</span><span>field_type, default=None, required=False)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">class Property(object):
+    def __init__(self, field_type, default=None, required=False):
+        if type(self) is Property:
+            raise Exception(&#34;You must extend Property&#34;)
+        self.type = field_type
+        self.default = default
+        self.required = required
+        self.name = None
+
+    def validate(self, value):
+        if self.required and self.default is None and value is None:
+            raise InvalidValueError(self, value)
+        # Assign a default value if None is provided
+        if value is None:
+            value = self.default
+
+        if not isinstance(value, self.type) and value is not None:
+            raise InvalidValueError(self, value)
+        return value</code></pre>
+</details>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="mantle.db.StringProperty" href="#mantle.db.StringProperty">StringProperty</a></li>
+<li><a title="mantle.db.IntegerProperty" href="#mantle.db.IntegerProperty">IntegerProperty</a></li>
+<li><a title="mantle.db.FloatingPointNumberProperty" href="#mantle.db.FloatingPointNumberProperty">FloatingPointNumberProperty</a></li>
+<li><a title="mantle.db.BytesProperty" href="#mantle.db.BytesProperty">BytesProperty</a></li>
+<li><a title="mantle.db.ListProperty" href="#mantle.db.ListProperty">ListProperty</a></li>
+<li><a title="mantle.db.ReferenceProperty" href="#mantle.db.ReferenceProperty">ReferenceProperty</a></li>
+<li><a title="mantle.db.DictProperty" href="#mantle.db.DictProperty">DictProperty</a></li>
+<li><a title="mantle.db.BooleanProperty" href="#mantle.db.BooleanProperty">BooleanProperty</a></li>
+<li><a title="mantle.db.DateTimeProperty" href="#mantle.db.DateTimeProperty">DateTimeProperty</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="mantle.db.Property.validate"><code class="name flex">
+<span>def <span class="ident">validate</span></span>(<span>self, value)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def validate(self, value):
+    if self.required and self.default is None and value is None:
+        raise InvalidValueError(self, value)
+    # Assign a default value if None is provided
+    if value is None:
+        value = self.default
+
+    if not isinstance(value, self.type) and value is not None:
+        raise InvalidValueError(self, value)
+    return value</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="mantle.db.ReferenceProperty"><code class="flex name class">
+<span>class <span class="ident">ReferenceProperty</span></span>
 <span>(</span><span>model, required=False)</span>
 </code></dt>
 <dd>
@@ -569,7 +637,7 @@ class ReferenceFieldError(Exception):
 </dl></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">class ReferenceField(_Field):
+<pre><code class="python">class ReferenceProperty(Property):
     &#34;&#34;&#34;
     A field referencing/pointing to another model.
 
@@ -583,25 +651,25 @@ class ReferenceFieldError(Exception):
         required (bool): Enforce that this model not store empty data
     &#34;&#34;&#34;
     def __init__(self, model, required=False):
-        from mantle.firestore.db.model import Model
+        from mantle.firestore import Model
         if not issubclass(model, Model):
-            raise ReferenceFieldError(&#34;A reference field must reference another model&#34;)
-        super(ReferenceField, self).__init__(model, required=required)
+            raise ReferencePropertyError(&#34;A reference field must reference another model&#34;)
+        super(ReferenceProperty, self).__init__(model, required=required)
         self.model = model
 
     def validate(self, value):
-        value = super(ReferenceField, self).validate(value)
+        value = super(ReferenceProperty, self).validate(value)
         if not value:
             return
         return value.__document__()</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li>mantle.db._Field</li>
+<li><a title="mantle.db.Property" href="#mantle.db.Property">Property</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
-<dt id="mantle.db.ReferenceField.validate"><code class="name flex">
+<dt id="mantle.db.ReferenceProperty.validate"><code class="name flex">
 <span>def <span class="ident">validate</span></span>(<span>self, value)</span>
 </code></dt>
 <dd>
@@ -609,7 +677,7 @@ class ReferenceFieldError(Exception):
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def validate(self, value):
-    value = super(ReferenceField, self).validate(value)
+    value = super(ReferenceProperty, self).validate(value)
     if not value:
         return
     return value.__document__()</code></pre>
@@ -617,15 +685,15 @@ class ReferenceFieldError(Exception):
 </dd>
 </dl>
 </dd>
-<dt id="mantle.db.ReferenceFieldError"><code class="flex name class">
-<span>class <span class="ident">ReferenceFieldError</span></span>
+<dt id="mantle.db.ReferencePropertyError"><code class="flex name class">
+<span>class <span class="ident">ReferencePropertyError</span></span>
 <span>(</span><span>message)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Raised when a reference field point's to a location the model can't resolve</p></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">class ReferenceFieldError(Exception):
+<pre><code class="python">class ReferencePropertyError(Exception):
     &#34;&#34;&#34;Raised when a reference field point&#39;s to a location the model can&#39;t resolve&#34;&#34;&#34;
     def __init__(self, message):
         self.message = message
@@ -639,35 +707,35 @@ class ReferenceFieldError(Exception):
 <li>builtins.BaseException</li>
 </ul>
 </dd>
-<dt id="mantle.db.StringField"><code class="flex name class">
-<span>class <span class="ident">StringField</span></span>
+<dt id="mantle.db.StringProperty"><code class="flex name class">
+<span>class <span class="ident">StringProperty</span></span>
 <span>(</span><span>default=None, length=None, required=False)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>A string field</p></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">class StringField(_Field):
+<pre><code class="python">class StringProperty(Property):
     &#34;&#34;&#34;
     A string field
     &#34;&#34;&#34;
     def __init__(self, default=None, length=None, required=False):
-        super(StringField, self).__init__(str, default=default, required=required)
+        super(StringProperty, self).__init__(str, default=default, required=required)
         self.length = length
 
     def validate(self, value):
-        value = super(StringField, self).validate(value)
+        value = super(StringProperty, self).validate(value)
         if self.length and value is not None and len(value) &gt; self.length:
             raise InvalidValueError(self, value)
         return value</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li>mantle.db._Field</li>
+<li><a title="mantle.db.Property" href="#mantle.db.Property">Property</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
-<dt id="mantle.db.StringField.validate"><code class="name flex">
+<dt id="mantle.db.StringProperty.validate"><code class="name flex">
 <span>def <span class="ident">validate</span></span>(<span>self, value)</span>
 </code></dt>
 <dd>
@@ -675,7 +743,7 @@ class ReferenceFieldError(Exception):
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">def validate(self, value):
-    value = super(StringField, self).validate(value)
+    value = super(StringProperty, self).validate(value)
     if self.length and value is not None and len(value) &gt; self.length:
         raise InvalidValueError(self, value)
     return value</code></pre>
@@ -700,28 +768,28 @@ class ReferenceFieldError(Exception):
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="mantle.db.BooleanField" href="#mantle.db.BooleanField">BooleanField</a></code></h4>
+<h4><code><a title="mantle.db.BooleanProperty" href="#mantle.db.BooleanProperty">BooleanProperty</a></code></h4>
 </li>
 <li>
-<h4><code><a title="mantle.db.BytesField" href="#mantle.db.BytesField">BytesField</a></code></h4>
+<h4><code><a title="mantle.db.BytesProperty" href="#mantle.db.BytesProperty">BytesProperty</a></code></h4>
 </li>
 <li>
-<h4><code><a title="mantle.db.DateTimeField" href="#mantle.db.DateTimeField">DateTimeField</a></code></h4>
+<h4><code><a title="mantle.db.DateTimeProperty" href="#mantle.db.DateTimeProperty">DateTimeProperty</a></code></h4>
 <ul class="">
-<li><code><a title="mantle.db.DateTimeField.validate" href="#mantle.db.DateTimeField.validate">validate</a></code></li>
+<li><code><a title="mantle.db.DateTimeProperty.validate" href="#mantle.db.DateTimeProperty.validate">validate</a></code></li>
 </ul>
 </li>
 <li>
-<h4><code><a title="mantle.db.DictField" href="#mantle.db.DictField">DictField</a></code></h4>
+<h4><code><a title="mantle.db.DictProperty" href="#mantle.db.DictProperty">DictProperty</a></code></h4>
 <ul class="">
-<li><code><a title="mantle.db.DictField.validate" href="#mantle.db.DictField.validate">validate</a></code></li>
+<li><code><a title="mantle.db.DictProperty.validate" href="#mantle.db.DictProperty.validate">validate</a></code></li>
 </ul>
 </li>
 <li>
-<h4><code><a title="mantle.db.FloatingPointNumberField" href="#mantle.db.FloatingPointNumberField">FloatingPointNumberField</a></code></h4>
+<h4><code><a title="mantle.db.FloatingPointNumberProperty" href="#mantle.db.FloatingPointNumberProperty">FloatingPointNumberProperty</a></code></h4>
 </li>
 <li>
-<h4><code><a title="mantle.db.IntegerField" href="#mantle.db.IntegerField">IntegerField</a></code></h4>
+<h4><code><a title="mantle.db.IntegerProperty" href="#mantle.db.IntegerProperty">IntegerProperty</a></code></h4>
 </li>
 <li>
 <h4><code><a title="mantle.db.InvalidPropertyError" href="#mantle.db.InvalidPropertyError">InvalidPropertyError</a></code></h4>
@@ -730,27 +798,33 @@ class ReferenceFieldError(Exception):
 <h4><code><a title="mantle.db.InvalidValueError" href="#mantle.db.InvalidValueError">InvalidValueError</a></code></h4>
 </li>
 <li>
-<h4><code><a title="mantle.db.ListField" href="#mantle.db.ListField">ListField</a></code></h4>
+<h4><code><a title="mantle.db.ListProperty" href="#mantle.db.ListProperty">ListProperty</a></code></h4>
 <ul class="">
-<li><code><a title="mantle.db.ListField.validate" href="#mantle.db.ListField.validate">validate</a></code></li>
+<li><code><a title="mantle.db.ListProperty.validate" href="#mantle.db.ListProperty.validate">validate</a></code></li>
 </ul>
 </li>
 <li>
 <h4><code><a title="mantle.db.MalformedQueryError" href="#mantle.db.MalformedQueryError">MalformedQueryError</a></code></h4>
 </li>
 <li>
-<h4><code><a title="mantle.db.ReferenceField" href="#mantle.db.ReferenceField">ReferenceField</a></code></h4>
+<h4><code><a title="mantle.db.Property" href="#mantle.db.Property">Property</a></code></h4>
 <ul class="">
-<li><code><a title="mantle.db.ReferenceField.validate" href="#mantle.db.ReferenceField.validate">validate</a></code></li>
+<li><code><a title="mantle.db.Property.validate" href="#mantle.db.Property.validate">validate</a></code></li>
 </ul>
 </li>
 <li>
-<h4><code><a title="mantle.db.ReferenceFieldError" href="#mantle.db.ReferenceFieldError">ReferenceFieldError</a></code></h4>
+<h4><code><a title="mantle.db.ReferenceProperty" href="#mantle.db.ReferenceProperty">ReferenceProperty</a></code></h4>
+<ul class="">
+<li><code><a title="mantle.db.ReferenceProperty.validate" href="#mantle.db.ReferenceProperty.validate">validate</a></code></li>
+</ul>
 </li>
 <li>
-<h4><code><a title="mantle.db.StringField" href="#mantle.db.StringField">StringField</a></code></h4>
+<h4><code><a title="mantle.db.ReferencePropertyError" href="#mantle.db.ReferencePropertyError">ReferencePropertyError</a></code></h4>
+</li>
+<li>
+<h4><code><a title="mantle.db.StringProperty" href="#mantle.db.StringProperty">StringProperty</a></code></h4>
 <ul class="">
-<li><code><a title="mantle.db.StringField.validate" href="#mantle.db.StringField.validate">validate</a></code></li>
+<li><code><a title="mantle.db.StringProperty.validate" href="#mantle.db.StringProperty.validate">validate</a></code></li>
 </ul>
 </li>
 </ul>

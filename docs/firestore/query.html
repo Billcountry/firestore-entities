@@ -23,7 +23,7 @@
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">from google.cloud.firestore import Query as FSQuery
-from mantle.db import MalformedQueryError, ListField
+from mantle.db import MalformedQueryError, ListProperty
 
 
 class Query(object):
@@ -145,7 +145,7 @@ class Query(object):
         model_field = getattr(self.__model, field)
 
         # Don&#39;t do a contains condition in an invalid field
-        if not isinstance(model_field, ListField):
+        if not isinstance(model_field, ListProperty):
             raise MalformedQueryError(&#34;Invalid field %s, query field for contains must be a list&#34; % field)
 
         # Make sure there&#39;s only on `array_contains` condition
@@ -335,7 +335,7 @@ You can iterate over the query to get the results of your query one by one. Each
         model_field = getattr(self.__model, field)
 
         # Don&#39;t do a contains condition in an invalid field
-        if not isinstance(model_field, ListField):
+        if not isinstance(model_field, ListProperty):
             raise MalformedQueryError(&#34;Invalid field %s, query field for contains must be a list&#34; % field)
 
         # Make sure there&#39;s only on `array_contains` condition
@@ -430,7 +430,7 @@ the query has more than one contains condition</dd>
     model_field = getattr(self.__model, field)
 
     # Don&#39;t do a contains condition in an invalid field
-    if not isinstance(model_field, ListField):
+    if not isinstance(model_field, ListProperty):
         raise MalformedQueryError(&#34;Invalid field %s, query field for contains must be a list&#34; % field)
 
     # Make sure there&#39;s only on `array_contains` condition
