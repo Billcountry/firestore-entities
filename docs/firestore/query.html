@@ -1,0 +1,714 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.6.3" />
+<title>mantle.firestore.query API documentation</title>
+<meta name="description" content="" />
+<link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
+<link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
+<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{font-weight:bold}#index h4 + ul{margin-bottom:.6em}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase;cursor:pointer}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>mantle.firestore.query</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">from google.cloud.firestore import Query as FSQuery
+from mantle.db import MalformedQueryError, ListField
+
+
+class Query(object):
+    &#34;&#34;&#34;
+    A  query object is returned when you call :class:`~.mantle.firestore.db.Model`.query().
+    You can iterate over the query to get the results of your query one by one. Each item is an instance of a
+    :class:`Model`
+    &#34;&#34;&#34;
+
+    def __init__(self, model, offset: int, limit: int, collection, parent):
+        self.__query = collection
+        self.parent = parent
+        if offset:
+            self.__query = self.__query.offset(offset)
+        if limit:
+            self.__query = self.__query.limit(limit)
+        self.__fetched = False
+        self.__model = model
+        self.__array_contains_queries = 0
+        self.__range_filter_queries = {}
+
+    def __validate_value(self, field_name, value):
+        field = getattr(self.__model, field_name)
+        return field.validate(value)
+
+    def __add_range_filter(self, field):
+        self.__range_filter_queries[field] = True
+
+        # Range filter queries are only allowed on a single field at any given time
+        if len(self.__range_filter_queries.keys()) &gt; 1:
+            raise MalformedQueryError(&#34;Range filter queries i.e (&lt;), (&gt;), (&lt;=) and (&gt;=) &#34;
+                                      &#34;can only be performed on a single field in a query&#34;)
+
+    def equal(self, field, value):
+        &#34;&#34;&#34;
+        A query condition where field == value
+
+        Args:
+             field (str): The name of a field to compare
+             value (Any): The value to compare from the field
+
+        Returns:
+            Query: A query object with this condition added
+        &#34;&#34;&#34;
+        self.__query = self.__query.where(field, &#34;==&#34;, self.__validate_value(field, value))
+        return self
+
+    def greater_than(self, field, value):
+        &#34;&#34;&#34;
+        A query condition where field &gt; value
+
+        Args:
+             field (str): The name of a field to compare
+             value (Any): The value to compare from the field
+
+        Returns:
+            Query: A query object with this condition added
+        &#34;&#34;&#34;
+        self.__add_range_filter(field)
+        self.__query = self.__query.where(field, &#34;&gt;&#34;, self.__validate_value(field, value))
+
+    def less_than(self, field, value):
+        &#34;&#34;&#34;
+        A query condition where field &lt; value
+
+        Args:
+             field (str): The name of a field to compare
+             value (Any): The value to compare from the field
+
+        Returns:
+            Query: A query object with this condition added
+        &#34;&#34;&#34;
+        self.__add_range_filter(field)
+        self.__query = self.__query.where(field, &#34;&lt;&#34;, self.__validate_value(field, value))
+
+    def greater_than_or_equal(self, field, value):
+        &#34;&#34;&#34;
+        A query condition where field &gt;= value
+
+        Args:
+             field (str): The name of a field to compare
+             value (Any): The value to compare from the field
+
+        Returns:
+            Query: A query object with this condition added
+        &#34;&#34;&#34;
+        self.__add_range_filter(field)
+        self.__query = self.__query.where(field, &#34;&gt;=&#34;, self.__validate_value(field, value))
+
+    def less_than_or_equal(self, field, value):
+        &#34;&#34;&#34;
+        A query condition where field &lt;= value
+
+        Args:
+             field (str): The name of a field to compare
+             value (Any): The value to compare from the field
+
+        Returns:
+            Query: A query object with this condition added
+        &#34;&#34;&#34;
+        self.__add_range_filter(field)
+        self.__query = self.__query.where(field, &#34;&lt;=&#34;, self.__validate_value(field, value))
+
+    def contains(self, field, value):
+        &#34;&#34;&#34;
+        A query condition where `value in field`
+
+        Args:
+             field (str): The name of a field to compare
+             value (Any): The value to compare from the field
+
+        Returns:
+            Query: A query object with this condition added
+
+        Raises:
+            MalformedQueryError: If the field specified is not a ListField, or
+               the query has more than one contains condition
+        &#34;&#34;&#34;
+        model_field = getattr(self.__model, field)
+
+        # Don&#39;t do a contains condition in an invalid field
+        if not isinstance(model_field, ListField):
+            raise MalformedQueryError(&#34;Invalid field %s, query field for contains must be a list&#34; % field)
+
+        # Make sure there&#39;s only on `array_contains` condition
+        self.__array_contains_queries += 1
+        if self.__array_contains_queries &gt; 1:
+            raise MalformedQueryError(&#34;Only one `contains` clause is allowed per query&#34;)
+        self.__query = self.__query.where(field, &#34;array_contains&#34;, value)
+        return self
+
+    def order_by(self, field, direction=&#34;ASC&#34;):
+        &#34;&#34;&#34;
+        Set an order for the query, accepts
+
+        Args:
+            field (str): The field name to order by
+            direction (str: &#34;ASC&#34; or &#34;DESC&#34;), optional:
+
+        Returns:
+             Query: A query object with order applied
+        &#34;&#34;&#34;
+        if direction is not &#34;ASC&#34; and direction is not &#34;DESC&#34;:
+            raise MalformedQueryError(&#34;order_by direction can only be ASC, or DESC&#34;)
+        direction = FSQuery.ASCENDING if direction is &#34;ASC&#34; else FSQuery.DESCENDING
+        self.__query = self.__query.order_by(field, direction=direction)
+        return self
+
+    def __fetch(self):
+        self.__docs = self.__query.stream()
+        self.__fetched = True
+
+    def __iter__(self):
+        return self
+
+    def fetch(self):
+        &#34;&#34;&#34;
+        Get the results of the query as a list
+
+        Returns:
+            list (Model): A list of models for the found results
+        &#34;&#34;&#34;
+        return [model for model in self]
+
+    def __next__(self):
+        # Fetch data from db if not already done
+        if not self.__fetched:
+            self.__fetch()
+        doc = self.__docs.__next__()
+        return self.__model(__parent__=self.parent, id=doc.id, **doc.to_dict())</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="mantle.firestore.query.Query"><code class="flex name class">
+<span>class <span class="ident">Query</span></span>
+<span>(</span><span>model, offset, limit, collection, parent)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>A
+query object is returned when you call :class:<code>~.mantle.firestore.db.Model</code>.query().
+You can iterate over the query to get the results of your query one by one. Each item is an instance of a
+:class:<code>Model</code></p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">class Query(object):
+    &#34;&#34;&#34;
+    A  query object is returned when you call :class:`~.mantle.firestore.db.Model`.query().
+    You can iterate over the query to get the results of your query one by one. Each item is an instance of a
+    :class:`Model`
+    &#34;&#34;&#34;
+
+    def __init__(self, model, offset: int, limit: int, collection, parent):
+        self.__query = collection
+        self.parent = parent
+        if offset:
+            self.__query = self.__query.offset(offset)
+        if limit:
+            self.__query = self.__query.limit(limit)
+        self.__fetched = False
+        self.__model = model
+        self.__array_contains_queries = 0
+        self.__range_filter_queries = {}
+
+    def __validate_value(self, field_name, value):
+        field = getattr(self.__model, field_name)
+        return field.validate(value)
+
+    def __add_range_filter(self, field):
+        self.__range_filter_queries[field] = True
+
+        # Range filter queries are only allowed on a single field at any given time
+        if len(self.__range_filter_queries.keys()) &gt; 1:
+            raise MalformedQueryError(&#34;Range filter queries i.e (&lt;), (&gt;), (&lt;=) and (&gt;=) &#34;
+                                      &#34;can only be performed on a single field in a query&#34;)
+
+    def equal(self, field, value):
+        &#34;&#34;&#34;
+        A query condition where field == value
+
+        Args:
+             field (str): The name of a field to compare
+             value (Any): The value to compare from the field
+
+        Returns:
+            Query: A query object with this condition added
+        &#34;&#34;&#34;
+        self.__query = self.__query.where(field, &#34;==&#34;, self.__validate_value(field, value))
+        return self
+
+    def greater_than(self, field, value):
+        &#34;&#34;&#34;
+        A query condition where field &gt; value
+
+        Args:
+             field (str): The name of a field to compare
+             value (Any): The value to compare from the field
+
+        Returns:
+            Query: A query object with this condition added
+        &#34;&#34;&#34;
+        self.__add_range_filter(field)
+        self.__query = self.__query.where(field, &#34;&gt;&#34;, self.__validate_value(field, value))
+
+    def less_than(self, field, value):
+        &#34;&#34;&#34;
+        A query condition where field &lt; value
+
+        Args:
+             field (str): The name of a field to compare
+             value (Any): The value to compare from the field
+
+        Returns:
+            Query: A query object with this condition added
+        &#34;&#34;&#34;
+        self.__add_range_filter(field)
+        self.__query = self.__query.where(field, &#34;&lt;&#34;, self.__validate_value(field, value))
+
+    def greater_than_or_equal(self, field, value):
+        &#34;&#34;&#34;
+        A query condition where field &gt;= value
+
+        Args:
+             field (str): The name of a field to compare
+             value (Any): The value to compare from the field
+
+        Returns:
+            Query: A query object with this condition added
+        &#34;&#34;&#34;
+        self.__add_range_filter(field)
+        self.__query = self.__query.where(field, &#34;&gt;=&#34;, self.__validate_value(field, value))
+
+    def less_than_or_equal(self, field, value):
+        &#34;&#34;&#34;
+        A query condition where field &lt;= value
+
+        Args:
+             field (str): The name of a field to compare
+             value (Any): The value to compare from the field
+
+        Returns:
+            Query: A query object with this condition added
+        &#34;&#34;&#34;
+        self.__add_range_filter(field)
+        self.__query = self.__query.where(field, &#34;&lt;=&#34;, self.__validate_value(field, value))
+
+    def contains(self, field, value):
+        &#34;&#34;&#34;
+        A query condition where `value in field`
+
+        Args:
+             field (str): The name of a field to compare
+             value (Any): The value to compare from the field
+
+        Returns:
+            Query: A query object with this condition added
+
+        Raises:
+            MalformedQueryError: If the field specified is not a ListField, or
+               the query has more than one contains condition
+        &#34;&#34;&#34;
+        model_field = getattr(self.__model, field)
+
+        # Don&#39;t do a contains condition in an invalid field
+        if not isinstance(model_field, ListField):
+            raise MalformedQueryError(&#34;Invalid field %s, query field for contains must be a list&#34; % field)
+
+        # Make sure there&#39;s only on `array_contains` condition
+        self.__array_contains_queries += 1
+        if self.__array_contains_queries &gt; 1:
+            raise MalformedQueryError(&#34;Only one `contains` clause is allowed per query&#34;)
+        self.__query = self.__query.where(field, &#34;array_contains&#34;, value)
+        return self
+
+    def order_by(self, field, direction=&#34;ASC&#34;):
+        &#34;&#34;&#34;
+        Set an order for the query, accepts
+
+        Args:
+            field (str): The field name to order by
+            direction (str: &#34;ASC&#34; or &#34;DESC&#34;), optional:
+
+        Returns:
+             Query: A query object with order applied
+        &#34;&#34;&#34;
+        if direction is not &#34;ASC&#34; and direction is not &#34;DESC&#34;:
+            raise MalformedQueryError(&#34;order_by direction can only be ASC, or DESC&#34;)
+        direction = FSQuery.ASCENDING if direction is &#34;ASC&#34; else FSQuery.DESCENDING
+        self.__query = self.__query.order_by(field, direction=direction)
+        return self
+
+    def __fetch(self):
+        self.__docs = self.__query.stream()
+        self.__fetched = True
+
+    def __iter__(self):
+        return self
+
+    def fetch(self):
+        &#34;&#34;&#34;
+        Get the results of the query as a list
+
+        Returns:
+            list (Model): A list of models for the found results
+        &#34;&#34;&#34;
+        return [model for model in self]
+
+    def __next__(self):
+        # Fetch data from db if not already done
+        if not self.__fetched:
+            self.__fetch()
+        doc = self.__docs.__next__()
+        return self.__model(__parent__=self.parent, id=doc.id, **doc.to_dict())</code></pre>
+</details>
+<h3>Methods</h3>
+<dl>
+<dt id="mantle.firestore.query.Query.contains"><code class="name flex">
+<span>def <span class="ident">contains</span></span>(<span>self, field, value)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>A query condition where <code>value in field</code></p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>field</code></strong> :&ensp;<code>str</code></dt>
+<dd>The name of a field to compare</dd>
+<dt><strong><code>value</code></strong> :&ensp;<code>Any</code></dt>
+<dd>The value to compare from the field</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><a title="mantle.firestore.query.Query" href="#mantle.firestore.query.Query"><code>Query</code></a></strong></dt>
+<dd>A query object with this condition added</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><strong><code>MalformedQueryError</code></strong></dt>
+<dd>If the field specified is not a ListField, or
+the query has more than one contains condition</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def contains(self, field, value):
+    &#34;&#34;&#34;
+    A query condition where `value in field`
+
+    Args:
+         field (str): The name of a field to compare
+         value (Any): The value to compare from the field
+
+    Returns:
+        Query: A query object with this condition added
+
+    Raises:
+        MalformedQueryError: If the field specified is not a ListField, or
+           the query has more than one contains condition
+    &#34;&#34;&#34;
+    model_field = getattr(self.__model, field)
+
+    # Don&#39;t do a contains condition in an invalid field
+    if not isinstance(model_field, ListField):
+        raise MalformedQueryError(&#34;Invalid field %s, query field for contains must be a list&#34; % field)
+
+    # Make sure there&#39;s only on `array_contains` condition
+    self.__array_contains_queries += 1
+    if self.__array_contains_queries &gt; 1:
+        raise MalformedQueryError(&#34;Only one `contains` clause is allowed per query&#34;)
+    self.__query = self.__query.where(field, &#34;array_contains&#34;, value)
+    return self</code></pre>
+</details>
+</dd>
+<dt id="mantle.firestore.query.Query.equal"><code class="name flex">
+<span>def <span class="ident">equal</span></span>(<span>self, field, value)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>A query condition where field == value</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>field</code></strong> :&ensp;<code>str</code></dt>
+<dd>The name of a field to compare</dd>
+<dt><strong><code>value</code></strong> :&ensp;<code>Any</code></dt>
+<dd>The value to compare from the field</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><a title="mantle.firestore.query.Query" href="#mantle.firestore.query.Query"><code>Query</code></a></strong></dt>
+<dd>A query object with this condition added</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def equal(self, field, value):
+    &#34;&#34;&#34;
+    A query condition where field == value
+
+    Args:
+         field (str): The name of a field to compare
+         value (Any): The value to compare from the field
+
+    Returns:
+        Query: A query object with this condition added
+    &#34;&#34;&#34;
+    self.__query = self.__query.where(field, &#34;==&#34;, self.__validate_value(field, value))
+    return self</code></pre>
+</details>
+</dd>
+<dt id="mantle.firestore.query.Query.fetch"><code class="name flex">
+<span>def <span class="ident">fetch</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Get the results of the query as a list</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>list</code></strong> :&ensp;<code>Model</code></dt>
+<dd>A list of models for the found results</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def fetch(self):
+    &#34;&#34;&#34;
+    Get the results of the query as a list
+
+    Returns:
+        list (Model): A list of models for the found results
+    &#34;&#34;&#34;
+    return [model for model in self]</code></pre>
+</details>
+</dd>
+<dt id="mantle.firestore.query.Query.greater_than"><code class="name flex">
+<span>def <span class="ident">greater_than</span></span>(<span>self, field, value)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>A query condition where field &gt; value</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>field</code></strong> :&ensp;<code>str</code></dt>
+<dd>The name of a field to compare</dd>
+<dt><strong><code>value</code></strong> :&ensp;<code>Any</code></dt>
+<dd>The value to compare from the field</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><a title="mantle.firestore.query.Query" href="#mantle.firestore.query.Query"><code>Query</code></a></strong></dt>
+<dd>A query object with this condition added</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def greater_than(self, field, value):
+    &#34;&#34;&#34;
+    A query condition where field &gt; value
+
+    Args:
+         field (str): The name of a field to compare
+         value (Any): The value to compare from the field
+
+    Returns:
+        Query: A query object with this condition added
+    &#34;&#34;&#34;
+    self.__add_range_filter(field)
+    self.__query = self.__query.where(field, &#34;&gt;&#34;, self.__validate_value(field, value))</code></pre>
+</details>
+</dd>
+<dt id="mantle.firestore.query.Query.greater_than_or_equal"><code class="name flex">
+<span>def <span class="ident">greater_than_or_equal</span></span>(<span>self, field, value)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>A query condition where field &gt;= value</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>field</code></strong> :&ensp;<code>str</code></dt>
+<dd>The name of a field to compare</dd>
+<dt><strong><code>value</code></strong> :&ensp;<code>Any</code></dt>
+<dd>The value to compare from the field</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><a title="mantle.firestore.query.Query" href="#mantle.firestore.query.Query"><code>Query</code></a></strong></dt>
+<dd>A query object with this condition added</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def greater_than_or_equal(self, field, value):
+    &#34;&#34;&#34;
+    A query condition where field &gt;= value
+
+    Args:
+         field (str): The name of a field to compare
+         value (Any): The value to compare from the field
+
+    Returns:
+        Query: A query object with this condition added
+    &#34;&#34;&#34;
+    self.__add_range_filter(field)
+    self.__query = self.__query.where(field, &#34;&gt;=&#34;, self.__validate_value(field, value))</code></pre>
+</details>
+</dd>
+<dt id="mantle.firestore.query.Query.less_than"><code class="name flex">
+<span>def <span class="ident">less_than</span></span>(<span>self, field, value)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>A query condition where field &lt; value</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>field</code></strong> :&ensp;<code>str</code></dt>
+<dd>The name of a field to compare</dd>
+<dt><strong><code>value</code></strong> :&ensp;<code>Any</code></dt>
+<dd>The value to compare from the field</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><a title="mantle.firestore.query.Query" href="#mantle.firestore.query.Query"><code>Query</code></a></strong></dt>
+<dd>A query object with this condition added</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def less_than(self, field, value):
+    &#34;&#34;&#34;
+    A query condition where field &lt; value
+
+    Args:
+         field (str): The name of a field to compare
+         value (Any): The value to compare from the field
+
+    Returns:
+        Query: A query object with this condition added
+    &#34;&#34;&#34;
+    self.__add_range_filter(field)
+    self.__query = self.__query.where(field, &#34;&lt;&#34;, self.__validate_value(field, value))</code></pre>
+</details>
+</dd>
+<dt id="mantle.firestore.query.Query.less_than_or_equal"><code class="name flex">
+<span>def <span class="ident">less_than_or_equal</span></span>(<span>self, field, value)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>A query condition where field &lt;= value</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>field</code></strong> :&ensp;<code>str</code></dt>
+<dd>The name of a field to compare</dd>
+<dt><strong><code>value</code></strong> :&ensp;<code>Any</code></dt>
+<dd>The value to compare from the field</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><a title="mantle.firestore.query.Query" href="#mantle.firestore.query.Query"><code>Query</code></a></strong></dt>
+<dd>A query object with this condition added</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def less_than_or_equal(self, field, value):
+    &#34;&#34;&#34;
+    A query condition where field &lt;= value
+
+    Args:
+         field (str): The name of a field to compare
+         value (Any): The value to compare from the field
+
+    Returns:
+        Query: A query object with this condition added
+    &#34;&#34;&#34;
+    self.__add_range_filter(field)
+    self.__query = self.__query.where(field, &#34;&lt;=&#34;, self.__validate_value(field, value))</code></pre>
+</details>
+</dd>
+<dt id="mantle.firestore.query.Query.order_by"><code class="name flex">
+<span>def <span class="ident">order_by</span></span>(<span>self, field, direction='ASC')</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Set an order for the query, accepts</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>field</code></strong> :&ensp;<code>str</code></dt>
+<dd>The field name to order by</dd>
+</dl>
+<p>direction (str: "ASC" or "DESC"), optional:</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><a title="mantle.firestore.query.Query" href="#mantle.firestore.query.Query"><code>Query</code></a></strong></dt>
+<dd>A query object with order applied</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def order_by(self, field, direction=&#34;ASC&#34;):
+    &#34;&#34;&#34;
+    Set an order for the query, accepts
+
+    Args:
+        field (str): The field name to order by
+        direction (str: &#34;ASC&#34; or &#34;DESC&#34;), optional:
+
+    Returns:
+         Query: A query object with order applied
+    &#34;&#34;&#34;
+    if direction is not &#34;ASC&#34; and direction is not &#34;DESC&#34;:
+        raise MalformedQueryError(&#34;order_by direction can only be ASC, or DESC&#34;)
+    direction = FSQuery.ASCENDING if direction is &#34;ASC&#34; else FSQuery.DESCENDING
+    self.__query = self.__query.order_by(field, direction=direction)
+    return self</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="mantle.firestore" href="index.html">mantle.firestore</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="mantle.firestore.query.Query" href="#mantle.firestore.query.Query">Query</a></code></h4>
+<ul class="">
+<li><code><a title="mantle.firestore.query.Query.contains" href="#mantle.firestore.query.Query.contains">contains</a></code></li>
+<li><code><a title="mantle.firestore.query.Query.equal" href="#mantle.firestore.query.Query.equal">equal</a></code></li>
+<li><code><a title="mantle.firestore.query.Query.fetch" href="#mantle.firestore.query.Query.fetch">fetch</a></code></li>
+<li><code><a title="mantle.firestore.query.Query.greater_than" href="#mantle.firestore.query.Query.greater_than">greater_than</a></code></li>
+<li><code><a title="mantle.firestore.query.Query.greater_than_or_equal" href="#mantle.firestore.query.Query.greater_than_or_equal">greater_than_or_equal</a></code></li>
+<li><code><a title="mantle.firestore.query.Query.less_than" href="#mantle.firestore.query.Query.less_than">less_than</a></code></li>
+<li><code><a title="mantle.firestore.query.Query.less_than_or_equal" href="#mantle.firestore.query.Query.less_than_or_equal">less_than_or_equal</a></code></li>
+<li><code><a title="mantle.firestore.query.Query.order_by" href="#mantle.firestore.query.Query.order_by">order_by</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.6.3</a>.</p>
+</footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad()</script>
+</body>
+</html>

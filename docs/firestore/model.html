@@ -1,0 +1,589 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.6.3" />
+<title>mantle.firestore.model API documentation</title>
+<meta name="description" content="" />
+<link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
+<link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
+<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{font-weight:bold}#index h4 + ul{margin-bottom:.6em}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase;cursor:pointer}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>mantle.firestore.model</code></h1>
+</header>
+<section id="section-intro">
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">from google.cloud.firestore import Client
+from google.cloud.firestore import DocumentReference
+from mantle.firestore.errors import SubCollectionError
+from mantle.db import InvalidPropertyError, ReferenceFieldError, _Field, ReferenceField
+from mantle.firestore.query import Query
+
+
+class Model(object):
+    &#34;&#34;&#34;Creates a firestore document under the collection [YourModel]
+
+    Args:
+        __parent__ Optional(Model.__class__): If this is a sub-collection of another model,
+            give an instance of the parent
+        **data (kwargs): Values for fields in the new record, e.g User(name=&#34;Bob&#34;)
+
+    Attributes:
+        id (str or int): Unique id identifying this record,
+            if auto-generated, this is not available before `put()`
+
+        __sub_collection__ (str of Model)(Optional class attribute):
+                1: A :class:`~Model` class where each document in this
+                    model is a sub-collection of a record in the returned
+                    :class:`~Model`. e.g If you have a `User` model and each `User`
+                    has a collection of `Notes`. The model `Notes` would return `User`
+                2: A path representing a collection if you don&#39;t want your Model to be on the root of the current
+                    database, e.g In a shared database: `sales`
+
+        __database_props__ Tuple(Project, Credentials, database): A tuple of `Project`, `Credentials` and `database` in
+            that order
+            provide these values if you are not working on App Engine environment or any other case where you need to
+            the `Project`, `Credentials` and the `database` that the model is going to use
+    &#34;&#34;&#34;
+
+    __database_props__ = (None, None, None)
+    __sub_collection__ = None
+
+    def __init__(self, __parent__: &#39;Model&#39; = None, **data):
+        if type(self) is Model:
+            raise Exception(&#34;You must extend Model&#34;)
+        self.__setup_fields()
+        self.__model_name = type(self).__name__
+        client = self.__init_client()
+        self.__collection = client.collection(self.__collection_path(__parent__))
+        self.id = None
+        if &#34;id&#34; in data:
+            self.id = data.pop(&#34;id&#34;)
+        for key, value in data.items():
+            if key in self.__fields:
+                field = self.__fields[key]
+                if isinstance(field, ReferenceField) and isinstance(value, DocumentReference):
+                    data = value.get()
+                    _id = value.id
+                    value = field.model(__parent__=__parent__, id=_id, **data.to_dict())
+                setattr(self, key, value)
+            else:
+                raise InvalidPropertyError(key, self.__model_name)
+
+    @classmethod
+    def __collection_path(cls, __parent__):
+        sub_collection = cls.__sub_collection__
+        if not sub_collection:
+            if __parent__:
+                raise Exception(&#34;__parent__ provided in a model that doesn&#39;t provide a subcollection&#34;)
+            return cls.__name__
+        if isinstance(sub_collection, str):  # In this case the subcollection is just a path
+            return sub_collection + &#34;/&#34; + cls.__name__
+        if not issubclass(sub_collection, Model):
+            raise SubCollectionError(&#34;`__sub_collection__` must return a subclass of `Model`&#34;)
+        if not __parent__:  # We need to have a parent model to compare the subclass to
+            raise SubCollectionError(&#34;Variable `__parent__` is required to initialize a sub-collection&#34;)
+        # We expect the parent to be an instance of the model returned
+        if not isinstance(__parent__, sub_collection):
+            raise SubCollectionError(&#34;The __parent__ of a subcollection must be of the same instance as &#34;
+                                     &#34;the return of `__sub_collection__`&#34;)
+        return __parent__._reference_path() + &#34;/&#34; + cls.__name__
+
+    def __document__(self):
+        if not self.id:
+            return None
+        # Get&#39;s the absolute path: `projects/{project_id}/databases/{database_id}/documents/{document_path}
+        return self.__collection.document(self.id)
+
+    def _reference_path(self):
+        if not self.id:
+            return None
+        # Get&#39;s the reference relative to the database
+        return self.__collection.document(self.id).path()
+
+    @classmethod
+    def __init_client(cls):
+        return Client()
+
+    def __str__(self):
+        return &#34;&lt;Model %s&gt;&#34; % self.__model_name
+
+    def __setup_fields(self):
+        # Get defined fields, equate them to their defaults
+        self.__fields = dict()
+        for attribute in dir(self):
+            if attribute.startswith(&#34;_&#34;):
+                continue
+            value = getattr(self, attribute)
+            if isinstance(value, _Field):
+                if isinstance(value, ReferenceField):
+                    sub_c = value.model.__sub_collection__
+                    if sub_c and issubclass(sub_c, Model):
+                        if not self.__sub_collection__:
+                            raise ReferenceFieldError(&#34;Reference fields must belong to the same parent as the model, &#34;
+                                                      &#34;they therefore must have the same __sub_collection__, %s&#34;
+                                                      &#34;does not define a __sub_collection__&#34; % type(self).__name__)
+                        if self.__sub_collection__ != sub_c:
+                            raise ReferenceFieldError(&#34;Reference fields must belong to the same parent as the model, &#34;
+                                                      &#34;they therefore must have the same __sub_collection__&#34;)
+
+                value.name = attribute
+                self.__fields[attribute] = value
+                setattr(self, attribute, value.default)
+
+    def __prepare(self):
+        # Find current field values and validate them
+        values = dict()
+        for key, field in self.__fields.items():
+            value = getattr(self, key)
+            values[key] = field.validate(value)
+        return values
+
+    def put(self):
+        &#34;&#34;&#34;
+        Save the models data to Firestore
+
+        Raises:
+            InvalidValueError: Raised if the value of a field is invalid, e.g. A required field that&#39;s None
+        &#34;&#34;&#34;
+        data = self.__prepare()
+        if self.id:
+            self.__collection.document(self.id).set(data)
+            return
+        _time, new_ref = self.__collection.add(data)
+        self.id = new_ref.id
+
+    def delete(self):
+        &#34;&#34;&#34;Delete the document connected to this model from firestore&#34;&#34;&#34;
+        if self.id:
+            self.__collection.document(self.id).delete()
+
+    @classmethod
+    def get(cls, _id, __parent__=None):
+        &#34;&#34;&#34;
+        Get a model with the given id
+
+        Args:
+            _id (str or int): A key or id of the model record, when a list is provided, `get` returns a list
+                models
+            __parent__ (Model): If querying a sub collection of model, provide the parent instance
+
+        Returns:
+            Model: An instance of the firestore model calling get
+            None: If the id provided doesn&#39;t exist
+        &#34;&#34;&#34;
+        document = cls.__init_client().collection(cls.__collection_path(__parent__)).document(_id)
+        data = document.get()
+        if not data.exists:
+            return None
+        return cls(__parent__=__parent__, id=_id, **data.to_dict())
+
+    @classmethod
+    def query(cls, offset=0, limit=0, __parent__=None):
+        &#34;&#34;&#34;
+        Create a query to this model
+
+        Args:
+            offset (int): The position in the database where the results begin
+            limit (int): Maximum number of records to return
+            __parent__ (Model): If querying a sub collection of model, provide the parent instance
+
+        Returns:
+            An iterable query object
+        &#34;&#34;&#34;
+        path = cls.__collection_path(__parent__)
+        collection = cls.__init_client().collection(path)
+        return Query(cls, offset, limit, collection, __parent__)</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="mantle.firestore.model.Model"><code class="flex name class">
+<span>class <span class="ident">Model</span></span>
+<span>(</span><span>**data)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Creates a firestore document under the collection [YourModel]</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong>parent</strong> Optional(Model.<strong>class</strong>): If this is a sub-collection of another model,</dt>
+<dt>give an instance of the parent</dt>
+<dt><strong><code>**data</code></strong> :&ensp;<code>kwargs</code></dt>
+<dd>Values for fields in the new record, e.g User(name="Bob")</dd>
+</dl>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>id</code></strong> :&ensp;<code>str</code> or <code>int</code></dt>
+<dd>Unique id identifying this record,
+if auto-generated, this is not available before <code>put()</code></dd>
+</dl>
+<p><strong>sub_collection</strong> (str of Model)(Optional class attribute):
+1: A :class:<code>~Model</code> class where each document in this
+model is a sub-collection of a record in the returned
+:class:<code>~Model</code>. e.g If you have a <code>User</code> model and each <code>User</code>
+has a collection of <code>Notes</code>. The model <code>Notes</code> would return <code>User</code>
+2: A path representing a collection if you don't want your Model to be on the root of the current
+database, e.g In a shared database: <code>sales</code></p>
+<p><strong>database_props</strong> Tuple(Project, Credentials, database): A tuple of <code>Project</code>, <code>Credentials</code> and <code>database</code> in
+that order
+provide these values if you are not working on App Engine environment or any other case where you need to
+the <code>Project</code>, <code>Credentials</code> and the <code>database</code> that the model is going to use</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">class Model(object):
+    &#34;&#34;&#34;Creates a firestore document under the collection [YourModel]
+
+    Args:
+        __parent__ Optional(Model.__class__): If this is a sub-collection of another model,
+            give an instance of the parent
+        **data (kwargs): Values for fields in the new record, e.g User(name=&#34;Bob&#34;)
+
+    Attributes:
+        id (str or int): Unique id identifying this record,
+            if auto-generated, this is not available before `put()`
+
+        __sub_collection__ (str of Model)(Optional class attribute):
+                1: A :class:`~Model` class where each document in this
+                    model is a sub-collection of a record in the returned
+                    :class:`~Model`. e.g If you have a `User` model and each `User`
+                    has a collection of `Notes`. The model `Notes` would return `User`
+                2: A path representing a collection if you don&#39;t want your Model to be on the root of the current
+                    database, e.g In a shared database: `sales`
+
+        __database_props__ Tuple(Project, Credentials, database): A tuple of `Project`, `Credentials` and `database` in
+            that order
+            provide these values if you are not working on App Engine environment or any other case where you need to
+            the `Project`, `Credentials` and the `database` that the model is going to use
+    &#34;&#34;&#34;
+
+    __database_props__ = (None, None, None)
+    __sub_collection__ = None
+
+    def __init__(self, __parent__: &#39;Model&#39; = None, **data):
+        if type(self) is Model:
+            raise Exception(&#34;You must extend Model&#34;)
+        self.__setup_fields()
+        self.__model_name = type(self).__name__
+        client = self.__init_client()
+        self.__collection = client.collection(self.__collection_path(__parent__))
+        self.id = None
+        if &#34;id&#34; in data:
+            self.id = data.pop(&#34;id&#34;)
+        for key, value in data.items():
+            if key in self.__fields:
+                field = self.__fields[key]
+                if isinstance(field, ReferenceField) and isinstance(value, DocumentReference):
+                    data = value.get()
+                    _id = value.id
+                    value = field.model(__parent__=__parent__, id=_id, **data.to_dict())
+                setattr(self, key, value)
+            else:
+                raise InvalidPropertyError(key, self.__model_name)
+
+    @classmethod
+    def __collection_path(cls, __parent__):
+        sub_collection = cls.__sub_collection__
+        if not sub_collection:
+            if __parent__:
+                raise Exception(&#34;__parent__ provided in a model that doesn&#39;t provide a subcollection&#34;)
+            return cls.__name__
+        if isinstance(sub_collection, str):  # In this case the subcollection is just a path
+            return sub_collection + &#34;/&#34; + cls.__name__
+        if not issubclass(sub_collection, Model):
+            raise SubCollectionError(&#34;`__sub_collection__` must return a subclass of `Model`&#34;)
+        if not __parent__:  # We need to have a parent model to compare the subclass to
+            raise SubCollectionError(&#34;Variable `__parent__` is required to initialize a sub-collection&#34;)
+        # We expect the parent to be an instance of the model returned
+        if not isinstance(__parent__, sub_collection):
+            raise SubCollectionError(&#34;The __parent__ of a subcollection must be of the same instance as &#34;
+                                     &#34;the return of `__sub_collection__`&#34;)
+        return __parent__._reference_path() + &#34;/&#34; + cls.__name__
+
+    def __document__(self):
+        if not self.id:
+            return None
+        # Get&#39;s the absolute path: `projects/{project_id}/databases/{database_id}/documents/{document_path}
+        return self.__collection.document(self.id)
+
+    def _reference_path(self):
+        if not self.id:
+            return None
+        # Get&#39;s the reference relative to the database
+        return self.__collection.document(self.id).path()
+
+    @classmethod
+    def __init_client(cls):
+        return Client()
+
+    def __str__(self):
+        return &#34;&lt;Model %s&gt;&#34; % self.__model_name
+
+    def __setup_fields(self):
+        # Get defined fields, equate them to their defaults
+        self.__fields = dict()
+        for attribute in dir(self):
+            if attribute.startswith(&#34;_&#34;):
+                continue
+            value = getattr(self, attribute)
+            if isinstance(value, _Field):
+                if isinstance(value, ReferenceField):
+                    sub_c = value.model.__sub_collection__
+                    if sub_c and issubclass(sub_c, Model):
+                        if not self.__sub_collection__:
+                            raise ReferenceFieldError(&#34;Reference fields must belong to the same parent as the model, &#34;
+                                                      &#34;they therefore must have the same __sub_collection__, %s&#34;
+                                                      &#34;does not define a __sub_collection__&#34; % type(self).__name__)
+                        if self.__sub_collection__ != sub_c:
+                            raise ReferenceFieldError(&#34;Reference fields must belong to the same parent as the model, &#34;
+                                                      &#34;they therefore must have the same __sub_collection__&#34;)
+
+                value.name = attribute
+                self.__fields[attribute] = value
+                setattr(self, attribute, value.default)
+
+    def __prepare(self):
+        # Find current field values and validate them
+        values = dict()
+        for key, field in self.__fields.items():
+            value = getattr(self, key)
+            values[key] = field.validate(value)
+        return values
+
+    def put(self):
+        &#34;&#34;&#34;
+        Save the models data to Firestore
+
+        Raises:
+            InvalidValueError: Raised if the value of a field is invalid, e.g. A required field that&#39;s None
+        &#34;&#34;&#34;
+        data = self.__prepare()
+        if self.id:
+            self.__collection.document(self.id).set(data)
+            return
+        _time, new_ref = self.__collection.add(data)
+        self.id = new_ref.id
+
+    def delete(self):
+        &#34;&#34;&#34;Delete the document connected to this model from firestore&#34;&#34;&#34;
+        if self.id:
+            self.__collection.document(self.id).delete()
+
+    @classmethod
+    def get(cls, _id, __parent__=None):
+        &#34;&#34;&#34;
+        Get a model with the given id
+
+        Args:
+            _id (str or int): A key or id of the model record, when a list is provided, `get` returns a list
+                models
+            __parent__ (Model): If querying a sub collection of model, provide the parent instance
+
+        Returns:
+            Model: An instance of the firestore model calling get
+            None: If the id provided doesn&#39;t exist
+        &#34;&#34;&#34;
+        document = cls.__init_client().collection(cls.__collection_path(__parent__)).document(_id)
+        data = document.get()
+        if not data.exists:
+            return None
+        return cls(__parent__=__parent__, id=_id, **data.to_dict())
+
+    @classmethod
+    def query(cls, offset=0, limit=0, __parent__=None):
+        &#34;&#34;&#34;
+        Create a query to this model
+
+        Args:
+            offset (int): The position in the database where the results begin
+            limit (int): Maximum number of records to return
+            __parent__ (Model): If querying a sub collection of model, provide the parent instance
+
+        Returns:
+            An iterable query object
+        &#34;&#34;&#34;
+        path = cls.__collection_path(__parent__)
+        collection = cls.__init_client().collection(path)
+        return Query(cls, offset, limit, collection, __parent__)</code></pre>
+</details>
+<h3>Static methods</h3>
+<dl>
+<dt id="mantle.firestore.model.Model.get"><code class="name flex">
+<span>def <span class="ident">get</span></span>(<span>_id)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Get a model with the given id</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>_id</code></strong> :&ensp;<code>str</code> or <code>int</code></dt>
+<dd>A key or id of the model record, when a list is provided, <code>get</code> returns a list
+models</dd>
+<dt><strong><code>__parent__</code></strong> :&ensp;<a title="mantle.firestore.model.Model" href="#mantle.firestore.model.Model"><code>Model</code></a></dt>
+<dd>If querying a sub collection of model, provide the parent instance</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><a title="mantle.firestore.model.Model" href="#mantle.firestore.model.Model"><code>Model</code></a></strong></dt>
+<dd>An instance of the firestore model calling get</dd>
+<dt><strong><code>None</code></strong></dt>
+<dd>If the id provided doesn't exist</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">@classmethod
+def get(cls, _id, __parent__=None):
+    &#34;&#34;&#34;
+    Get a model with the given id
+
+    Args:
+        _id (str or int): A key or id of the model record, when a list is provided, `get` returns a list
+            models
+        __parent__ (Model): If querying a sub collection of model, provide the parent instance
+
+    Returns:
+        Model: An instance of the firestore model calling get
+        None: If the id provided doesn&#39;t exist
+    &#34;&#34;&#34;
+    document = cls.__init_client().collection(cls.__collection_path(__parent__)).document(_id)
+    data = document.get()
+    if not data.exists:
+        return None
+    return cls(__parent__=__parent__, id=_id, **data.to_dict())</code></pre>
+</details>
+</dd>
+<dt id="mantle.firestore.model.Model.query"><code class="name flex">
+<span>def <span class="ident">query</span></span>(<span>offset=0, limit=0)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Create a query to this model</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>offset</code></strong> :&ensp;<code>int</code></dt>
+<dd>The position in the database where the results begin</dd>
+<dt><strong><code>limit</code></strong> :&ensp;<code>int</code></dt>
+<dd>Maximum number of records to return</dd>
+<dt><strong><code>__parent__</code></strong> :&ensp;<a title="mantle.firestore.model.Model" href="#mantle.firestore.model.Model"><code>Model</code></a></dt>
+<dd>If querying a sub collection of model, provide the parent instance</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>An</code> <code>iterable</code> <code>query</code> <code>object</code></dt>
+<dd>&nbsp;</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">@classmethod
+def query(cls, offset=0, limit=0, __parent__=None):
+    &#34;&#34;&#34;
+    Create a query to this model
+
+    Args:
+        offset (int): The position in the database where the results begin
+        limit (int): Maximum number of records to return
+        __parent__ (Model): If querying a sub collection of model, provide the parent instance
+
+    Returns:
+        An iterable query object
+    &#34;&#34;&#34;
+    path = cls.__collection_path(__parent__)
+    collection = cls.__init_client().collection(path)
+    return Query(cls, offset, limit, collection, __parent__)</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="mantle.firestore.model.Model.delete"><code class="name flex">
+<span>def <span class="ident">delete</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Delete the document connected to this model from firestore</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def delete(self):
+    &#34;&#34;&#34;Delete the document connected to this model from firestore&#34;&#34;&#34;
+    if self.id:
+        self.__collection.document(self.id).delete()</code></pre>
+</details>
+</dd>
+<dt id="mantle.firestore.model.Model.put"><code class="name flex">
+<span>def <span class="ident">put</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Save the models data to Firestore</p>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><strong><code>InvalidValueError</code></strong></dt>
+<dd>Raised if the value of a field is invalid, e.g. A required field that's None</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def put(self):
+    &#34;&#34;&#34;
+    Save the models data to Firestore
+
+    Raises:
+        InvalidValueError: Raised if the value of a field is invalid, e.g. A required field that&#39;s None
+    &#34;&#34;&#34;
+    data = self.__prepare()
+    if self.id:
+        self.__collection.document(self.id).set(data)
+        return
+    _time, new_ref = self.__collection.add(data)
+    self.id = new_ref.id</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="mantle.firestore" href="index.html">mantle.firestore</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="mantle.firestore.model.Model" href="#mantle.firestore.model.Model">Model</a></code></h4>
+<ul class="">
+<li><code><a title="mantle.firestore.model.Model.delete" href="#mantle.firestore.model.Model.delete">delete</a></code></li>
+<li><code><a title="mantle.firestore.model.Model.get" href="#mantle.firestore.model.Model.get">get</a></code></li>
+<li><code><a title="mantle.firestore.model.Model.put" href="#mantle.firestore.model.Model.put">put</a></code></li>
+<li><code><a title="mantle.firestore.model.Model.query" href="#mantle.firestore.model.Model.query">query</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.6.3</a>.</p>
+</footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad()</script>
+</body>
+</html>
