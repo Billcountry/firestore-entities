@@ -11,7 +11,7 @@ setuptools.setup(
     description="A module allowing you to freely model your code on top of Google cloud firestore",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/Billcountry/mantle-model",
+    url="https://github.com/mantle-studio/models",
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
