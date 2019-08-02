@@ -1,5 +1,5 @@
 from google.cloud.firestore import Query as FSQuery
-from mantle.db import MalformedQueryError, ListField
+from mantle.db import MalformedQueryError, ListProperty
 
 
 class Query(object):
@@ -121,7 +121,7 @@ class Query(object):
         model_field = getattr(self.__model, field)
 
         # Don't do a contains condition in an invalid field
-        if not isinstance(model_field, ListField):
+        if not isinstance(model_field, ListProperty):
             raise MalformedQueryError("Invalid field %s, query field for contains must be a list" % field)
 
         # Make sure there's only on `array_contains` condition
