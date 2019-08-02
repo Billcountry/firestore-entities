@@ -1,7 +1,7 @@
 from google.cloud.firestore import Client
 from google.cloud.firestore import DocumentReference
 from mantle.firestore.errors import SubCollectionError
-from mantle.db import InvalidPropertyError, ReferenceFieldError, _Field, ReferenceField
+from mantle.db import InvalidPropertyError, ReferencePropertyError, Property, ReferenceProperty
 from mantle.firestore.query import Query
 
 
@@ -47,7 +47,7 @@ class Model(object):
         for key, value in data.items():
             if key in self.__fields:
                 field = self.__fields[key]
-                if isinstance(field, ReferenceField) and isinstance(value, DocumentReference):
+                if isinstance(field, ReferenceProperty) and isinstance(value, DocumentReference):
                     data = value.get()
                     _id = value.id
                     value = field.model(__parent__=__parent__, id=_id, **data.to_dict())
@@ -100,16 +100,16 @@ class Model(object):
             if attribute.startswith("_"):
                 continue
             value = getattr(self, attribute)
-            if isinstance(value, _Field):
-                if isinstance(value, ReferenceField):
+            if isinstance(value, Property):
+                if isinstance(value, ReferenceProperty):
                     sub_c = value.model.__sub_collection__
                     if sub_c and issubclass(sub_c, Model):
                         if not self.__sub_collection__:
-                            raise ReferenceFieldError("Reference fields must belong to the same parent as the model, "
+                            raise ReferencePropertyError("Reference fields must belong to the same parent as the model, "
                                                       "they therefore must have the same __sub_collection__, %s"
                                                       "does not define a __sub_collection__" % type(self).__name__)
                         if self.__sub_collection__ != sub_c:
-                            raise ReferenceFieldError("Reference fields must belong to the same parent as the model, "
+                            raise ReferencePropertyError("Reference fields must belong to the same parent as the model, "
                                                       "they therefore must have the same __sub_collection__")
 
                 value.name = attribute
