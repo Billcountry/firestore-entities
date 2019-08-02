@@ -1,0 +1,4 @@
+[ -e docs ] && rm -r docs
+pdoc --html mantle
+mv html/mantle docs
+rm -r html
