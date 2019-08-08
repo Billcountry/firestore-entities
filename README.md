@@ -28,11 +28,15 @@ class Enterprise(Model):
     logo = db.BytesProperty()
 
     def create_account(self, user, roles=[]):
+        # Since account is a sub-collection of an enterprise,
+        # the parent enterprise must be provided
         account = Accounts(__parent__=self, user=user, roles=roles)
         account.put()
+        return account
 
 
 class Accounts(Model):
+    __sub_collection__ = Enterprise
     user = db.ReferenceProperty(User)
     roles = db.ListProperty(field_type=db.TextProperty())
     date_added = db.DateTimeProperty(auto_add_now=True)
