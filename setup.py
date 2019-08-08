@@ -11,7 +11,7 @@ setuptools.setup(
     version="0.0.1",
     author="Billcountry Mwaniki",
     author_email="me@billcountry.tech",
-    description="A module allowing you to freely model your code on top of Google cloud firestore",
+    description="Implementation of models concept on top of Google cloud firestore",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/mantle-studio/models",

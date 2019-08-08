@@ -1,7 +1,14 @@
 ### Mantle Firestore Model
 
-This is an implementation of models on top of Google cloud firestore. It tries to make interaction with firestore as simple as possible for the developer. See examples below:
+Implementation of models concept on top of Google cloud firestore.
+It tries to make interaction with firestore as simple as possible for the developer.
 
+#### Installation
+```shell script
+pip install mantle-firestore
+```
+
+#### Examples
 ```python
 """
 This code creates a model with some possible scenarios when working with db.FirestoreModel
