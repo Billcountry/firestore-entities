@@ -1,4 +1,4 @@
-### Firestore Model
+### Mantle Firestore Model
 
 This is an implementation of models on top of Google cloud firestore. It tries to make interaction with firestore as simple as possible for the developer. See examples below:
 
