@@ -352,7 +352,7 @@ Raised when the rules of a query are broken
     
 #### Descendants
 
-* [mantle.db.StringProperty](#mantle.db.StringProperty)
+* [mantle.db.TextProperty](#mantle.db.TextProperty)
 * [mantle.db.IntegerProperty](#mantle.db.IntegerProperty)
 * [mantle.db.FloatingPointNumberProperty](#mantle.db.FloatingPointNumberProperty)
 * [mantle.db.BytesProperty](#mantle.db.BytesProperty)
@@ -457,11 +457,11 @@ Raised when a reference field point's to a location the model can't resolve
 
 
     
-### Class `StringProperty` {#mantle.db.StringProperty}
+### Class `TextProperty` {#mantle.db.TextProperty}
 
 
 
-> `class StringProperty(default=None, length=None, required=False)`
+> `class TextProperty(default=None, length=None, required=False)`
 
 
 A string field
@@ -483,7 +483,7 @@ A string field
 
 
     
-##### Method `validate` {#mantle.db.StringProperty.validate}
+##### Method `validate` {#mantle.db.TextProperty.validate}
 
 
 
