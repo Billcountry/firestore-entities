@@ -1,1 +1,10 @@
+echo "Building package..."
+python setup.py sdist bdist_wheel
+
+echo "Starting Uplaod"
 twine upload --verbose dist/*
+
+echo "Removing build files"
+rm -r dist
+rm -r build
+rm -r mantle_firestore.egg-info
