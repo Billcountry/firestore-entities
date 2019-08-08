@@ -1,8 +1,8 @@
 ### Firestore Model
 
-This is an implementation of models on to of Google cloud firestore. It tries to make interaction with firestore as simple as possible for the developer. See examples below:
+This is an implementation of models on top of Google cloud firestore. It tries to make interaction with firestore as simple as possible for the developer. See examples below:
 
-```py
+```python
 """
 This code creates a model with some possible scenarios when working with db.FirestoreModel
 
@@ -11,49 +11,49 @@ It assumes a case where a company offers SAAS to different enterprises for a cha
 - All enterprises have Clients and Clients have messages
 """
 
-from google.cloud.firestore_v1beta1 import db
+from mantle.firestore import Model, SERVER_TIMESTAMP
+from mantle import db
 
-
-class User(db.FirestoreModel):
-    user_name = db.StringField(length=16, required=True)
-    email_address = db.StringField(required=True)
-    full_name = db.StringField(required=True)
-    password = db.StringField(required=False)
-    date_registered = db.DateTimeField(default=db.SERVER_TIMESTAMP)
+class User(Model):
+    user_name = db.TextProperty(length=16, required=True)
+    email_address = db.TextProperty(required=True)
+    full_name = db.TextProperty(required=True)
+    password = db.TextProperty(required=False)
+    date_registered = db.DateTimeProperty(default=SERVER_TIMESTAMP)
     __sub_collection__ = "user_data"
 
 
-class Enterprise(db.FirestoreModel):
-    name = db.StringField(required=True)
-    logo = db.BytesField()
+class Enterprise(Model):
+    name = db.TextProperty(required=True)
+    logo = db.BytesProperty()
 
     def create_account(self, user, roles=[]):
         account = Accounts(__parent__=self, user=user, roles=roles)
         account.put()
 
 
-class Accounts(db.FirestoreModel):
-    user = db.ReferenceField(User)
-    roles = db.ListField(field_type=db.StringField())
-    date_added = db.DateTimeField(auto_add_now=True)
-    last_updated = db.DateTimeField(auto_now=True)
+class Accounts(Model):
+    user = db.ReferenceProperty(User)
+    roles = db.ListProperty(field_type=db.TextProperty())
+    date_added = db.DateTimeProperty(auto_add_now=True)
+    last_updated = db.DateTimeProperty(auto_now=True)
 
 
-class Clients(db.FirestoreModel):
+class Clients(Model):
     __sub_collection__ = Enterprise
-    email_address = db.StringField()
-    name = db.StringField()
+    email_address = db.TextProperty()
+    name = db.TextProperty()
 
 
-class Fields(db.FirestoreModel):
+class Fields(Model):
     __sub_collection__ = Clients
-    field_type = db.StringField("string")
-    value = db.StringField()
+    field_type = db.TextProperty("string")
+    value = db.TextProperty()
 
 
-class Messages(db.FirestoreModel):
+class Messages(Model):
     __sub_collection__ = Enterprise
-    client = db.ReferenceField(Clients, required=True)
-    sender = db.ReferenceField(Accounts)
-    message_date = db.DateTimeField(auto_add_now=True)
+    client = db.ReferenceProperty(Clients, required=True)
+    sender = db.ReferenceProperty(Accounts)
+    message_date = db.DateTimeProperty(auto_add_now=True)
 ```
