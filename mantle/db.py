@@ -28,16 +28,16 @@ class Property(object):
         return value
 
 
-class StringProperty(Property):
+class TextProperty(Property):
     """
     A string field
     """
     def __init__(self, default=None, length=None, required=False):
-        super(StringProperty, self).__init__(str, default=default, required=required)
+        super(TextProperty, self).__init__(str, default=default, required=required)
         self.length = length
 
     def validate(self, value):
-        value = super(StringProperty, self).validate(value)
+        value = super(TextProperty, self).validate(value)
         if self.length and value is not None and len(value) > self.length:
             raise InvalidValueError(self, value)
         return value
