@@ -1,4 +1,4 @@
-### Mantle Firestore Model
+### Mantle Firestore Model (BETA)
 
 Implementation of models concept on top of Google cloud firestore.
 It tries to make interaction with firestore as simple as possible for the developer.
