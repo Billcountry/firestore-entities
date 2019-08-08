@@ -1,4 +1,4 @@
-from unittest import TestCase
+import unittest
 from google.cloud.firestore_v1beta1 import SERVER_TIMESTAMP
 from mantle.firestore import Model
 from mantle import db
@@ -79,7 +79,7 @@ class DoomedToFail(Model):
     message = db.ReferenceProperty(MessageLog)
 
 
-class TestDB(TestCase):
+class TestDB(unittest.TestCase):
     def setUp(self):
         class John:
             name = "John Doe"
