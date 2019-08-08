@@ -10,16 +10,16 @@ A group meet ups organizing app that allow users add meetups and to RSVP to meet
 
 class User(Model):
     """A user can register and can have an account in multiple groups"""
-    name = db.StringProperty(default="doe")
-    email = db.StringProperty(required=True)
-    password = db.StringProperty(required=True)
+    name = db.TextProperty(default="doe")
+    email = db.TextProperty(required=True)
+    password = db.TextProperty(required=True)
     date_registered = db.DateTimeProperty(auto_add_now=True)
 
 
 class Group(Model):
     """A group is created by a user and can be invite only or public"""
-    name = db.StringProperty()
-    description = db.StringProperty(length=400)
+    name = db.TextProperty()
+    description = db.TextProperty(length=400)
     creator = db.ReferenceProperty(model=User)
     date_created = db.DateTimeProperty(auto_add_now=True)
     last_update = db.DateTimeProperty(auto_now=True)
@@ -30,7 +30,7 @@ class Account(Model):
     """An account exists in a group, belongs to a user"""
     __sub_collection__ = Group
     user = db.ReferenceProperty(model=User)
-    roles = db.ListProperty(field_type=db.StringProperty(required=True))
+    roles = db.ListProperty(field_type=db.TextProperty(required=True))
     date_joined = db.DateTimeProperty(auto_add_now=True)
 
 
@@ -38,8 +38,8 @@ class Meetup(Model):
     """Meetups that are only open and accessible to members of a group"""
     __sub_collection__ = Group
     organizer = db.ReferenceProperty(Account, required=True)  # This Account must belong to the same group
-    title = db.StringProperty(length=200)
-    description = db.StringProperty()
+    title = db.TextProperty(length=200)
+    description = db.TextProperty()
     date_created = db.DateTimeProperty(auto_add_now=True)
     meetup_date = db.DateTimeProperty()
 
@@ -68,7 +68,7 @@ class MessageLog(Model):
     """Actual messages between users in a conversation"""
     __sub_collection__ = Conversation
     sender = db.ReferenceProperty(User, required=True)
-    message = db.StringProperty()
+    message = db.TextProperty()
     date_sent = db.DateTimeProperty(auto_add_now=True)
 
 
@@ -97,15 +97,7 @@ class ModelTestCases(unittest.TestCase):
         john = User(name=self.john.name, email=self.john.email, password=self.john.password)
 
     def test_model_initialization(self):
-        jane = User(name="Jane Doe", email="jane@doe.fam", password="stupidJohn")
-        self.assertEqual(jane.name, "Jane Doe")
-        self.assertEqual(jane.email, "jane")
-        self.assertEqual(jane.password, "Jane Doe")
-
-
-if __name__ == '__main__':
-    import sys
-    import os
-    # Add main dir to path
-    sys.path.append(os.path.join(os.path.dirname(__file__), "../"))
-    unittest.main()
+        jane = User(name=self.jane.name, email=self.jane.email, password=self.jane.password)
+        self.assertEqual(jane.name, self.jane.name)
+        self.assertEqual(jane.email, self.jane.email)
+        self.assertEqual(jane.password, self.jane.password)
