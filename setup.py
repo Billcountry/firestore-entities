@@ -1,5 +1,8 @@
 import setuptools
 
+
+install_requires = ["google-cloud-firestore"]
+
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
@@ -18,7 +21,5 @@ setuptools.setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
-    install_requires=[
-        ""
-    ]
+    install_requires=install_requires
 )
