@@ -8,7 +8,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="mantle-firestore",
-    version="0.0.1",
+    version="0.0.2",
     author="Billcountry Mwaniki",
     author_email="me@billcountry.tech",
     description="Implementation of models concept on top of Google cloud firestore",
