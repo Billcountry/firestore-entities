@@ -170,6 +170,7 @@ class InvalidValueError(ValueError):
         return "%s is not a valid value for field %s of type %s" % \
                (self.value, self.field.name, type(self.field).__name__)
 
+
 class MalformedQueryError(Exception):
     """Raised when the rules of a query are broken"""
 
@@ -178,6 +179,7 @@ class MalformedQueryError(Exception):
 
     def __str__(self):
         return self.message
+
 
 class InvalidPropertyError(Exception):
     """Raised if a non-existent field is provided during the creation of a model"""
