@@ -1,0 +1,1 @@
+mock-firestore==0.2.0
