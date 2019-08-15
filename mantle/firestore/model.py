@@ -1,7 +1,7 @@
 from google.cloud.firestore import Client
 from google.cloud.firestore import DocumentReference
 from mantle.firestore.errors import SubCollectionError
-from mantle.db import InvalidPropertyError, ReferencePropertyError, Property, ReferenceProperty
+from mantle.firestore.db import InvalidPropertyError, ReferencePropertyError, Property, ReferenceProperty
 from mantle.firestore.query import Query
 
 
@@ -32,47 +32,28 @@ class Model(object):
     """
 
     __database_props__ = (None, None, None)
-    __sub_collection__ = None
 
-    def __init__(self, __parent__: 'Model' = None, **data):
+    def __init__(self, **data):
         if type(self) is Model:
             raise Exception("You must extend Model")
         self.__setup_fields()
         self.__model_name = type(self).__name__
         client = self.__init_client()
-        self.__collection = client.collection(self.__collection_path(__parent__))
+        self.__collection = client.collection(self.__collection_path())
         self.id = None
         if "id" in data:
             self.id = data.pop("id")
         for key, value in data.items():
             if key in self.__fields:
                 field = self.__fields[key]
-                if isinstance(field, ReferenceProperty) and isinstance(value, DocumentReference):
-                    data = value.get()
-                    _id = value.id
-                    value = field.model(__parent__=__parent__, id=_id, **data.to_dict())
+                value = field.__get_user_value__(value)
                 setattr(self, key, value)
             else:
                 raise InvalidPropertyError(key, self.__model_name)
 
     @classmethod
-    def __collection_path(cls, __parent__):
-        sub_collection = cls.__sub_collection__
-        if not sub_collection:
-            if __parent__:
-                raise Exception("__parent__ provided in a model that doesn't provide a subcollection")
-            return cls.__name__
-        if isinstance(sub_collection, str):  # In this case the subcollection is just a path
-            return sub_collection + "/" + cls.__name__
-        if not issubclass(sub_collection, Model):
-            raise SubCollectionError("`__sub_collection__` must return a subclass of `Model`")
-        if not __parent__:  # We need to have a parent model to compare the subclass to
-            raise SubCollectionError("Variable `__parent__` is required to initialize a sub-collection")
-        # We expect the parent to be an instance of the model returned
-        if not isinstance(__parent__, sub_collection):
-            raise SubCollectionError("The __parent__ of a subcollection must be of the same instance as "
-                                     "the return of `__sub_collection__`")
-        return __parent__._reference_path() + "/" + cls.__name__
+    def __collection_path(cls):
+        return cls.__name__
 
     def __document__(self):
         if not self.id:
@@ -101,17 +82,6 @@ class Model(object):
                 continue
             value = getattr(self, attribute)
             if isinstance(value, Property):
-                if isinstance(value, ReferenceProperty):
-                    sub_c = value.model.__sub_collection__
-                    if sub_c and issubclass(sub_c, Model):
-                        if not self.__sub_collection__:
-                            raise ReferencePropertyError("Reference fields must belong to the same parent as the model, "
-                                                      "they therefore must have the same __sub_collection__, %s"
-                                                      "does not define a __sub_collection__" % type(self).__name__)
-                        if self.__sub_collection__ != sub_c:
-                            raise ReferencePropertyError("Reference fields must belong to the same parent as the model, "
-                                                      "they therefore must have the same __sub_collection__")
-
                 value.name = attribute
                 self.__fields[attribute] = value
                 setattr(self, attribute, value.default)
@@ -121,7 +91,7 @@ class Model(object):
         values = dict()
         for key, field in self.__fields.items():
             value = getattr(self, key)
-            values[key] = field.validate(value)
+            values[key] = field.__get_base_value__(value)
         return values
 
     def put(self):
@@ -144,6 +114,19 @@ class Model(object):
             self.__collection.document(self.id).delete()
 
     @classmethod
+    def __get_user_data__(cls, base_data):
+        user_data = dict()
+        for name in dir(cls):
+            prop = getattr(cls, name)
+            if not isinstance(prop, Property):
+                continue
+            if name in base_data:
+                user_data[name] = prop.__get_user_value__(base_data.get(name))
+            else:
+                user_data[name] = prop.default
+        return user_data
+
+    @classmethod
     def get(cls, _id, __parent__=None):
         """
         Get a model with the given id
@@ -161,21 +144,19 @@ class Model(object):
         data = document.get()
         if not data.exists:
             return None
-        return cls(__parent__=__parent__, id=_id, **data.to_dict())
+        user_data = cls.__get_user_data__(data.to_dict())
+        return cls(id=_id, **user_data)
 
     @classmethod
-    def query(cls, offset=0, limit=0, __parent__=None):
+    def query(cls, offset=0, limit=0):
         """
         Create a query to this model
 
         Args:
             offset (int): The position in the database where the results begin
             limit (int): Maximum number of records to return
-            __parent__ (Model): If querying a sub collection of model, provide the parent instance
 
         Returns:
             An iterable query object
         """
-        path = cls.__collection_path(__parent__)
-        collection = cls.__init_client().collection(path)
-        return Query(cls, offset, limit, collection, __parent__)
+        return Query(cls, offset, limit)
