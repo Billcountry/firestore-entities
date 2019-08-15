@@ -1,7 +1,5 @@
 import unittest
-from mantle import db
-from mantle.firestore import Model
-
+from mantle.firestore import Model, db
 
 """
 A group meet ups organizing app that allow users add meetups and to RSVP to meetups
