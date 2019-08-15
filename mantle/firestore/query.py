@@ -1,5 +1,5 @@
 from google.cloud.firestore import Query as FSQuery
-from mantle.db import MalformedQueryError, ListProperty
+from mantle.firestore.db import MalformedQueryError, ListProperty
 
 
 class Query(object):
@@ -9,20 +9,26 @@ class Query(object):
     :class:`Model`
     """
 
-    def __init__(self, model, offset: int, limit: int, collection, parent):
-        self.__query = collection
-        self.parent = parent
+    def __init__(self, entity, offset: int, limit: int):
+        """Initialize a query
+
+        Args:
+            entity: The entity you want to query
+            offset: The position to begin the query results
+            limit: Maximum number of results to return
+        """
+        self.__query = entity.__init_client().collection(entity.__collection_path())
         if offset:
             self.__query = self.__query.offset(offset)
         if limit:
             self.__query = self.__query.limit(limit)
         self.__fetched = False
-        self.__model = model
+        self.__entity = entity
         self.__array_contains_queries = 0
         self.__range_filter_queries = {}
 
     def __validate_value(self, field_name, value):
-        field = getattr(self.__model, field_name)
+        field = getattr(self.__entity, field_name)
         return field.validate(value)
 
     def __add_range_filter(self, field):
@@ -118,7 +124,7 @@ class Query(object):
             MalformedQueryError: If the field specified is not a ListField, or
                the query has more than one contains condition
         """
-        model_field = getattr(self.__model, field)
+        model_field = getattr(self.__entity, field)
 
         # Don't do a contains condition in an invalid field
         if not isinstance(model_field, ListProperty):
@@ -162,11 +168,12 @@ class Query(object):
         Returns:
             list (Model): A list of models for the found results
         """
-        return [model for model in self]
+        return [entity for entity in self]
 
     def __next__(self):
         # Fetch data from db if not already done
         if not self.__fetched:
             self.__fetch()
         doc = self.__docs.__next__()
-        return self.__model(__parent__=self.parent, id=doc.id, **doc.to_dict())
+        user_data = self.__model.__get_user_data__(doc.to_dict())
+        return self.__entity(id=doc.id, **user_data)
