@@ -11,30 +11,17 @@ class Property(object):
     """
     A class describing a typed, persisted attribute of a database entity
     """
-    def __init__(self, field_type, default=None, required=False):
+    def __init__(self, default=None, required=False):
         """
         Args:
-            field_type: A type to compare the field value to, e.g. str, int, float
             default: The default value of the field
             required: Enforce the field value to be provided
         """
         if type(self) is Property:
             raise Exception("You must extend Property")
-        self.type = field_type
         self.default = default
         self.required = required
         self.name = None
-
-    def __validate__(self, value):
-        if self.required and self.default is None and value is None:
-            raise InvalidValueError(self, value)
-        # Assign a default value if None is provided
-        if value is None:
-            value = self.default
-
-        if not isinstance(value, self.type) and value is not None:
-            raise InvalidValueError(self, value)
-        return value
 
     def __get_user_value__(self, base_value):
         """
@@ -56,17 +43,33 @@ class Property(object):
         """
         raise NotImplementedError
 
+    def __type_check__(self, user_value, data_types):
+        """
+        Check whether this value has the right data type
+        Args:
+            user_value: The user_value you want to confirm
+            data_types: Type/Types to check against
+
+        Returns:
+            Any
+        """
+        if self.required and self.default is None and user_value is None:
+            raise InvalidValueError(self, user_value)
+        # Assign a default value if None is provided
+        if user_value is None:
+            user_value = self.default
+
+        if not isinstance(user_value, data_types) and user_value is not None:
+            raise InvalidValueError(self, user_value)
+        return user_value
+
 
 class TextProperty(Property):
     """An Property whose value is a text string of unlimited length.
     I'ts not advisable to index this property
     """
-    def __init__(self, default=None, required=False):
-        super(TextProperty, self).__init__(str, default=default, required=required)
-
     def __get_base_value__(self, user_value):
-        user_value = self.__validate__(user_value)
-        return user_value
+        return self.__type_check__(user_value, str)
 
     def __get_user_value__(self, base_value):
         return base_value
@@ -74,33 +77,45 @@ class TextProperty(Property):
 
 class IntegerProperty(Property):
     """This field stores a 64-bit signed integer"""
-    def __init__(self, default=None, required=False):
-        super(IntegerProperty, self).__init__(int, default=default, required=required)
+    def __get_base_value__(self, user_value):
+        return self.__type_check__(user_value, int)
+
+    def __get_user_value__(self, base_value):
+        return base_value
 
 
 class FloatingPointNumberProperty(Property):
     """Stores a 64-bit double precision floating number"""
-    def __init__(self, default=None, required=False):
-        super(FloatingPointNumberProperty, self).__init__((float, int), default=default, required=required)
+    def __get_base_value__(self, user_value: float):
+        user_value = self.__type_check__(user_value, (int, float))
+        return user_value
+
+    def __get_user_value__(self, base_value):
+        return base_value
 
 
 class BytesProperty(Property):
     """Stores values as bytes, can be used to save a blob"""
-    def __init__(self, default=None, required=False):
-        super(BytesProperty, self).__init__(bytes, default=default, required=required)
+    def __get_base_value__(self, user_value):
+        return self.__type_check__(user_value, (bytes, bytearray))
+
+    def __get_user_value__(self, base_value):
+        return base_value
 
 
 class ListProperty(Property, list):
     """A List field"""
-    def __init__(self, field_type):
+    def __init__(self, field_type: Property):
         super(ListProperty, self).__init__(list, default=[])
         self.field_type = field_type
 
-    def validate(self, value):
-        value = super(ListProperty, self).validate(value)
-        for item in value:
-            self.field_type.validate(item)
-        return value
+    def __get_base_value__(self, user_value: list):
+        user_value = self.__type_check__(user_value, (list))
+        user_value = [self.field_type.__get_base_value__(value) for value in user_value]
+        return user_value
+
+    def __get_user_value__(self, base_value):
+        return base_value
 
 
 class ReferenceProperty(Property):
@@ -109,25 +124,24 @@ class ReferenceProperty(Property):
 
     Args:
         model Type(Model): The model at which this field will be referencing
-            NOTE:
-                A referenced model must meet one of the following:
-                    1. In the same subcollection as the current model
-                    2. In a static subcollection defined by a string path
-                    3. At the to level of the database
-        required (bool): Enforce that this model not store empty data
+        required (bool): Enforce that this entity not store empty data
     """
-    def __init__(self, model, required=False):
+    def __init__(self, entity, required=False):
         from mantle.firestore import Model
-        if not issubclass(model, Model):
+        if not issubclass(entity, Model):
             raise ReferencePropertyError("A reference field must reference another model")
-        super(ReferenceProperty, self).__init__(model, required=required)
-        self.model = model
+        super(ReferenceProperty, self).__init__(entity, required=required)
+        self.entity = entity
 
-    def validate(self, value):
-        value = super(ReferenceProperty, self).validate(value)
-        if not value:
-            return
-        return value.__document__()
+    def __get_base_value__(self, user_value):
+        user_value = self.__type_check__(user_value, (self.entity))
+        return user_value.__document__()
+
+    def __get_user_value__(self, base_value):
+        if not base_value:
+            return None
+        user_data = self.entity.__get_user_data__(base_value.get().todict())
+        return self.entity(id=base_value.id, **user_data)
 
 
 class DictProperty(Property):
@@ -136,31 +150,39 @@ class DictProperty(Property):
 
     The value of this field can be a dict or a valid json string. The string will be converted to a dict
     """
-    def __init__(self, required=False, default=None):
-        super(DictProperty, self).__init__(dict, required=required, default=default)
+    def __init__(self, required=False):
+        super(DictProperty, self).__init__(required=required, default={})
 
-    def validate(self, value):
-        # Accept valid JSON as a value
-        if isinstance(value, str) and value:
-            try:
-                value = json.loads(value)
-            except json.JSONDecodeError:
-                raise InvalidValueError(self, value)
-        value = super(DictProperty, self).validate(value)
-        if not value:
-            return value
-        # This will raise any errors if the data is not convertible to valid JSON
-        try:
-            json.dumps(value)
-        except TypeError:
-            raise InvalidValueError(self, value)
-        return value
+    def __get_base_value__(self, user_value):
+        if self.required and self.default is None and user_value is None:
+            raise InvalidValueError(self, user_value)
+        # Assign a default value if None is provided
+        if user_value is None:
+            user_value = self.default
+
+        if not isinstance(user_value, (dict, list)) and user_value is not None:
+            raise InvalidValueError(self, user_value)
+        return user_value
+
+    def __get_user_value__(self, base_value):
+        return base_value
 
 
 class BooleanProperty(Property):
     """A boolean field, holds True or False"""
-    def __init__(self, default=None, required=False):
-        super(BooleanProperty, self).__init__(bool, default=default, required=required)
+    def __get_base_value__(self, user_value):
+        if self.required and self.default is None and user_value is None:
+            raise InvalidValueError(self, user_value)
+        # Assign a default value if None is provided
+        if user_value is None:
+            user_value = self.default
+
+        if not isinstance(user_value, bool) and user_value is not None:
+            raise InvalidValueError(self, user_value)
+        return user_value
+
+    def __get_user_value__(self, base_value):
+        return base_value
 
 
 class DateTimeProperty(Property):
@@ -179,13 +201,19 @@ class DateTimeProperty(Property):
         super(DateTimeProperty, self).__init__((datetime, date), default=default, required=required)
         self.auto_now = auto_now
 
-    def validate(self, value):
+    def __get_base_value__(self, user_value):
         # Return server timestamp as the value
-        if value == SERVER_TIMESTAMP or self.auto_now:
+        if user_value == SERVER_TIMESTAMP or self.auto_now:
             return SERVER_TIMESTAMP
-        if value is None and self.default == SERVER_TIMESTAMP:
+        if user_value is None and self.default == SERVER_TIMESTAMP:
             return SERVER_TIMESTAMP
-        return super(DateTimeProperty, self).validate(value)
+        if self.required and self.default is None and user_value is None:
+            raise InvalidValueError(self, user_value)
+        if user_value is None:
+            user_value = self.default
+        if not isinstance(user_value, bool) and user_value is not None:
+            raise InvalidValueError(self, user_value)
+        return user_value
 
 
 class InvalidValueError(ValueError):
