@@ -8,7 +8,16 @@ from google.cloud.firestore import SERVER_TIMESTAMP
 
 
 class Property(object):
+    """
+    A class describing a typed, persisted attribute of a database entity
+    """
     def __init__(self, field_type, default=None, required=False):
+        """
+        Args:
+            field_type: A type to compare the field value to, e.g. str, int, float
+            default: The default value of the field
+            required: Enforce the field value to be provided
+        """
         if type(self) is Property:
             raise Exception("You must extend Property")
         self.type = field_type
@@ -16,7 +25,7 @@ class Property(object):
         self.required = required
         self.name = None
 
-    def validate(self, value):
+    def _validate(self, value):
         if self.required and self.default is None and value is None:
             raise InvalidValueError(self, value)
         # Assign a default value if None is provided
@@ -27,14 +36,33 @@ class Property(object):
             raise InvalidValueError(self, value)
         return value
 
+    def __get_user_value__(self, base_value):
+        """
+        Convert value from database to a value usable by the user
+        Args:
+            base_value: The current value from db
+
+        Returns:
+            user_value expected to be of the specified type
+        """
+        raise NotImplementedError
+
+    def __get_base_value__(self, value):
+        """
+        Convert value to database acceptable format
+        Args
+        :param value: Current user_value
+        :return: base_value
+        """
+        raise NotImplementedError
+
 
 class TextProperty(Property):
+    """An Property whose value is a text string of unlimited length.
+    I'ts not advisable to index this property
     """
-    A string field
-    """
-    def __init__(self, default=None, length=None, required=False):
+    def __init__(self, default=None, required=False):
         super(TextProperty, self).__init__(str, default=default, required=required)
-        self.length = length
 
     def validate(self, value):
         value = super(TextProperty, self).validate(value)
