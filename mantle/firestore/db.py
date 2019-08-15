@@ -106,7 +106,7 @@ class BytesProperty(Property):
 class ListProperty(Property, list):
     """A List field"""
     def __init__(self, field_type: Property):
-        super(ListProperty, self).__init__(list, default=[])
+        super(ListProperty, self).__init__(default=[])
         self.field_type = field_type
 
     def __get_base_value__(self, user_value: list):
@@ -130,7 +130,7 @@ class ReferenceProperty(Property):
         from mantle.firestore import Model
         if not issubclass(entity, Model):
             raise ReferencePropertyError("A reference field must reference another model")
-        super(ReferenceProperty, self).__init__(entity, required=required)
+        super(ReferenceProperty, self).__init__(required=required)
         self.entity = entity
 
     def __get_base_value__(self, user_value):
@@ -171,15 +171,7 @@ class DictProperty(Property):
 class BooleanProperty(Property):
     """A boolean field, holds True or False"""
     def __get_base_value__(self, user_value):
-        if self.required and self.default is None and user_value is None:
-            raise InvalidValueError(self, user_value)
-        # Assign a default value if None is provided
-        if user_value is None:
-            user_value = self.default
-
-        if not isinstance(user_value, bool) and user_value is not None:
-            raise InvalidValueError(self, user_value)
-        return user_value
+        return self.__type_check__(user_value, bool)
 
     def __get_user_value__(self, base_value):
         return base_value
@@ -198,7 +190,7 @@ class DateTimeProperty(Property):
     def __init__(self, default=None, required=False, auto_now=False, auto_add_now=False):
         if not default and auto_add_now:
             default = SERVER_TIMESTAMP
-        super(DateTimeProperty, self).__init__((datetime, date), default=default, required=required)
+        super(DateTimeProperty, self).__init__(default=default, required=required)
         self.auto_now = auto_now
 
     def __get_base_value__(self, user_value):
@@ -207,13 +199,10 @@ class DateTimeProperty(Property):
             return SERVER_TIMESTAMP
         if user_value is None and self.default == SERVER_TIMESTAMP:
             return SERVER_TIMESTAMP
-        if self.required and self.default is None and user_value is None:
-            raise InvalidValueError(self, user_value)
-        if user_value is None:
-            user_value = self.default
-        if not isinstance(user_value, bool) and user_value is not None:
-            raise InvalidValueError(self, user_value)
-        return user_value
+        return self.__type_check__(user_value, datetime)
+
+    def __get_user_value__(self, base_value):
+        return base_value
 
 
 class InvalidValueError(ValueError):
