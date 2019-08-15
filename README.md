@@ -19,8 +19,7 @@ Assume a case of mantle.studio where a user can have
 - Have an account in each project
 """
 
-from mantle.firestore import Model, SERVER_TIMESTAMP
-from mantle import db
+from mantle.firestore import Model, SERVER_TIMESTAMP, db
 
 class User(Model):
     user_name = db.TextProperty(length=16, required=True)
