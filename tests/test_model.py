@@ -17,8 +17,8 @@ class User(Model):
 class Group(Model):
     """A group is created by a user and can be invite only or public"""
     name = db.TextProperty()
-    description = db.TextProperty(length=400)
-    creator = db.ReferenceProperty(model=User)
+    description = db.TextProperty()
+    creator = db.ReferenceProperty(entity=User)
     date_created = db.DateTimeProperty(auto_add_now=True)
     last_update = db.DateTimeProperty(auto_now=True)
     public_group = db.BooleanProperty(default=True)
@@ -26,17 +26,15 @@ class Group(Model):
 
 class Account(Model):
     """An account exists in a group, belongs to a user"""
-    __sub_collection__ = Group
-    user = db.ReferenceProperty(model=User)
+    user = db.ReferenceProperty(entity=User)
     roles = db.ListProperty(field_type=db.TextProperty(required=True))
     date_joined = db.DateTimeProperty(auto_add_now=True)
 
 
 class Meetup(Model):
     """Meetups that are only open and accessible to members of a group"""
-    __sub_collection__ = Group
     organizer = db.ReferenceProperty(Account, required=True)  # This Account must belong to the same group
-    title = db.TextProperty(length=200)
+    title = db.TextProperty()
     description = db.TextProperty()
     date_created = db.DateTimeProperty(auto_add_now=True)
     meetup_date = db.DateTimeProperty()
@@ -51,20 +49,19 @@ class RSVP(Model):
 
 class Conversation(Model):
     """Conversations between users"""
-    users = db.ListProperty(field_type=db.ReferenceProperty(model=User, required=True))
+    users = db.ListProperty(field_type=db.ReferenceProperty(entity=User, required=True))
     start_time = db.DateTimeProperty(auto_add_now=True)
     last_update = db.DateTimeProperty(auto_now=True)
 
     def send_message(self, user, text):
         if user not in self.users:
             raise Exception("User must be in a conversation to send a message")
-        message = MessageLog(__parent__=self, sender=user, message=text)
+        message = MessageLog(sender=user, message=text)
         message.put()
 
 
 class MessageLog(Model):
     """Actual messages between users in a conversation"""
-    __sub_collection__ = Conversation
     sender = db.ReferenceProperty(User, required=True)
     message = db.TextProperty()
     date_sent = db.DateTimeProperty(auto_add_now=True)
