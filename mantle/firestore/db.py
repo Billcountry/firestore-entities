@@ -25,7 +25,7 @@ class Property(object):
         self.required = required
         self.name = None
 
-    def _validate(self, value):
+    def __validate__(self, value):
         if self.required and self.default is None and value is None:
             raise InvalidValueError(self, value)
         # Assign a default value if None is provided
@@ -47,11 +47,11 @@ class Property(object):
         """
         raise NotImplementedError
 
-    def __get_base_value__(self, value):
+    def __get_base_value__(self, user_value):
         """
         Convert value to database acceptable format
         Args
-        :param value: Current user_value
+        :param user_value: Current user_value
         :return: base_value
         """
         raise NotImplementedError
@@ -64,11 +64,12 @@ class TextProperty(Property):
     def __init__(self, default=None, required=False):
         super(TextProperty, self).__init__(str, default=default, required=required)
 
-    def validate(self, value):
-        value = super(TextProperty, self).validate(value)
-        if self.length and value is not None and len(value) > self.length:
-            raise InvalidValueError(self, value)
-        return value
+    def __get_base_value__(self, user_value):
+        user_value = self.__validate__(user_value)
+        return user_value
+
+    def __get_user_value__(self, base_value):
+        return base_value
 
 
 class IntegerProperty(Property):
