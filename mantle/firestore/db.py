@@ -1,5 +1,5 @@
 """
-This is a collection of tools used by mantle Database packages, the include field types and common errors
+This is a collection of tools used by mantle Database packages, the include property types and common errors
 """
 
 import json
@@ -15,8 +15,8 @@ class Property(object):
     def __init__(self, default=None, required=False):
         """
         Args:
-            default: The default value of the field
-            required: Enforce the field value to be provided
+            default: The default value of the property
+            required: Enforce the property value to be provided
         """
         if type(self) is Property:
             raise Exception("You must extend Property")
@@ -131,14 +131,14 @@ class BlobProperty(Property):
 
 
 class ListProperty(Property, list):
-    """A List field"""
-    def __init__(self, field_type: Property):
+    """A List property"""
+    def __init__(self, property_type: Property):
         super(ListProperty, self).__init__(default=[])
-        self.field_type = field_type
+        self.property_type = property_type
 
     def __get_base_value__(self, user_value: list):
         user_value = self.__type_check__(user_value, (list))
-        user_value = [self.field_type.__get_base_value__(value) for value in user_value]
+        user_value = [self.property_type.__get_base_value__(value) for value in user_value]
         return user_value
 
     def __get_user_value__(self, base_value):
@@ -147,16 +147,16 @@ class ListProperty(Property, list):
 
 class ReferenceProperty(Property):
     """
-    A field referencing/pointing to another model.
+    A property referencing/pointing to another model.
 
     Args:
-        model Type(Model): The model at which this field will be referencing
+        model Type(Model): The model at which this property will be referencing
         required (bool): Enforce that this entity not store empty data
     """
     def __init__(self, entity, required=False):
         from mantle.firestore import Model
         if not issubclass(entity, Model):
-            raise ReferencePropertyError("A reference field must reference another model")
+            raise ReferencePropertyError("A reference property must reference another model")
         super(ReferenceProperty, self).__init__(required=required)
         self.entity = entity
 
@@ -204,7 +204,7 @@ class DateTimeProperty(Property):
     Note: auto_now_add can be overridden by setting the value before writing the entity.
     Args:
         default (datetime)
-        required (bool): Enforce that this field can't be submitted when empty
+        required (bool): Enforce that this property can't be submitted when empty
         auto_now (bool): Set to the current time every time the model is updated
         auto_add_now (bool): Set to the current time when a record is created
     """
@@ -231,7 +231,7 @@ class DateProperty(Property):
 
     Args:
         default (datetime): The default value for this property
-        required (bool): Enforce that this field can't be submitted when empty
+        required (bool): Enforce that this property can't be submitted when empty
         auto_add_now (bool): Set to the current date when a record is created
     """
     def __init__(self, default=None, required=False, auto_add_now=False):
@@ -266,15 +266,15 @@ class PickledProperty(Property):
 
 
 class InvalidValueError(ValueError):
-    """Raised if the value of a field does not fit the field type"""
+    """Raised if the value of a property does not fit the property type"""
 
-    def __init__(self, field, value):
-        self.field = field
+    def __init__(self, property, value):
+        self.property = property
         self.value = value
 
     def __str__(self):
-        return "%s is not a valid value for field %s of type %s" % \
-               (self.value, self.field.name, type(self.field).__name__)
+        return "%s is not a valid value for property %s of type %s" % \
+               (self.value, self.property.name, type(self.property).__name__)
 
 
 class MalformedQueryError(Exception):
@@ -288,7 +288,7 @@ class MalformedQueryError(Exception):
 
 
 class InvalidPropertyError(Exception):
-    """Raised if a non-existent field is provided during the creation of a model"""
+    """Raised if a non-existent property is provided during the creation of a model"""
 
     def __init__(self, prop_name, model_name):
         self.prop_name = prop_name
@@ -299,7 +299,7 @@ class InvalidPropertyError(Exception):
 
 
 class ReferencePropertyError(Exception):
-    """Raised when a reference field point's to a location the model can't resolve"""
+    """Raised when a reference property point's to a location the model can't resolve"""
     def __init__(self, message):
         self.message = message
 

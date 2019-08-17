@@ -11,7 +11,7 @@ class Model(object):
     Args:
         __parent__ Optional(Model.__class__): If this is a sub-collection of another model,
             give an instance of the parent
-        **data (kwargs): Values for fields in the new record, e.g User(name="Bob")
+        **data (kwargs): Values for propertys in the new record, e.g User(name="Bob")
 
     Attributes:
         id (str or int): Unique id identifying this record,
@@ -36,7 +36,7 @@ class Model(object):
     def __init__(self, **data):
         if type(self) is Model:
             raise Exception("You must extend Model")
-        self.__setup_fields()
+        self.__setup_propertys()
         self.__model_name = type(self).__name__
         client = self.__init_client()
         self.__collection = client.collection(self.__collection_path())
@@ -44,9 +44,9 @@ class Model(object):
         if "id" in data:
             self.id = data.pop("id")
         for key, value in data.items():
-            if key in self.__fields:
-                field = self.__fields[key]
-                value = field.__get_user_value__(value)
+            if key in self.__propertys:
+                property = self.__propertys[key]
+                value = property.__get_user_value__(value)
                 setattr(self, key, value)
             else:
                 raise InvalidPropertyError(key, self.__model_name)
@@ -74,24 +74,24 @@ class Model(object):
     def __str__(self):
         return "<Model %s>" % self.__model_name
 
-    def __setup_fields(self):
-        # Get defined fields, equate them to their defaults
-        self.__fields = dict()
+    def __setup_propertys(self):
+        # Get defined propertys, equate them to their defaults
+        self.__propertys = dict()
         for attribute in dir(self):
             if attribute.startswith("_"):
                 continue
             value = getattr(self, attribute)
             if isinstance(value, Property):
                 value.name = attribute
-                self.__fields[attribute] = value
+                self.__propertys[attribute] = value
                 setattr(self, attribute, value.default)
 
     def __prepare(self):
-        # Find current field values and validate them
+        # Find current property values and validate them
         values = dict()
-        for key, field in self.__fields.items():
+        for key, property in self.__propertys.items():
             value = getattr(self, key)
-            values[key] = field.__get_base_value__(value)
+            values[key] = property.__get_base_value__(value)
         return values
 
     def put(self):
@@ -99,7 +99,7 @@ class Model(object):
         Save the models data to Firestore
 
         Raises:
-            InvalidValueError: Raised if the value of a field is invalid, e.g. A required field that's None
+            InvalidValueError: Raised if the value of a property is invalid, e.g. A required property that's None
         """
         data = self.__prepare()
         if self.id:

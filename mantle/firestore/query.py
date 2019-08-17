@@ -27,122 +27,122 @@ class Query(object):
         self.__array_contains_queries = 0
         self.__range_filter_queries = {}
 
-    def __validate_value(self, field_name, value):
-        field = getattr(self.__entity, field_name)
-        return field.validate(value)
+    def __validate_value(self, property_name, value):
+        property = getattr(self.__entity, property_name)
+        return property.validate(value)
 
-    def __add_range_filter(self, field):
-        self.__range_filter_queries[field] = True
+    def __add_range_filter(self, property):
+        self.__range_filter_queries[property] = True
 
-        # Range filter queries are only allowed on a single field at any given time
+        # Range filter queries are only allowed on a single property at any given time
         if len(self.__range_filter_queries.keys()) > 1:
             raise MalformedQueryError("Range filter queries i.e (<), (>), (<=) and (>=) "
-                                      "can only be performed on a single field in a query")
+                                      "can only be performed on a single property in a query")
 
-    def equal(self, field, value):
+    def equal(self, property, value):
         """
-        A query condition where field == value
+        A query condition where property == value
 
         Args:
-             field (str): The name of a field to compare
-             value (Any): The value to compare from the field
+             property (str): The name of a property to compare
+             value (Any): The value to compare from the property
 
         Returns:
             Query: A query object with this condition added
         """
-        self.__query = self.__query.where(field, "==", self.__validate_value(field, value))
+        self.__query = self.__query.where(property, "==", self.__validate_value(property, value))
         return self
 
-    def greater_than(self, field, value):
+    def greater_than(self, property, value):
         """
-        A query condition where field > value
+        A query condition where property > value
 
         Args:
-             field (str): The name of a field to compare
-             value (Any): The value to compare from the field
+             property (str): The name of a property to compare
+             value (Any): The value to compare from the property
 
         Returns:
             Query: A query object with this condition added
         """
-        self.__add_range_filter(field)
-        self.__query = self.__query.where(field, ">", self.__validate_value(field, value))
+        self.__add_range_filter(property)
+        self.__query = self.__query.where(property, ">", self.__validate_value(property, value))
 
-    def less_than(self, field, value):
+    def less_than(self, property, value):
         """
-        A query condition where field < value
+        A query condition where property < value
 
         Args:
-             field (str): The name of a field to compare
-             value (Any): The value to compare from the field
+             property (str): The name of a property to compare
+             value (Any): The value to compare from the property
 
         Returns:
             Query: A query object with this condition added
         """
-        self.__add_range_filter(field)
-        self.__query = self.__query.where(field, "<", self.__validate_value(field, value))
+        self.__add_range_filter(property)
+        self.__query = self.__query.where(property, "<", self.__validate_value(property, value))
 
-    def greater_than_or_equal(self, field, value):
+    def greater_than_or_equal(self, property, value):
         """
-        A query condition where field >= value
+        A query condition where property >= value
 
         Args:
-             field (str): The name of a field to compare
-             value (Any): The value to compare from the field
+             property (str): The name of a property to compare
+             value (Any): The value to compare from the property
 
         Returns:
             Query: A query object with this condition added
         """
-        self.__add_range_filter(field)
-        self.__query = self.__query.where(field, ">=", self.__validate_value(field, value))
+        self.__add_range_filter(property)
+        self.__query = self.__query.where(property, ">=", self.__validate_value(property, value))
 
-    def less_than_or_equal(self, field, value):
+    def less_than_or_equal(self, property, value):
         """
-        A query condition where field <= value
+        A query condition where property <= value
 
         Args:
-             field (str): The name of a field to compare
-             value (Any): The value to compare from the field
+             property (str): The name of a property to compare
+             value (Any): The value to compare from the property
 
         Returns:
             Query: A query object with this condition added
         """
-        self.__add_range_filter(field)
-        self.__query = self.__query.where(field, "<=", self.__validate_value(field, value))
+        self.__add_range_filter(property)
+        self.__query = self.__query.where(property, "<=", self.__validate_value(property, value))
 
-    def contains(self, field, value):
+    def contains(self, property, value):
         """
-        A query condition where `value in field`
+        A query condition where `value in property`
 
         Args:
-             field (str): The name of a field to compare
-             value (Any): The value to compare from the field
+             property (str): The name of a property to compare
+             value (Any): The value to compare from the property
 
         Returns:
             Query: A query object with this condition added
 
         Raises:
-            MalformedQueryError: If the field specified is not a ListField, or
+            MalformedQueryError: If the property specified is not a ListField, or
                the query has more than one contains condition
         """
-        model_field = getattr(self.__entity, field)
+        model_property = getattr(self.__entity, property)
 
-        # Don't do a contains condition in an invalid field
-        if not isinstance(model_field, ListProperty):
-            raise MalformedQueryError("Invalid field %s, query field for contains must be a list" % field)
+        # Don't do a contains condition in an invalid property
+        if not isinstance(model_property, ListProperty):
+            raise MalformedQueryError("Invalid property %s, query property for contains must be a list" % property)
 
         # Make sure there's only on `array_contains` condition
         self.__array_contains_queries += 1
         if self.__array_contains_queries > 1:
             raise MalformedQueryError("Only one `contains` clause is allowed per query")
-        self.__query = self.__query.where(field, "array_contains", value)
+        self.__query = self.__query.where(property, "array_contains", value)
         return self
 
-    def order_by(self, field, direction="ASC"):
+    def order_by(self, property, direction="ASC"):
         """
         Set an order for the query, accepts
 
         Args:
-            field (str): The field name to order by
+            property (str): The property name to order by
             direction (str: "ASC" or "DESC"), optional:
 
         Returns:
@@ -151,7 +151,7 @@ class Query(object):
         if direction is not "ASC" and direction is not "DESC":
             raise MalformedQueryError("order_by direction can only be ASC, or DESC")
         direction = FSQuery.ASCENDING if direction is "ASC" else FSQuery.DESCENDING
-        self.__query = self.__query.order_by(field, direction=direction)
+        self.__query = self.__query.order_by(property, direction=direction)
         return self
 
     def __fetch(self):
