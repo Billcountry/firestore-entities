@@ -1,37 +1,18 @@
 from google.cloud.firestore import Client
-from google.cloud.firestore import DocumentReference
-from mantle.firestore.errors import SubCollectionError
-from mantle.firestore.db import InvalidPropertyError, ReferencePropertyError, Property, ReferenceProperty
+from mantle.firestore.db import InvalidPropertyError, Property
 from mantle.firestore.query import Query
 
 
 class Entity(object):
-    """Creates a firestore document under the collection [YourModel]
+    """Creates a firestore document under the collection [YourEntity]
 
     Args:
-        __parent__ Optional(Model.__class__): If this is a sub-collection of another model,
-            give an instance of the parent
-        **data (kwargs): Values for propertys in the new record, e.g User(name="Bob")
+        **data (kwargs): Values for properties in the new record, e.g User(name="Bob")
 
     Attributes:
         id (str or int): Unique id identifying this record,
             if auto-generated, this is not available before `put()`
-
-        __sub_collection__ (str of Model)(Optional class attribute):
-                1: A :class:`~Model` class where each document in this
-                    model is a sub-collection of a record in the returned
-                    :class:`~Model`. e.g If you have a `User` model and each `User`
-                    has a collection of `Notes`. The model `Notes` would return `User`
-                2: A path representing a collection if you don't want your Model to be on the root of the current
-                    database, e.g In a shared database: `sales`
-
-        __database_props__ Tuple(Project, Credentials, database): A tuple of `Project`, `Credentials` and `database` in
-            that order
-            provide these values if you are not working on App Engine environment or any other case where you need to
-            the `Project`, `Credentials` and the `database` that the model is going to use
     """
-
-    __database_props__ = (None, None, None)
 
     def __init__(self, **data):
         if type(self) is Entity:
@@ -60,12 +41,6 @@ class Entity(object):
             return None
         # Get's the absolute path: `projects/{project_id}/databases/{database_id}/documents/{document_path}
         return self.__collection.document(self.id)
-
-    def _reference_path(self):
-        if not self.id:
-            return None
-        # Get's the reference relative to the database
-        return self.__collection.document(self.id).path()
 
     @classmethod
     def __init_client(cls):
