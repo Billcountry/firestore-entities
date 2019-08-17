@@ -2,7 +2,7 @@ import unittest
 from mantle.firestore import Entity, db
 
 """
-A group meet ups organizing app that allow users add meetups and to RSVP to meetups
+A small chat application with conservations support.
 """
 
 
@@ -34,7 +34,7 @@ class MessageLog(Entity):
     date_sent = db.DateTimeProperty(auto_add_now=True)
 
 
-class ModelTestCases(unittest.TestCase):
+class EntitiesTestCases(unittest.TestCase):
     def setUp(self):
         class John:
             name = "John Doe"
@@ -46,15 +46,22 @@ class ModelTestCases(unittest.TestCase):
             email = "jane@doe.fam"
             password = "StewPidJohn"
 
-        self.john = John
-        self.jane = Jane
+        self.john = User(name=Jane.name, email=Jane.email, password=Jane.password)
+        self.jane = User(name=John.name, email=John.email, password=John.password)
 
-    def test_reference_field(self):
-        jane = User(name=self.jane.name, email=self.jane.email, password=self.jane.password)
-        john = User(name=self.john.name, email=self.john.email, password=self.john.password)
+    def test_model_ops(self):
+        pass
 
-    def test_model_initialization(self):
-        jane = User(name=self.jane.name, email=self.jane.email, password=self.jane.password)
+    def test_reference_property(self):
+        # A model must be saved to referenced
+        ref_property = db.ReferenceProperty(User)
+        self.assertRaises(db.ReferencePropertyError, ref_property.__get_base_value__, self.john)
+        self.john.put()
+        self.assertEqual(ref_property.__get_base_value__(self.john).id, self.john.__document__().id)
+
+    def test_put_and_get(self):
+        self.jane.put()
+        jane = User.get(self.jane.id)
         self.assertEqual(jane.name, self.jane.name)
         self.assertEqual(jane.email, self.jane.email)
         self.assertEqual(jane.password, self.jane.password)
