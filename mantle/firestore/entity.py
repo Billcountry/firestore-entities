@@ -17,7 +17,7 @@ class Entity(object):
     def __init__(self, **data):
         if type(self) is Entity:
             raise Exception("You must extend Model")
-        self.__setup_propertys()
+        self.__setup_properties()
         self.__model_name = type(self).__name__
         client = self.__init_client()
         self.__collection = client.collection(self.__collection_path())
@@ -25,9 +25,7 @@ class Entity(object):
         if "id" in data:
             self.id = data.pop("id")
         for key, value in data.items():
-            if key in self.__propertys:
-                property = self.__propertys[key]
-                value = property.__get_user_value__(value)
+            if key in self.__properties:
                 setattr(self, key, value)
             else:
                 raise InvalidPropertyError(key, self.__model_name)
@@ -49,24 +47,24 @@ class Entity(object):
     def __str__(self):
         return "<Model %s>" % self.__model_name
 
-    def __setup_propertys(self):
-        # Get defined propertys, equate them to their defaults
-        self.__propertys = dict()
+    def __setup_properties(self):
+        # Get defined properties, equate them to their defaults
+        self.__properties = dict()
         for attribute in dir(self):
             if attribute.startswith("_"):
                 continue
             value = getattr(self, attribute)
             if isinstance(value, Property):
                 value.name = attribute
-                self.__propertys[attribute] = value
+                self.__properties[attribute] = value
                 setattr(self, attribute, value.default)
 
     def __prepare(self):
         # Find current property values and validate them
         values = dict()
-        for key, property in self.__propertys.items():
+        for key, prop in self.__properties.items():
             value = getattr(self, key)
-            values[key] = property.__get_base_value__(value)
+            values[key] = prop.__get_base_value__(value)
         return values
 
     def put(self):
@@ -102,20 +100,19 @@ class Entity(object):
         return user_data
 
     @classmethod
-    def get(cls, _id, __parent__=None):
+    def get(cls, _id):
         """
         Get a model with the given id
 
         Args:
             _id (str or int): A key or id of the model record, when a list is provided, `get` returns a list
                 models
-            __parent__ (Entity): If querying a sub collection of model, provide the parent instance
 
         Returns:
-            Entity: An instance of the firestore model calling get
+            Entity: An instance of the firestore entity calling get
             None: If the id provided doesn't exist
         """
-        document = cls.__init_client().collection(cls.__collection_path(__parent__)).document(_id)
+        document = cls.__init_client().collection(cls.__collection_path()).document(_id)
         data = document.get()
         if not data.exists:
             return None
