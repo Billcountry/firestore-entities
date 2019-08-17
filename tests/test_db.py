@@ -63,10 +63,7 @@ class TestProperties(unittest.TestCase):
         self.assertEqual(dt_field.__get_base_value__(None), SERVER_TIMESTAMP)
         # A string is not a date time object
         self.assertRaises(db.InvalidValueError, dt_field.__get_base_value__, "12-may-2019")
-        today = now.date()
-        # A date item is a valid entry
-        self.assertIsInstance(today, date)
-        self.assertEqual(dt_field.__get_base_value__(today), today)
+        self.assertRaises(db.InvalidValueError, dt_field.__get_base_value__, now.date())
         dt_field = db.DateTimeProperty(auto_now=True)
         # This value is always updated to current time stamp on every update
         self.assertEqual(dt_field.__get_base_value__(now), SERVER_TIMESTAMP)
