@@ -17,7 +17,8 @@ class Query(object):
             offset: The position to begin the query results
             limit: Maximum number of results to return
         """
-        self.__query = entity.__init_client().collection(entity.__collection_path())
+        from mantle.firestore.entity import __get_client__
+        self.__query = __get_client__().collection(entity.__collection_path())
         if offset:
             self.__query = self.__query.offset(offset)
         if limit:

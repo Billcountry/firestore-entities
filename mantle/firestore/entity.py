@@ -3,6 +3,14 @@ from mantle.firestore.db import InvalidPropertyError, Property
 from mantle.firestore.query import Query
 
 
+def __get_client__():
+    # There must be a better way to do this, right?
+    import builtins
+    if not hasattr(builtins, "__firestore_client__"):
+        setattr(builtins, "__firestore_client__", Client())
+    return builtins.__firestore_client__
+
+
 class Entity(object):
     """Creates a firestore document under the collection [YourEntity]
 
@@ -19,7 +27,7 @@ class Entity(object):
             raise Exception("You must extend Model")
         self.__setup_properties()
         self.__model_name = type(self).__name__
-        client = self.__init_client()
+        client = __get_client__()
         self.__collection = client.collection(self.__collection_path())
         self.id = None
         if "id" in data:
@@ -39,10 +47,6 @@ class Entity(object):
             return None
         # Get's the absolute path: `projects/{project_id}/databases/{database_id}/documents/{document_path}
         return self.__collection.document(self.id)
-
-    @classmethod
-    def __init_client(cls):
-        return Client()
 
     def __str__(self):
         return "<Model %s>" % self.__model_name
@@ -112,7 +116,7 @@ class Entity(object):
             Entity: An instance of the firestore entity calling get
             None: If the id provided doesn't exist
         """
-        document = cls.__init_client().collection(cls.__collection_path()).document(_id)
+        document = __get_client__().collection(cls.__collection_path()).document(_id)
         data = document.get()
         if not data.exists:
             return None
