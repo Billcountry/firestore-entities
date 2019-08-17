@@ -17,8 +17,9 @@ class Query(object):
             offset: The position to begin the query results
             limit: Maximum number of results to return
         """
+        print(entity)
         from mantle.firestore.entity import __get_client__
-        self.__query = __get_client__().collection(entity.__collection_path())
+        self.__query = __get_client__().collection(entity.__name__)
         if offset:
             self.__query = self.__query.offset(offset)
         if limit:
@@ -30,7 +31,7 @@ class Query(object):
 
     def __validate_value(self, property_name, value):
         property = getattr(self.__entity, property_name)
-        return property.validate(value)
+        return property.__get_base_value__(value)
 
     def __add_range_filter(self, property):
         self.__range_filter_queries[property] = True
@@ -156,7 +157,7 @@ class Query(object):
         return self
 
     def __fetch(self):
-        self.__docs = self.__query.stream()
+        self.__docs = self.__query.get()
         self.__fetched = True
 
     def __iter__(self):
@@ -176,5 +177,5 @@ class Query(object):
         if not self.__fetched:
             self.__fetch()
         doc = self.__docs.__next__()
-        user_data = self.__model.__get_user_data__(doc.to_dict())
+        user_data = self.__entity.__get_user_data__(doc.to_dict())
         return self.__entity(id=doc.id, **user_data)
