@@ -76,6 +76,29 @@ class TextProperty(Property):
         return base_value
 
 
+class StringProperty(Property):
+    """
+    An indexed Property whose value is a text string of limited length.
+
+    Args:
+        default: Default value for this property
+        length (int): The maximum length of this property
+        required (bool): Enforce whether this value can be empty
+    """
+    def __init__(self, default=None, length=255, required=False):
+        super(StringProperty, self).__init__(default=default, required=required)
+        self.length = length
+
+    def __get_base_value__(self, user_value):
+        user_value = self.__type_check__(user_value, str)
+        if user_value is not None and len(user_value) > self.length:
+            raise InvalidValueError(self, user_value)
+        return user_value
+
+    def __get_user_value__(self, base_value):
+        return base_value
+
+
 class IntegerProperty(Property):
     """A Property whose value is a Python int or long"""
     def __get_base_value__(self, user_value):
@@ -98,7 +121,7 @@ class FloatingPointNumberProperty(Property):
         return base_value
 
 
-class BytesProperty(Property):
+class BlobProperty(Property):
     """A Property whose value is a byte string. It may be compressed."""
     def __get_base_value__(self, user_value):
         return self.__type_check__(user_value, (bytes, bytearray))
