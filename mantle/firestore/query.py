@@ -4,7 +4,7 @@ from mantle.firestore.db import MalformedQueryError, ListProperty
 
 class Query(object):
     """
-    A  query object is returned when you call :class:`~.mantle.firestore.db.Model`.query().
+    A  query object is returned when you call :class:`~.mantle.firestore.db.Entity`.query().
     You can iterate over the query to get the results of your query one by one. Each item is an instance of a
     :class:`Model`
     """

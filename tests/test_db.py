@@ -3,6 +3,7 @@ from mantle.firestore import SERVER_TIMESTAMP, db
 import json
 from datetime import datetime, date
 from mockfirestore import MockFirestore
+import pickle
 
 mock = MockFirestore()
 
@@ -76,7 +77,8 @@ class TestProperties(unittest.TestCase):
     def test_date_property(self):
         dt_property = db.DateProperty(auto_add_now=True)
         now = datetime.now()
-        self.assertEqual(dt_property.__get_base_value__(now), now)
+        today = date(year=now.year, month=now.month, day=now.day)
+        self.assertEqual(dt_property.__get_base_value__(today), today)
         self.assertEqual(dt_property.__get_base_value__(now), now.date())
         # Confirm that default is set to server timestamp
         self.assertEqual(dt_property.__get_base_value__(None), SERVER_TIMESTAMP)
@@ -100,3 +102,15 @@ class TestProperties(unittest.TestCase):
         self.assertEqual(blob_property.__get_base_value__(None), some_bytes)
         self.assertEqual(blob_property.__get_base_value__(other_bytes), other_bytes)
         self.assertRaises(db.InvalidValueError, blob_property.__get_base_value__, "some_string")
+
+    def test_pickled_property(self):
+        testing = TestPickle(name="testing")
+        pickled_property = db.PickledProperty()
+        pickled_string = pickle.dumps(testing)
+        self.assertEqual(pickled_property.__get_base_value__(testing), pickled_string)
+        self.assertEqual(pickled_property.__get_user_value__(pickled_string).name, testing.name)
+
+
+class TestPickle:
+    def __init__(self, name):
+        self.name = name
