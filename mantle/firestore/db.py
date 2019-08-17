@@ -150,7 +150,7 @@ class ReferenceProperty(Property):
     A property referencing/pointing to another model.
 
     Args:
-        model Type(Model): The model at which this property will be referencing
+        model Type(Entity): The model at which this property will be referencing
         required (bool): Enforce that this entity not store empty data
     """
     def __init__(self, entity, required=False):
@@ -162,6 +162,10 @@ class ReferenceProperty(Property):
 
     def __get_base_value__(self, user_value):
         user_value = self.__type_check__(user_value, (self.entity))
+        if not user_value:
+            return user_value
+        if not user_value.id:
+            raise ReferencePropertyError("A reference must be put first before it can be referenced")
         return user_value.__document__()
 
     def __get_user_value__(self, base_value):

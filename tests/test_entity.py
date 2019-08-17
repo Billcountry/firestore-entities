@@ -16,7 +16,7 @@ class User(Entity):
 
 class Conversation(Entity):
     """Conversations between users"""
-    users = db.ListProperty(field_type=db.ReferenceProperty(entity=User, required=True))
+    users = db.ListProperty(db.ReferenceProperty(entity=User, required=True))
     start_time = db.DateTimeProperty(auto_add_now=True)
     last_update = db.DateTimeProperty(auto_now=True)
 
