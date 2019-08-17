@@ -19,9 +19,9 @@ Assume a case of mantle.studio where a user can have
 - Have an account in each project
 """
 
-from mantle.firestore import Model, SERVER_TIMESTAMP, db
+from mantle.firestore import Entity, SERVER_TIMESTAMP, db
 
-class User(Model):
+class User(Entity):
     user_name = db.TextProperty(length=16, required=True)
     email = db.TextProperty(required=True)
     full_name = db.TextProperty(required=True)
@@ -30,7 +30,7 @@ class User(Model):
     __sub_collection__ = "user_data"
 
 
-class Project(Model):
+class Project(Entity):
     name = db.TextProperty(required=True)
     logo = db.BytesProperty()
 
@@ -44,7 +44,7 @@ class Project(Model):
         return account
 
 
-class Account(Model):
+class Account(Entity):
     __sub_collection__ = Project
     user = db.ReferenceProperty(User)
     roles = db.ListProperty(field_type=db.TextProperty())
