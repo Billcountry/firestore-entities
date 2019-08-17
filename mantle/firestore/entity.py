@@ -5,7 +5,7 @@ from mantle.firestore.db import InvalidPropertyError, ReferencePropertyError, Pr
 from mantle.firestore.query import Query
 
 
-class Model(object):
+class Entity(object):
     """Creates a firestore document under the collection [YourModel]
 
     Args:
@@ -34,7 +34,7 @@ class Model(object):
     __database_props__ = (None, None, None)
 
     def __init__(self, **data):
-        if type(self) is Model:
+        if type(self) is Entity:
             raise Exception("You must extend Model")
         self.__setup_propertys()
         self.__model_name = type(self).__name__
@@ -134,10 +134,10 @@ class Model(object):
         Args:
             _id (str or int): A key or id of the model record, when a list is provided, `get` returns a list
                 models
-            __parent__ (Model): If querying a sub collection of model, provide the parent instance
+            __parent__ (Entity): If querying a sub collection of model, provide the parent instance
 
         Returns:
-            Model: An instance of the firestore model calling get
+            Entity: An instance of the firestore model calling get
             None: If the id provided doesn't exist
         """
         document = cls.__init_client().collection(cls.__collection_path(__parent__)).document(_id)

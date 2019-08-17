@@ -154,8 +154,8 @@ class ReferenceProperty(Property):
         required (bool): Enforce that this entity not store empty data
     """
     def __init__(self, entity, required=False):
-        from mantle.firestore import Model
-        if not issubclass(entity, Model):
+        from mantle.firestore import Entity
+        if not issubclass(entity, Entity):
             raise ReferencePropertyError("A reference property must reference another model")
         super(ReferenceProperty, self).__init__(required=required)
         self.entity = entity
