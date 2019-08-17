@@ -3,6 +3,7 @@ This is a collection of tools used by mantle Database packages, the include fiel
 """
 
 import json
+import pickle
 from datetime import datetime, date
 from google.cloud.firestore import SERVER_TIMESTAMP
 
@@ -76,7 +77,7 @@ class TextProperty(Property):
 
 
 class IntegerProperty(Property):
-    """This field stores a 64-bit signed integer"""
+    """A Property whose value is a Python int or long"""
     def __get_base_value__(self, user_value):
         return self.__type_check__(user_value, int)
 
@@ -85,7 +86,10 @@ class IntegerProperty(Property):
 
 
 class FloatingPointNumberProperty(Property):
-    """Stores a 64-bit double precision floating number"""
+    """A Property whose value is a Python float.
+
+    Note: int and long are also allowed.
+    """
     def __get_base_value__(self, user_value: float):
         user_value = self.__type_check__(user_value, (int, float))
         return user_value
@@ -95,7 +99,7 @@ class FloatingPointNumberProperty(Property):
 
 
 class BytesProperty(Property):
-    """Stores values as bytes, can be used to save a blob"""
+    """A Property whose value is a byte string. It may be compressed."""
     def __get_base_value__(self, user_value):
         return self.__type_check__(user_value, (bytes, bytearray))
 
@@ -144,32 +148,26 @@ class ReferenceProperty(Property):
         return self.entity(id=base_value.id, **user_data)
 
 
-class DictProperty(Property):
-    """
-    Holds an Dictionary of JSON serializable field data usually
-
-    The value of this field can be a dict or a valid json string. The string will be converted to a dict
+class JsonProperty(Property):
+    """A property whose value is any Json-encodable Python object.
     """
     def __init__(self, required=False):
-        super(DictProperty, self).__init__(required=required, default={})
+        super(JsonProperty, self).__init__(required=required, default={})
 
     def __get_base_value__(self, user_value):
-        if self.required and self.default is None and user_value is None:
-            raise InvalidValueError(self, user_value)
-        # Assign a default value if None is provided
-        if user_value is None:
-            user_value = self.default
-
-        if not isinstance(user_value, (dict, list)) and user_value is not None:
-            raise InvalidValueError(self, user_value)
-        return user_value
+        if isinstance(user_value, str):
+            try:
+                user_value = json.loads(user_value)
+            except json.JSONDecodeError:
+                raise InvalidPropertyError(self, "Dict property must be valid JSON")
+        return self.__type_check__(user_value, dict)
 
     def __get_user_value__(self, base_value):
         return base_value
 
 
 class BooleanProperty(Property):
-    """A boolean field, holds True or False"""
+    """A Property whose value is a Python bool."""
     def __get_base_value__(self, user_value):
         return self.__type_check__(user_value, bool)
 
@@ -178,9 +176,9 @@ class BooleanProperty(Property):
 
 
 class DateTimeProperty(Property):
-    """
-    Holds a date time value, if `auto_now` is true the value you set will be overwritten with the current server value
+    """A Property whose value is a datetime object.
 
+    Note: auto_now_add can be overridden by setting the value before writing the entity.
     Args:
         default (datetime)
         required (bool): Enforce that this field can't be submitted when empty
@@ -203,6 +201,45 @@ class DateTimeProperty(Property):
 
     def __get_user_value__(self, base_value):
         return base_value
+
+
+class DateProperty(Property):
+    """A Property whose value is a date object.
+
+    Args:
+        default (datetime): The default value for this property
+        required (bool): Enforce that this field can't be submitted when empty
+        auto_add_now (bool): Set to the current date when a record is created
+    """
+    def __init__(self, default=None, required=False, auto_add_now=False):
+        if not default and auto_add_now:
+            default = SERVER_TIMESTAMP
+        super(DateProperty, self).__init__(default=default, required=required)
+
+    def __get_base_value__(self, user_value):
+        # Return server timestamp as the value
+        if user_value is None and self.default == SERVER_TIMESTAMP:
+            return SERVER_TIMESTAMP
+        if isinstance(user_value, datetime):
+            return user_value.date()
+        return self.__type_check__(user_value, date)
+
+    def __get_user_value__(self, base_value):
+        if isinstance(base_value, datetime):
+            return base_value.date()
+        return base_value
+
+
+class PickledProperty(Property):
+    """A Property whose value is any picklable Python object."""
+    def __int__(self, required=False):
+        super(PickledProperty, self).__init__(default=None, required=required)
+
+    def __get_base_value__(self, user_value):
+        return pickle.dumps(user_value)
+
+    def __get_user_value__(self, base_value):
+        return pickle.loads(base_value)
 
 
 class InvalidValueError(ValueError):
