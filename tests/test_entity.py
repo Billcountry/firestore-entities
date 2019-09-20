@@ -49,8 +49,20 @@ class EntitiesTestCases(unittest.TestCase):
         self.john = User(name=Jane.name, email=Jane.email, password=Jane.password)
         self.jane = User(name=John.name, email=John.email, password=John.password)
 
-    def test_model_ops(self):
-        pass
+    def test_query(self):
+        self.jane.put()
+        self.john.put()
+        conversation = Conversation(users=[self.john, self.jane])
+        conversation.put()
+        for i in range(50):
+            message = "Lorem ipsum %s" % i
+            if i % 2:
+                conversation.send_message(self.jane, message)
+            else:
+                conversation.send_message(self.john, message)
+        janes_messages = MessageLog.query()  #.equal("sender", self.jane)
+        print(janes_messages.fetch())
+        self.assertEqual(True, False)
 
     def test_reference_property(self):
         # A model must be saved to referenced
