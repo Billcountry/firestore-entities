@@ -1,6 +1,6 @@
 ---
 description: |
-    API documentation for modules: mantle, mantle.db, mantle.firestore, mantle.firestore.errors, mantle.firestore.model, mantle.firestore.query.
+    API documentation for modules: mantle, mantle.firestore, mantle.firestore.db, mantle.firestore.entity, mantle.firestore.query.
 
 lang: en
 
@@ -23,7 +23,6 @@ Mantle is a collection of backend libraries for easy creation of backend systems
     
 ## Sub-modules
 
-* [mantle.db](#mantle.db)
 * [mantle.firestore](#mantle.firestore)
 
 
@@ -32,9 +31,28 @@ Mantle is a collection of backend libraries for easy creation of backend systems
 
 
     
-# Module `mantle.db` {#mantle.db}
+# Module `mantle.firestore` {#mantle.firestore}
 
-This is a collection of tools used by mantle Database packages, the include field types and common errors
+
+
+
+
+    
+## Sub-modules
+
+* [mantle.firestore.db](#mantle.firestore.db)
+* [mantle.firestore.entity](#mantle.firestore.entity)
+* [mantle.firestore.query](#mantle.firestore.query)
+
+
+
+
+
+
+    
+# Module `mantle.firestore.db` {#mantle.firestore.db}
+
+This is a collection of tools used by mantle Database packages, the include property types and common errors
 
 
 
@@ -46,21 +64,65 @@ This is a collection of tools used by mantle Database packages, the include fiel
 
 
     
-### Class `BooleanProperty` {#mantle.db.BooleanProperty}
+### Class `BlobProperty` {#mantle.firestore.db.BlobProperty}
+
+
+
+> `class BlobProperty(default=None, required=False)`
+
+
+A Property whose value is a byte string. It may be compressed.
+
+
+#### Args
+
+**`default`**
+:   The default value of the property
+
+
+**`required`**
+:   Enforce the property value to be provided
+
+
+
+
+    
+#### Ancestors (in MRO)
+
+* [mantle.firestore.db.Property](#mantle.firestore.db.Property)
+
+
+
+
+
+
+    
+### Class `BooleanProperty` {#mantle.firestore.db.BooleanProperty}
 
 
 
 > `class BooleanProperty(default=None, required=False)`
 
 
-A boolean field, holds True or False
+A Property whose value is a Python bool.
+
+
+#### Args
+
+**`default`**
+:   The default value of the property
+
+
+**`required`**
+:   Enforce the property value to be provided
+
 
 
 
     
 #### Ancestors (in MRO)
 
-* [mantle.db.Property](#mantle.db.Property)
+* [mantle.firestore.db.Property](#mantle.firestore.db.Property)
 
 
 
@@ -68,21 +130,47 @@ A boolean field, holds True or False
 
 
     
-### Class `BytesProperty` {#mantle.db.BytesProperty}
+### Class `DateProperty` {#mantle.firestore.db.DateProperty}
 
 
 
-> `class BytesProperty(default=None, required=False)`
+> `class DateProperty(default=None, required=False, auto_add_now=False)`
 
 
-Stores values as bytes, can be used to save a blob
+A Property whose value is a date object.
+
+
+#### Args
+
+**`default`** :&ensp;`datetime`
+:   The default value for this property
+
+
+**`required`** :&ensp;`bool`
+:   Enforce that this property can't be submitted when empty
+
+
+**`auto_add_now`** :&ensp;`bool`
+:   Set to the current date when a record is created
+
+
+
+#### Args
+
+**`default`**
+:   The default value of the property
+
+
+**`required`**
+:   Enforce the property value to be provided
+
 
 
 
     
 #### Ancestors (in MRO)
 
-* [mantle.db.Property](#mantle.db.Property)
+* [mantle.firestore.db.Property](#mantle.firestore.db.Property)
 
 
 
@@ -90,21 +178,22 @@ Stores values as bytes, can be used to save a blob
 
 
     
-### Class `DateTimeProperty` {#mantle.db.DateTimeProperty}
+### Class `DateTimeProperty` {#mantle.firestore.db.DateTimeProperty}
 
 
 
 > `class DateTimeProperty(default=None, required=False, auto_now=False, auto_add_now=False)`
 
 
-Holds a date time value, if `auto_now` is true the value you set will be overwritten with the current server value
+A Property whose value is a datetime object.
 
+Note: auto_now_add can be overridden by setting the value before writing the entity.
 
 #### Args
 
 default (datetime)
 **`required`** :&ensp;`bool`
-:   Enforce that this field can't be submitted when empty
+:   Enforce that this property can't be submitted when empty
 
 
 **`auto_now`** :&ensp;`bool`
@@ -116,51 +205,22 @@ default (datetime)
 
 
 
+#### Args
 
-    
-#### Ancestors (in MRO)
-
-* [mantle.db.Property](#mantle.db.Property)
-
+**`default`**
+:   The default value of the property
 
 
+**`required`**
+:   Enforce the property value to be provided
 
-
-
-    
-#### Methods
-
-
-    
-##### Method `validate` {#mantle.db.DateTimeProperty.validate}
-
-
-
-    
-> `def validate(self, value)`
-
-
-
-
-
-    
-### Class `DictProperty` {#mantle.db.DictProperty}
-
-
-
-> `class DictProperty(required=False, default=None)`
-
-
-Holds an Dictionary of JSON serializable field data usually
-
-The value of this field can be a dict or a valid json string. The string will be converted to a dict
 
 
 
     
 #### Ancestors (in MRO)
 
-* [mantle.db.Property](#mantle.db.Property)
+* [mantle.firestore.db.Property](#mantle.firestore.db.Property)
 
 
 
@@ -168,37 +228,34 @@ The value of this field can be a dict or a valid json string. The string will be
 
 
     
-#### Methods
-
-
-    
-##### Method `validate` {#mantle.db.DictProperty.validate}
-
-
-
-    
-> `def validate(self, value)`
-
-
-
-
-
-    
-### Class `FloatingPointNumberProperty` {#mantle.db.FloatingPointNumberProperty}
+### Class `FloatingPointNumberProperty` {#mantle.firestore.db.FloatingPointNumberProperty}
 
 
 
 > `class FloatingPointNumberProperty(default=None, required=False)`
 
 
-Stores a 64-bit double precision floating number
+A Property whose value is a Python float.
+
+Note: int and long are also allowed.
+
+
+#### Args
+
+**`default`**
+:   The default value of the property
+
+
+**`required`**
+:   Enforce the property value to be provided
+
 
 
 
     
 #### Ancestors (in MRO)
 
-* [mantle.db.Property](#mantle.db.Property)
+* [mantle.firestore.db.Property](#mantle.firestore.db.Property)
 
 
 
@@ -206,21 +263,32 @@ Stores a 64-bit double precision floating number
 
 
     
-### Class `IntegerProperty` {#mantle.db.IntegerProperty}
+### Class `IntegerProperty` {#mantle.firestore.db.IntegerProperty}
 
 
 
 > `class IntegerProperty(default=None, required=False)`
 
 
-This field stores a 64-bit signed integer
+A Property whose value is a Python int or long
+
+
+#### Args
+
+**`default`**
+:   The default value of the property
+
+
+**`required`**
+:   Enforce the property value to be provided
+
 
 
 
     
 #### Ancestors (in MRO)
 
-* [mantle.db.Property](#mantle.db.Property)
+* [mantle.firestore.db.Property](#mantle.firestore.db.Property)
 
 
 
@@ -228,14 +296,14 @@ This field stores a 64-bit signed integer
 
 
     
-### Class `InvalidPropertyError` {#mantle.db.InvalidPropertyError}
+### Class `InvalidPropertyError` {#mantle.firestore.db.InvalidPropertyError}
 
 
 
 > `class InvalidPropertyError(prop_name, model_name)`
 
 
-Raised if a non-existent field is provided during the creation of a model
+Raised if a non-existent property is provided during the creation of a model
 
 
 
@@ -251,14 +319,14 @@ Raised if a non-existent field is provided during the creation of a model
 
 
     
-### Class `InvalidValueError` {#mantle.db.InvalidValueError}
+### Class `InvalidValueError` {#mantle.firestore.db.InvalidValueError}
 
 
 
-> `class InvalidValueError(field, value)`
+> `class InvalidValueError(property, value)`
 
 
-Raised if the value of a field does not fit the field type
+Raised if the value of a property does not fit the property type
 
 
 
@@ -275,21 +343,66 @@ Raised if the value of a field does not fit the field type
 
 
     
-### Class `ListProperty` {#mantle.db.ListProperty}
+### Class `JsonProperty` {#mantle.firestore.db.JsonProperty}
 
 
 
-> `class ListProperty(field_type)`
+> `class JsonProperty(required=False)`
 
 
-A List field
+A property whose value is any Json-encodable Python object.
+    
+
+
+#### Args
+
+**`default`**
+:   The default value of the property
+
+
+**`required`**
+:   Enforce the property value to be provided
+
 
 
 
     
 #### Ancestors (in MRO)
 
-* [mantle.db.Property](#mantle.db.Property)
+* [mantle.firestore.db.Property](#mantle.firestore.db.Property)
+
+
+
+
+
+
+    
+### Class `ListProperty` {#mantle.firestore.db.ListProperty}
+
+
+
+> `class ListProperty(property_type)`
+
+
+A List property
+
+
+#### Args
+
+**`default`**
+:   The default value of the property
+
+
+**`required`**
+:   Enforce the property value to be provided
+
+
+
+
+    
+#### Ancestors (in MRO)
+
+* [mantle.firestore.db.Property](#mantle.firestore.db.Property)
 * [builtins.list](#builtins.list)
 
 
@@ -298,23 +411,7 @@ A List field
 
 
     
-#### Methods
-
-
-    
-##### Method `validate` {#mantle.db.ListProperty.validate}
-
-
-
-    
-> `def validate(self, value)`
-
-
-
-
-
-    
-### Class `MalformedQueryError` {#mantle.db.MalformedQueryError}
+### Class `MalformedQueryError` {#mantle.firestore.db.MalformedQueryError}
 
 
 
@@ -337,13 +434,57 @@ Raised when the rules of a query are broken
 
 
     
-### Class `Property` {#mantle.db.Property}
+### Class `PickledProperty` {#mantle.firestore.db.PickledProperty}
 
 
 
-> `class Property(field_type, default=None, required=False)`
+> `class PickledProperty(default=None, required=False)`
 
 
+A Property whose value is any picklable Python object.
+
+
+#### Args
+
+**`default`**
+:   The default value of the property
+
+
+**`required`**
+:   Enforce the property value to be provided
+
+
+
+
+    
+#### Ancestors (in MRO)
+
+* [mantle.firestore.db.Property](#mantle.firestore.db.Property)
+
+
+
+
+
+
+    
+### Class `Property` {#mantle.firestore.db.Property}
+
+
+
+> `class Property(default=None, required=False)`
+
+
+A class describing a typed, persisted attribute of a database entity
+
+
+#### Args
+
+**`default`**
+:   The default value of the property
+
+
+**`required`**
+:   Enforce the property value to be provided
 
 
 
@@ -352,57 +493,50 @@ Raised when the rules of a query are broken
     
 #### Descendants
 
-* [mantle.db.TextProperty](#mantle.db.TextProperty)
-* [mantle.db.IntegerProperty](#mantle.db.IntegerProperty)
-* [mantle.db.FloatingPointNumberProperty](#mantle.db.FloatingPointNumberProperty)
-* [mantle.db.BytesProperty](#mantle.db.BytesProperty)
-* [mantle.db.ListProperty](#mantle.db.ListProperty)
-* [mantle.db.ReferenceProperty](#mantle.db.ReferenceProperty)
-* [mantle.db.DictProperty](#mantle.db.DictProperty)
-* [mantle.db.BooleanProperty](#mantle.db.BooleanProperty)
-* [mantle.db.DateTimeProperty](#mantle.db.DateTimeProperty)
+* [mantle.firestore.db.TextProperty](#mantle.firestore.db.TextProperty)
+* [mantle.firestore.db.StringProperty](#mantle.firestore.db.StringProperty)
+* [mantle.firestore.db.IntegerProperty](#mantle.firestore.db.IntegerProperty)
+* [mantle.firestore.db.FloatingPointNumberProperty](#mantle.firestore.db.FloatingPointNumberProperty)
+* [mantle.firestore.db.BlobProperty](#mantle.firestore.db.BlobProperty)
+* [mantle.firestore.db.ListProperty](#mantle.firestore.db.ListProperty)
+* [mantle.firestore.db.ReferenceProperty](#mantle.firestore.db.ReferenceProperty)
+* [mantle.firestore.db.JsonProperty](#mantle.firestore.db.JsonProperty)
+* [mantle.firestore.db.BooleanProperty](#mantle.firestore.db.BooleanProperty)
+* [mantle.firestore.db.DateTimeProperty](#mantle.firestore.db.DateTimeProperty)
+* [mantle.firestore.db.DateProperty](#mantle.firestore.db.DateProperty)
+* [mantle.firestore.db.PickledProperty](#mantle.firestore.db.PickledProperty)
 
 
 
 
 
     
-#### Methods
-
-
-    
-##### Method `validate` {#mantle.db.Property.validate}
+### Class `ReferenceProperty` {#mantle.firestore.db.ReferenceProperty}
 
 
 
-    
-> `def validate(self, value)`
+> `class ReferenceProperty(entity, required=False)`
 
 
-
-
-
-    
-### Class `ReferenceProperty` {#mantle.db.ReferenceProperty}
-
-
-
-> `class ReferenceProperty(model, required=False)`
-
-
-A field referencing/pointing to another model.
+A property referencing/pointing to another model.
 
 
 #### Args
 
-model Type(Model): The model at which this field will be referencing
-    NOTE:
-        A referenced model must meet one of the following:
-            1. In the same subcollection as the current model
-            2. In a static subcollection defined by a string path
-            3. At the to level of the database
+model Type(Entity): The model at which this property will be referencing
 **`required`** :&ensp;`bool`
-:   Enforce that this model not store empty data
+:   Enforce that this entity not store empty data
+
+
+
+#### Args
+
+**`default`**
+:   The default value of the property
+
+
+**`required`**
+:   Enforce the property value to be provided
 
 
 
@@ -410,7 +544,7 @@ model Type(Model): The model at which this field will be referencing
     
 #### Ancestors (in MRO)
 
-* [mantle.db.Property](#mantle.db.Property)
+* [mantle.firestore.db.Property](#mantle.firestore.db.Property)
 
 
 
@@ -418,30 +552,14 @@ model Type(Model): The model at which this field will be referencing
 
 
     
-#### Methods
-
-
-    
-##### Method `validate` {#mantle.db.ReferenceProperty.validate}
-
-
-
-    
-> `def validate(self, value)`
-
-
-
-
-
-    
-### Class `ReferencePropertyError` {#mantle.db.ReferencePropertyError}
+### Class `ReferencePropertyError` {#mantle.firestore.db.ReferencePropertyError}
 
 
 
 > `class ReferencePropertyError(message)`
 
 
-Raised when a reference field point's to a location the model can't resolve
+Raised when a reference property point's to a location the model can't resolve
 
 
 
@@ -457,134 +575,118 @@ Raised when a reference field point's to a location the model can't resolve
 
 
     
-### Class `TextProperty` {#mantle.db.TextProperty}
+### Class `StringProperty` {#mantle.firestore.db.StringProperty}
 
 
 
-> `class TextProperty(default=None, length=None, required=False)`
+> `class StringProperty(default=None, length=255, required=False)`
 
 
-A string field
-
-
-
-    
-#### Ancestors (in MRO)
-
-* [mantle.db.Property](#mantle.db.Property)
-
-
-
-
-
-
-    
-#### Methods
-
-
-    
-##### Method `validate` {#mantle.db.TextProperty.validate}
-
-
-
-    
-> `def validate(self, value)`
-
-
-
-
-
-
-
-    
-# Module `mantle.firestore` {#mantle.firestore}
-
-
-
-
-
-    
-## Sub-modules
-
-* [mantle.firestore.errors](#mantle.firestore.errors)
-* [mantle.firestore.model](#mantle.firestore.model)
-* [mantle.firestore.query](#mantle.firestore.query)
-
-
-
-
-
-
-    
-# Module `mantle.firestore.errors` {#mantle.firestore.errors}
-
-
-
-
-
-
-
-
-    
-## Classes
-
-
-    
-### Class `SubCollectionError` {#mantle.firestore.errors.SubCollectionError}
-
-
-
-> `class SubCollectionError(message)`
-
-
-Raised when conditions of a subcollection are not met
-
-
-
-    
-#### Ancestors (in MRO)
-
-* [builtins.Exception](#builtins.Exception)
-* [builtins.BaseException](#builtins.BaseException)
-
-
-
-
-
-
-
-
-    
-# Module `mantle.firestore.model` {#mantle.firestore.model}
-
-
-
-
-
-
-
-
-    
-## Classes
-
-
-    
-### Class `Model` {#mantle.firestore.model.Model}
-
-
-
-> `class Model(**data)`
-
-
-Creates a firestore document under the collection [YourModel]
+An indexed Property whose value is a text string of limited length.
 
 
 #### Args
 
-__parent__ Optional(Model.__class__): If this is a sub-collection of another model,
-    give an instance of the parent
+**`default`**
+:   Default value for this property
+
+
+**`length`** :&ensp;`int`
+:   The maximum length of this property
+
+
+**`required`** :&ensp;`bool`
+:   Enforce whether this value can be empty
+
+
+
+#### Args
+
+**`default`**
+:   The default value of the property
+
+
+**`required`**
+:   Enforce the property value to be provided
+
+
+
+
+    
+#### Ancestors (in MRO)
+
+* [mantle.firestore.db.Property](#mantle.firestore.db.Property)
+
+
+
+
+
+
+    
+### Class `TextProperty` {#mantle.firestore.db.TextProperty}
+
+
+
+> `class TextProperty(default=None, required=False)`
+
+
+An Property whose value is a text string of unlimited length.
+I'ts not advisable to index this property
+
+
+#### Args
+
+**`default`**
+:   The default value of the property
+
+
+**`required`**
+:   Enforce the property value to be provided
+
+
+
+
+    
+#### Ancestors (in MRO)
+
+* [mantle.firestore.db.Property](#mantle.firestore.db.Property)
+
+
+
+
+
+
+
+
+    
+# Module `mantle.firestore.entity` {#mantle.firestore.entity}
+
+
+
+
+
+
+
+
+    
+## Classes
+
+
+    
+### Class `Entity` {#mantle.firestore.entity.Entity}
+
+
+
+> `class Entity(**data)`
+
+
+Creates a firestore document under the collection [YourEntity]
+
+
+#### Args
+
 **`**data`** :&ensp;`kwargs`
-:   Values for fields in the new record, e.g User(name="Bob")
+:   Values for properties in the new record, e.g User(name="Bob")
 
 
 
@@ -594,20 +696,6 @@ __parent__ Optional(Model.__class__): If this is a sub-collection of another mod
 :   Unique id identifying this record,
     if auto-generated, this is not available before `put()`
 
-
-
-__sub_collection__ (str of Model)(Optional class attribute):
-        1: A :class:`~Model` class where each document in this
-            model is a sub-collection of a record in the returned
-            :class:`~Model`. e.g If you have a `User` model and each `User`
-            has a collection of `Notes`. The model `Notes` would return `User`
-        2: A path representing a collection if you don't want your Model to be on the root of the current
-            database, e.g In a shared database: `sales`
-
-__database_props__ Tuple(Project, Credentials, database): A tuple of `Project`, `Credentials` and `database` in
-    that order
-    provide these values if you are not working on App Engine environment or any other case where you need to
-    the `Project`, `Credentials` and the `database` that the model is going to use
 
 
 
@@ -620,7 +708,7 @@ __database_props__ Tuple(Project, Credentials, database): A tuple of `Project`, 
 
 
     
-##### `Method get` {#mantle.firestore.model.Model.get}
+##### `Method get` {#mantle.firestore.entity.Entity.get}
 
 
 
@@ -638,15 +726,11 @@ Get a model with the given id
     models
 
 
-**`__parent__`** :&ensp;[`Model`](#mantle.firestore.model.Model)
-:   If querying a sub collection of model, provide the parent instance
-
-
 
 ###### Returns
 
-**[`Model`](#mantle.firestore.model.Model)**
-:   An instance of the firestore model calling get
+**[`Entity`](#mantle.firestore.entity.Entity)**
+:   An instance of the firestore entity calling get
 
 
 **`None`**
@@ -655,7 +739,7 @@ Get a model with the given id
 
 
     
-##### `Method query` {#mantle.firestore.model.Model.query}
+##### `Method query` {#mantle.firestore.entity.Entity.query}
 
 
 
@@ -676,10 +760,6 @@ Create a query to this model
 :   Maximum number of records to return
 
 
-**`__parent__`** :&ensp;[`Model`](#mantle.firestore.model.Model)
-:   If querying a sub collection of model, provide the parent instance
-
-
 
 ###### Returns
 
@@ -694,7 +774,7 @@ Create a query to this model
 
 
     
-##### Method `delete` {#mantle.firestore.model.Model.delete}
+##### Method `delete` {#mantle.firestore.entity.Entity.delete}
 
 
 
@@ -706,7 +786,7 @@ Delete the document connected to this model from firestore
 
 
     
-##### Method `put` {#mantle.firestore.model.Model.put}
+##### Method `put` {#mantle.firestore.entity.Entity.put}
 
 
 
@@ -720,7 +800,7 @@ Save the models data to Firestore
 ###### Raises
 
 **`InvalidValueError`**
-:   Raised if the value of a field is invalid, e.g. A required field that's None
+:   Raised if the value of a property is invalid, e.g. A required property that's None
 
 
 
@@ -745,12 +825,29 @@ Save the models data to Firestore
 
 
 
-> `class Query(model, offset, limit, collection, parent)`
+> `class Query(entity, offset, limit)`
 
 
-A  query object is returned when you call :class:`~.mantle.firestore.db.Model`.query().
+A  query object is returned when you call :class:`~.mantle.firestore.db.Entity`.query().
 You can iterate over the query to get the results of your query one by one. Each item is an instance of a
 :class:`Model`
+
+Initialize a query
+
+
+#### Args
+
+**`entity`**
+:   The entity you want to query
+
+
+**`offset`**
+:   The position to begin the query results
+
+
+**`limit`**
+:   Maximum number of results to return
+
 
 
 
@@ -769,20 +866,20 @@ You can iterate over the query to get the results of your query one by one. Each
 
 
     
-> `def contains(self, field, value)`
+> `def contains(self, property, value)`
 
 
-A query condition where `value in field`
+A query condition where `value in property`
 
 
 ###### Args
 
-**`field`** :&ensp;`str`
-:   The name of a field to compare
+**`property`** :&ensp;`str`
+:   The name of a property to compare
 
 
 **`value`** :&ensp;`Any`
-:   The value to compare from the field
+:   The value to compare from the property
 
 
 
@@ -796,7 +893,7 @@ A query condition where `value in field`
 ###### Raises
 
 **`MalformedQueryError`**
-:   If the field specified is not a ListField, or
+:   If the property specified is not a ListField, or
      the query has more than one contains condition
 
 
@@ -807,20 +904,20 @@ A query condition where `value in field`
 
 
     
-> `def equal(self, field, value)`
+> `def equal(self, property, value)`
 
 
-A query condition where field == value
+A query condition where property == value
 
 
 ###### Args
 
-**`field`** :&ensp;`str`
-:   The name of a field to compare
+**`property`** :&ensp;`str`
+:   The name of a property to compare
 
 
 **`value`** :&ensp;`Any`
-:   The value to compare from the field
+:   The value to compare from the property
 
 
 
@@ -856,20 +953,20 @@ Get the results of the query as a list
 
 
     
-> `def greater_than(self, field, value)`
+> `def greater_than(self, property, value)`
 
 
-A query condition where field > value
+A query condition where property > value
 
 
 ###### Args
 
-**`field`** :&ensp;`str`
-:   The name of a field to compare
+**`property`** :&ensp;`str`
+:   The name of a property to compare
 
 
 **`value`** :&ensp;`Any`
-:   The value to compare from the field
+:   The value to compare from the property
 
 
 
@@ -886,20 +983,20 @@ A query condition where field > value
 
 
     
-> `def greater_than_or_equal(self, field, value)`
+> `def greater_than_or_equal(self, property, value)`
 
 
-A query condition where field >= value
+A query condition where property >= value
 
 
 ###### Args
 
-**`field`** :&ensp;`str`
-:   The name of a field to compare
+**`property`** :&ensp;`str`
+:   The name of a property to compare
 
 
 **`value`** :&ensp;`Any`
-:   The value to compare from the field
+:   The value to compare from the property
 
 
 
@@ -916,20 +1013,20 @@ A query condition where field >= value
 
 
     
-> `def less_than(self, field, value)`
+> `def less_than(self, property, value)`
 
 
-A query condition where field < value
+A query condition where property < value
 
 
 ###### Args
 
-**`field`** :&ensp;`str`
-:   The name of a field to compare
+**`property`** :&ensp;`str`
+:   The name of a property to compare
 
 
 **`value`** :&ensp;`Any`
-:   The value to compare from the field
+:   The value to compare from the property
 
 
 
@@ -946,20 +1043,20 @@ A query condition where field < value
 
 
     
-> `def less_than_or_equal(self, field, value)`
+> `def less_than_or_equal(self, property, value)`
 
 
-A query condition where field <= value
+A query condition where property <= value
 
 
 ###### Args
 
-**`field`** :&ensp;`str`
-:   The name of a field to compare
+**`property`** :&ensp;`str`
+:   The name of a property to compare
 
 
 **`value`** :&ensp;`Any`
-:   The value to compare from the field
+:   The value to compare from the property
 
 
 
@@ -976,7 +1073,7 @@ A query condition where field <= value
 
 
     
-> `def order_by(self, field, direction='ASC')`
+> `def order_by(self, property, direction='ASC')`
 
 
 Set an order for the query, accepts
@@ -984,8 +1081,8 @@ Set an order for the query, accepts
 
 ###### Args
 
-**`field`** :&ensp;`str`
-:   The field name to order by
+**`property`** :&ensp;`str`
+:   The property name to order by
 
 
 direction (str: "ASC" or "DESC"), optional:

@@ -1,0 +1,1078 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.6.3" />
+<title>mantle.firestore.db API documentation</title>
+<meta name="description" content="This is a collection of tools used by mantle Database packages, the include property types and common errors" />
+<link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
+<link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
+<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{font-weight:bold}#index h4 + ul{margin-bottom:.6em}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase;cursor:pointer}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>mantle.firestore.db</code></h1>
+</header>
+<section id="section-intro">
+<p>This is a collection of tools used by mantle Database packages, the include property types and common errors</p>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">&#34;&#34;&#34;
+This is a collection of tools used by mantle Database packages, the include property types and common errors
+&#34;&#34;&#34;
+
+import json
+import pickle
+from datetime import datetime, date
+from google.cloud.firestore import SERVER_TIMESTAMP
+
+
+class Property(object):
+    &#34;&#34;&#34;
+    A class describing a typed, persisted attribute of a database entity
+    &#34;&#34;&#34;
+    def __init__(self, default=None, required=False):
+        &#34;&#34;&#34;
+        Args:
+            default: The default value of the property
+            required: Enforce the property value to be provided
+        &#34;&#34;&#34;
+        if type(self) is Property:
+            raise Exception(&#34;You must extend Property&#34;)
+        self.default = default
+        self.required = required
+        self.name = None
+
+    def __get_user_value__(self, base_value):
+        &#34;&#34;&#34;
+        Convert value from database to a value usable by the user
+        Args:
+            base_value: The current value from db
+
+        Returns:
+            user_value expected to be of the specified type
+        &#34;&#34;&#34;
+        raise NotImplementedError
+
+    def __get_base_value__(self, user_value):
+        &#34;&#34;&#34;
+        Convert value to database acceptable format
+        Args
+        :param user_value: Current user_value
+        :return: base_value
+        &#34;&#34;&#34;
+        raise NotImplementedError
+
+    def __type_check__(self, user_value, data_types):
+        &#34;&#34;&#34;
+        Check whether this value has the right data type
+        Args:
+            user_value: The user_value you want to confirm
+            data_types: Type/Types to check against
+
+        Returns:
+            Any
+        &#34;&#34;&#34;
+        if self.required and self.default is None and user_value is None:
+            raise InvalidValueError(self, user_value)
+        # Assign a default value if None is provided
+        if user_value is None:
+            user_value = self.default
+
+        if not isinstance(user_value, data_types) and user_value is not None:
+            raise InvalidValueError(self, user_value)
+        return user_value
+
+
+class TextProperty(Property):
+    &#34;&#34;&#34;An Property whose value is a text string of unlimited length.
+    I&#39;ts not advisable to index this property
+    &#34;&#34;&#34;
+    def __get_base_value__(self, user_value):
+        return self.__type_check__(user_value, str)
+
+    def __get_user_value__(self, base_value):
+        return base_value
+
+
+class StringProperty(Property):
+    &#34;&#34;&#34;
+    An indexed Property whose value is a text string of limited length.
+
+    Args:
+        default: Default value for this property
+        length (int): The maximum length of this property
+        required (bool): Enforce whether this value can be empty
+    &#34;&#34;&#34;
+    def __init__(self, default=None, length=255, required=False):
+        super(StringProperty, self).__init__(default=default, required=required)
+        self.length = length
+
+    def __get_base_value__(self, user_value):
+        user_value = self.__type_check__(user_value, str)
+        if user_value is not None and len(user_value) &gt; self.length:
+            raise InvalidValueError(self, user_value)
+        return user_value
+
+    def __get_user_value__(self, base_value):
+        return base_value
+
+
+class IntegerProperty(Property):
+    &#34;&#34;&#34;A Property whose value is a Python int or long&#34;&#34;&#34;
+    def __get_base_value__(self, user_value):
+        return self.__type_check__(user_value, int)
+
+    def __get_user_value__(self, base_value):
+        return base_value
+
+
+class FloatingPointNumberProperty(Property):
+    &#34;&#34;&#34;A Property whose value is a Python float.
+
+    Note: int and long are also allowed.
+    &#34;&#34;&#34;
+    def __get_base_value__(self, user_value: float):
+        user_value = self.__type_check__(user_value, (int, float))
+        return user_value
+
+    def __get_user_value__(self, base_value):
+        return base_value
+
+
+class BlobProperty(Property):
+    &#34;&#34;&#34;A Property whose value is a byte string. It may be compressed.&#34;&#34;&#34;
+    def __get_base_value__(self, user_value):
+        return self.__type_check__(user_value, (bytes, bytearray))
+
+    def __get_user_value__(self, base_value):
+        return base_value
+
+
+class ListProperty(Property, list):
+    &#34;&#34;&#34;A List property&#34;&#34;&#34;
+    def __init__(self, property_type: Property):
+        super(ListProperty, self).__init__(default=[])
+        self.property_type = property_type
+
+    def __get_base_value__(self, user_value: list):
+        user_value = self.__type_check__(user_value, (list))
+        user_value = [self.property_type.__get_base_value__(value) for value in user_value]
+        return user_value
+
+    def __get_user_value__(self, base_value):
+        return base_value
+
+
+class ReferenceProperty(Property):
+    &#34;&#34;&#34;
+    A property referencing/pointing to another model.
+
+    Args:
+        model Type(Entity): The model at which this property will be referencing
+        required (bool): Enforce that this entity not store empty data
+    &#34;&#34;&#34;
+    def __init__(self, entity, required=False):
+        from mantle.firestore import Entity
+        if not issubclass(entity, Entity):
+            raise ReferencePropertyError(&#34;A reference property must reference another model&#34;)
+        super(ReferenceProperty, self).__init__(required=required)
+        self.entity = entity
+
+    def __get_base_value__(self, user_value):
+        user_value = self.__type_check__(user_value, (self.entity))
+        if not user_value:
+            return user_value
+        if not user_value.id:
+            raise ReferencePropertyError(&#34;A reference must be put first before it can be referenced&#34;)
+        return user_value.__document__()
+
+    def __get_user_value__(self, base_value):
+        if not base_value:
+            return None
+        user_data = self.entity.__get_user_data__(base_value.get().todict())
+        return self.entity(id=base_value.id, **user_data)
+
+
+class JsonProperty(Property):
+    &#34;&#34;&#34;A property whose value is any Json-encodable Python object.
+    &#34;&#34;&#34;
+    def __init__(self, required=False):
+        super(JsonProperty, self).__init__(required=required, default={})
+
+    def __get_base_value__(self, user_value):
+        if isinstance(user_value, str):
+            try:
+                user_value = json.loads(user_value)
+            except json.JSONDecodeError:
+                raise InvalidPropertyError(self, &#34;Dict property must be valid JSON&#34;)
+        return self.__type_check__(user_value, dict)
+
+    def __get_user_value__(self, base_value):
+        return base_value
+
+
+class BooleanProperty(Property):
+    &#34;&#34;&#34;A Property whose value is a Python bool.&#34;&#34;&#34;
+    def __get_base_value__(self, user_value):
+        return self.__type_check__(user_value, bool)
+
+    def __get_user_value__(self, base_value):
+        return base_value
+
+
+class DateTimeProperty(Property):
+    &#34;&#34;&#34;A Property whose value is a datetime object.
+
+    Note: auto_now_add can be overridden by setting the value before writing the entity.
+    Args:
+        default (datetime)
+        required (bool): Enforce that this property can&#39;t be submitted when empty
+        auto_now (bool): Set to the current time every time the model is updated
+        auto_add_now (bool): Set to the current time when a record is created
+    &#34;&#34;&#34;
+    def __init__(self, default=None, required=False, auto_now=False, auto_add_now=False):
+        if not default and auto_add_now:
+            default = SERVER_TIMESTAMP
+        super(DateTimeProperty, self).__init__(default=default, required=required)
+        self.auto_now = auto_now
+
+    def __get_base_value__(self, user_value):
+        # Return server timestamp as the value
+        if user_value == SERVER_TIMESTAMP or self.auto_now:
+            return SERVER_TIMESTAMP
+        if user_value is None and self.default == SERVER_TIMESTAMP:
+            return SERVER_TIMESTAMP
+        return self.__type_check__(user_value, datetime)
+
+    def __get_user_value__(self, base_value):
+        return base_value
+
+
+class DateProperty(Property):
+    &#34;&#34;&#34;A Property whose value is a date object.
+
+    Args:
+        default (datetime): The default value for this property
+        required (bool): Enforce that this property can&#39;t be submitted when empty
+        auto_add_now (bool): Set to the current date when a record is created
+    &#34;&#34;&#34;
+    def __init__(self, default=None, required=False, auto_add_now=False):
+        if not default and auto_add_now:
+            default = SERVER_TIMESTAMP
+        super(DateProperty, self).__init__(default=default, required=required)
+
+    def __get_base_value__(self, user_value):
+        # Return server timestamp as the value
+        if user_value is None and self.default == SERVER_TIMESTAMP:
+            return SERVER_TIMESTAMP
+        if isinstance(user_value, datetime):
+            return user_value.date()
+        return self.__type_check__(user_value, date)
+
+    def __get_user_value__(self, base_value):
+        if isinstance(base_value, datetime):
+            return base_value.date()
+        return base_value
+
+
+class PickledProperty(Property):
+    &#34;&#34;&#34;A Property whose value is any picklable Python object.&#34;&#34;&#34;
+    def __int__(self, required=False):
+        super(PickledProperty, self).__init__(default=None, required=required)
+
+    def __get_base_value__(self, user_value):
+        return pickle.dumps(user_value)
+
+    def __get_user_value__(self, base_value):
+        return pickle.loads(base_value)
+
+
+class InvalidValueError(ValueError):
+    &#34;&#34;&#34;Raised if the value of a property does not fit the property type&#34;&#34;&#34;
+
+    def __init__(self, property, value):
+        self.property = property
+        self.value = value
+
+    def __str__(self):
+        return &#34;%s is not a valid value for property %s of type %s&#34; % \
+               (self.value, self.property.name, type(self.property).__name__)
+
+
+class MalformedQueryError(Exception):
+    &#34;&#34;&#34;Raised when the rules of a query are broken&#34;&#34;&#34;
+
+    def __init__(self, message):
+        self.message = message
+
+    def __str__(self):
+        return self.message
+
+
+class InvalidPropertyError(Exception):
+    &#34;&#34;&#34;Raised if a non-existent property is provided during the creation of a model&#34;&#34;&#34;
+
+    def __init__(self, prop_name, model_name):
+        self.prop_name = prop_name
+        self.model_name = model_name
+
+    def __str__(self):
+        return &#34;%s not found in model %s&#34; % (self.prop_name, self.model_name)
+
+
+class ReferencePropertyError(Exception):
+    &#34;&#34;&#34;Raised when a reference property point&#39;s to a location the model can&#39;t resolve&#34;&#34;&#34;
+    def __init__(self, message):
+        self.message = message
+
+    def __str__(self):
+        return self.message</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="mantle.firestore.db.BlobProperty"><code class="flex name class">
+<span>class <span class="ident">BlobProperty</span></span>
+<span>(</span><span>default=None, required=False)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>A Property whose value is a byte string. It may be compressed.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>default</code></strong></dt>
+<dd>The default value of the property</dd>
+<dt><strong><code>required</code></strong></dt>
+<dd>Enforce the property value to be provided</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">class BlobProperty(Property):
+    &#34;&#34;&#34;A Property whose value is a byte string. It may be compressed.&#34;&#34;&#34;
+    def __get_base_value__(self, user_value):
+        return self.__type_check__(user_value, (bytes, bytearray))
+
+    def __get_user_value__(self, base_value):
+        return base_value</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="mantle.firestore.db.Property" href="#mantle.firestore.db.Property">Property</a></li>
+</ul>
+</dd>
+<dt id="mantle.firestore.db.BooleanProperty"><code class="flex name class">
+<span>class <span class="ident">BooleanProperty</span></span>
+<span>(</span><span>default=None, required=False)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>A Property whose value is a Python bool.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>default</code></strong></dt>
+<dd>The default value of the property</dd>
+<dt><strong><code>required</code></strong></dt>
+<dd>Enforce the property value to be provided</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">class BooleanProperty(Property):
+    &#34;&#34;&#34;A Property whose value is a Python bool.&#34;&#34;&#34;
+    def __get_base_value__(self, user_value):
+        return self.__type_check__(user_value, bool)
+
+    def __get_user_value__(self, base_value):
+        return base_value</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="mantle.firestore.db.Property" href="#mantle.firestore.db.Property">Property</a></li>
+</ul>
+</dd>
+<dt id="mantle.firestore.db.DateProperty"><code class="flex name class">
+<span>class <span class="ident">DateProperty</span></span>
+<span>(</span><span>default=None, required=False, auto_add_now=False)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>A Property whose value is a date object.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>default</code></strong> :&ensp;<code>datetime</code></dt>
+<dd>The default value for this property</dd>
+<dt><strong><code>required</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Enforce that this property can't be submitted when empty</dd>
+<dt><strong><code>auto_add_now</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Set to the current date when a record is created</dd>
+</dl>
+<h2 id="args_1">Args</h2>
+<dl>
+<dt><strong><code>default</code></strong></dt>
+<dd>The default value of the property</dd>
+<dt><strong><code>required</code></strong></dt>
+<dd>Enforce the property value to be provided</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">class DateProperty(Property):
+    &#34;&#34;&#34;A Property whose value is a date object.
+
+    Args:
+        default (datetime): The default value for this property
+        required (bool): Enforce that this property can&#39;t be submitted when empty
+        auto_add_now (bool): Set to the current date when a record is created
+    &#34;&#34;&#34;
+    def __init__(self, default=None, required=False, auto_add_now=False):
+        if not default and auto_add_now:
+            default = SERVER_TIMESTAMP
+        super(DateProperty, self).__init__(default=default, required=required)
+
+    def __get_base_value__(self, user_value):
+        # Return server timestamp as the value
+        if user_value is None and self.default == SERVER_TIMESTAMP:
+            return SERVER_TIMESTAMP
+        if isinstance(user_value, datetime):
+            return user_value.date()
+        return self.__type_check__(user_value, date)
+
+    def __get_user_value__(self, base_value):
+        if isinstance(base_value, datetime):
+            return base_value.date()
+        return base_value</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="mantle.firestore.db.Property" href="#mantle.firestore.db.Property">Property</a></li>
+</ul>
+</dd>
+<dt id="mantle.firestore.db.DateTimeProperty"><code class="flex name class">
+<span>class <span class="ident">DateTimeProperty</span></span>
+<span>(</span><span>default=None, required=False, auto_now=False, auto_add_now=False)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>A Property whose value is a datetime object.</p>
+<p>Note: auto_now_add can be overridden by setting the value before writing the entity.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt>default (datetime)</dt>
+<dt><strong><code>required</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Enforce that this property can't be submitted when empty</dd>
+<dt><strong><code>auto_now</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Set to the current time every time the model is updated</dd>
+<dt><strong><code>auto_add_now</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Set to the current time when a record is created</dd>
+</dl>
+<h2 id="args_1">Args</h2>
+<dl>
+<dt><strong><code>default</code></strong></dt>
+<dd>The default value of the property</dd>
+<dt><strong><code>required</code></strong></dt>
+<dd>Enforce the property value to be provided</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">class DateTimeProperty(Property):
+    &#34;&#34;&#34;A Property whose value is a datetime object.
+
+    Note: auto_now_add can be overridden by setting the value before writing the entity.
+    Args:
+        default (datetime)
+        required (bool): Enforce that this property can&#39;t be submitted when empty
+        auto_now (bool): Set to the current time every time the model is updated
+        auto_add_now (bool): Set to the current time when a record is created
+    &#34;&#34;&#34;
+    def __init__(self, default=None, required=False, auto_now=False, auto_add_now=False):
+        if not default and auto_add_now:
+            default = SERVER_TIMESTAMP
+        super(DateTimeProperty, self).__init__(default=default, required=required)
+        self.auto_now = auto_now
+
+    def __get_base_value__(self, user_value):
+        # Return server timestamp as the value
+        if user_value == SERVER_TIMESTAMP or self.auto_now:
+            return SERVER_TIMESTAMP
+        if user_value is None and self.default == SERVER_TIMESTAMP:
+            return SERVER_TIMESTAMP
+        return self.__type_check__(user_value, datetime)
+
+    def __get_user_value__(self, base_value):
+        return base_value</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="mantle.firestore.db.Property" href="#mantle.firestore.db.Property">Property</a></li>
+</ul>
+</dd>
+<dt id="mantle.firestore.db.FloatingPointNumberProperty"><code class="flex name class">
+<span>class <span class="ident">FloatingPointNumberProperty</span></span>
+<span>(</span><span>default=None, required=False)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>A Property whose value is a Python float.</p>
+<p>Note: int and long are also allowed.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>default</code></strong></dt>
+<dd>The default value of the property</dd>
+<dt><strong><code>required</code></strong></dt>
+<dd>Enforce the property value to be provided</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">class FloatingPointNumberProperty(Property):
+    &#34;&#34;&#34;A Property whose value is a Python float.
+
+    Note: int and long are also allowed.
+    &#34;&#34;&#34;
+    def __get_base_value__(self, user_value: float):
+        user_value = self.__type_check__(user_value, (int, float))
+        return user_value
+
+    def __get_user_value__(self, base_value):
+        return base_value</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="mantle.firestore.db.Property" href="#mantle.firestore.db.Property">Property</a></li>
+</ul>
+</dd>
+<dt id="mantle.firestore.db.IntegerProperty"><code class="flex name class">
+<span>class <span class="ident">IntegerProperty</span></span>
+<span>(</span><span>default=None, required=False)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>A Property whose value is a Python int or long</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>default</code></strong></dt>
+<dd>The default value of the property</dd>
+<dt><strong><code>required</code></strong></dt>
+<dd>Enforce the property value to be provided</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">class IntegerProperty(Property):
+    &#34;&#34;&#34;A Property whose value is a Python int or long&#34;&#34;&#34;
+    def __get_base_value__(self, user_value):
+        return self.__type_check__(user_value, int)
+
+    def __get_user_value__(self, base_value):
+        return base_value</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="mantle.firestore.db.Property" href="#mantle.firestore.db.Property">Property</a></li>
+</ul>
+</dd>
+<dt id="mantle.firestore.db.InvalidPropertyError"><code class="flex name class">
+<span>class <span class="ident">InvalidPropertyError</span></span>
+<span>(</span><span>prop_name, model_name)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Raised if a non-existent property is provided during the creation of a model</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">class InvalidPropertyError(Exception):
+    &#34;&#34;&#34;Raised if a non-existent property is provided during the creation of a model&#34;&#34;&#34;
+
+    def __init__(self, prop_name, model_name):
+        self.prop_name = prop_name
+        self.model_name = model_name
+
+    def __str__(self):
+        return &#34;%s not found in model %s&#34; % (self.prop_name, self.model_name)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+</dd>
+<dt id="mantle.firestore.db.InvalidValueError"><code class="flex name class">
+<span>class <span class="ident">InvalidValueError</span></span>
+<span>(</span><span>property, value)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Raised if the value of a property does not fit the property type</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">class InvalidValueError(ValueError):
+    &#34;&#34;&#34;Raised if the value of a property does not fit the property type&#34;&#34;&#34;
+
+    def __init__(self, property, value):
+        self.property = property
+        self.value = value
+
+    def __str__(self):
+        return &#34;%s is not a valid value for property %s of type %s&#34; % \
+               (self.value, self.property.name, type(self.property).__name__)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>builtins.ValueError</li>
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+</dd>
+<dt id="mantle.firestore.db.JsonProperty"><code class="flex name class">
+<span>class <span class="ident">JsonProperty</span></span>
+<span>(</span><span>required=False)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>A property whose value is any Json-encodable Python object.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>default</code></strong></dt>
+<dd>The default value of the property</dd>
+<dt><strong><code>required</code></strong></dt>
+<dd>Enforce the property value to be provided</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">class JsonProperty(Property):
+    &#34;&#34;&#34;A property whose value is any Json-encodable Python object.
+    &#34;&#34;&#34;
+    def __init__(self, required=False):
+        super(JsonProperty, self).__init__(required=required, default={})
+
+    def __get_base_value__(self, user_value):
+        if isinstance(user_value, str):
+            try:
+                user_value = json.loads(user_value)
+            except json.JSONDecodeError:
+                raise InvalidPropertyError(self, &#34;Dict property must be valid JSON&#34;)
+        return self.__type_check__(user_value, dict)
+
+    def __get_user_value__(self, base_value):
+        return base_value</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="mantle.firestore.db.Property" href="#mantle.firestore.db.Property">Property</a></li>
+</ul>
+</dd>
+<dt id="mantle.firestore.db.ListProperty"><code class="flex name class">
+<span>class <span class="ident">ListProperty</span></span>
+<span>(</span><span>property_type)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>A List property</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>default</code></strong></dt>
+<dd>The default value of the property</dd>
+<dt><strong><code>required</code></strong></dt>
+<dd>Enforce the property value to be provided</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">class ListProperty(Property, list):
+    &#34;&#34;&#34;A List property&#34;&#34;&#34;
+    def __init__(self, property_type: Property):
+        super(ListProperty, self).__init__(default=[])
+        self.property_type = property_type
+
+    def __get_base_value__(self, user_value: list):
+        user_value = self.__type_check__(user_value, (list))
+        user_value = [self.property_type.__get_base_value__(value) for value in user_value]
+        return user_value
+
+    def __get_user_value__(self, base_value):
+        return base_value</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="mantle.firestore.db.Property" href="#mantle.firestore.db.Property">Property</a></li>
+<li>builtins.list</li>
+</ul>
+</dd>
+<dt id="mantle.firestore.db.MalformedQueryError"><code class="flex name class">
+<span>class <span class="ident">MalformedQueryError</span></span>
+<span>(</span><span>message)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Raised when the rules of a query are broken</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">class MalformedQueryError(Exception):
+    &#34;&#34;&#34;Raised when the rules of a query are broken&#34;&#34;&#34;
+
+    def __init__(self, message):
+        self.message = message
+
+    def __str__(self):
+        return self.message</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+</dd>
+<dt id="mantle.firestore.db.PickledProperty"><code class="flex name class">
+<span>class <span class="ident">PickledProperty</span></span>
+<span>(</span><span>default=None, required=False)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>A Property whose value is any picklable Python object.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>default</code></strong></dt>
+<dd>The default value of the property</dd>
+<dt><strong><code>required</code></strong></dt>
+<dd>Enforce the property value to be provided</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">class PickledProperty(Property):
+    &#34;&#34;&#34;A Property whose value is any picklable Python object.&#34;&#34;&#34;
+    def __int__(self, required=False):
+        super(PickledProperty, self).__init__(default=None, required=required)
+
+    def __get_base_value__(self, user_value):
+        return pickle.dumps(user_value)
+
+    def __get_user_value__(self, base_value):
+        return pickle.loads(base_value)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="mantle.firestore.db.Property" href="#mantle.firestore.db.Property">Property</a></li>
+</ul>
+</dd>
+<dt id="mantle.firestore.db.Property"><code class="flex name class">
+<span>class <span class="ident">Property</span></span>
+<span>(</span><span>default=None, required=False)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>A class describing a typed, persisted attribute of a database entity</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>default</code></strong></dt>
+<dd>The default value of the property</dd>
+<dt><strong><code>required</code></strong></dt>
+<dd>Enforce the property value to be provided</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">class Property(object):
+    &#34;&#34;&#34;
+    A class describing a typed, persisted attribute of a database entity
+    &#34;&#34;&#34;
+    def __init__(self, default=None, required=False):
+        &#34;&#34;&#34;
+        Args:
+            default: The default value of the property
+            required: Enforce the property value to be provided
+        &#34;&#34;&#34;
+        if type(self) is Property:
+            raise Exception(&#34;You must extend Property&#34;)
+        self.default = default
+        self.required = required
+        self.name = None
+
+    def __get_user_value__(self, base_value):
+        &#34;&#34;&#34;
+        Convert value from database to a value usable by the user
+        Args:
+            base_value: The current value from db
+
+        Returns:
+            user_value expected to be of the specified type
+        &#34;&#34;&#34;
+        raise NotImplementedError
+
+    def __get_base_value__(self, user_value):
+        &#34;&#34;&#34;
+        Convert value to database acceptable format
+        Args
+        :param user_value: Current user_value
+        :return: base_value
+        &#34;&#34;&#34;
+        raise NotImplementedError
+
+    def __type_check__(self, user_value, data_types):
+        &#34;&#34;&#34;
+        Check whether this value has the right data type
+        Args:
+            user_value: The user_value you want to confirm
+            data_types: Type/Types to check against
+
+        Returns:
+            Any
+        &#34;&#34;&#34;
+        if self.required and self.default is None and user_value is None:
+            raise InvalidValueError(self, user_value)
+        # Assign a default value if None is provided
+        if user_value is None:
+            user_value = self.default
+
+        if not isinstance(user_value, data_types) and user_value is not None:
+            raise InvalidValueError(self, user_value)
+        return user_value</code></pre>
+</details>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="mantle.firestore.db.TextProperty" href="#mantle.firestore.db.TextProperty">TextProperty</a></li>
+<li><a title="mantle.firestore.db.StringProperty" href="#mantle.firestore.db.StringProperty">StringProperty</a></li>
+<li><a title="mantle.firestore.db.IntegerProperty" href="#mantle.firestore.db.IntegerProperty">IntegerProperty</a></li>
+<li><a title="mantle.firestore.db.FloatingPointNumberProperty" href="#mantle.firestore.db.FloatingPointNumberProperty">FloatingPointNumberProperty</a></li>
+<li><a title="mantle.firestore.db.BlobProperty" href="#mantle.firestore.db.BlobProperty">BlobProperty</a></li>
+<li><a title="mantle.firestore.db.ListProperty" href="#mantle.firestore.db.ListProperty">ListProperty</a></li>
+<li><a title="mantle.firestore.db.ReferenceProperty" href="#mantle.firestore.db.ReferenceProperty">ReferenceProperty</a></li>
+<li><a title="mantle.firestore.db.JsonProperty" href="#mantle.firestore.db.JsonProperty">JsonProperty</a></li>
+<li><a title="mantle.firestore.db.BooleanProperty" href="#mantle.firestore.db.BooleanProperty">BooleanProperty</a></li>
+<li><a title="mantle.firestore.db.DateTimeProperty" href="#mantle.firestore.db.DateTimeProperty">DateTimeProperty</a></li>
+<li><a title="mantle.firestore.db.DateProperty" href="#mantle.firestore.db.DateProperty">DateProperty</a></li>
+<li><a title="mantle.firestore.db.PickledProperty" href="#mantle.firestore.db.PickledProperty">PickledProperty</a></li>
+</ul>
+</dd>
+<dt id="mantle.firestore.db.ReferenceProperty"><code class="flex name class">
+<span>class <span class="ident">ReferenceProperty</span></span>
+<span>(</span><span>entity, required=False)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>A property referencing/pointing to another model.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt>model Type(Entity): The model at which this property will be referencing</dt>
+<dt><strong><code>required</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Enforce that this entity not store empty data</dd>
+</dl>
+<h2 id="args_1">Args</h2>
+<dl>
+<dt><strong><code>default</code></strong></dt>
+<dd>The default value of the property</dd>
+<dt><strong><code>required</code></strong></dt>
+<dd>Enforce the property value to be provided</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">class ReferenceProperty(Property):
+    &#34;&#34;&#34;
+    A property referencing/pointing to another model.
+
+    Args:
+        model Type(Entity): The model at which this property will be referencing
+        required (bool): Enforce that this entity not store empty data
+    &#34;&#34;&#34;
+    def __init__(self, entity, required=False):
+        from mantle.firestore import Entity
+        if not issubclass(entity, Entity):
+            raise ReferencePropertyError(&#34;A reference property must reference another model&#34;)
+        super(ReferenceProperty, self).__init__(required=required)
+        self.entity = entity
+
+    def __get_base_value__(self, user_value):
+        user_value = self.__type_check__(user_value, (self.entity))
+        if not user_value:
+            return user_value
+        if not user_value.id:
+            raise ReferencePropertyError(&#34;A reference must be put first before it can be referenced&#34;)
+        return user_value.__document__()
+
+    def __get_user_value__(self, base_value):
+        if not base_value:
+            return None
+        user_data = self.entity.__get_user_data__(base_value.get().todict())
+        return self.entity(id=base_value.id, **user_data)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="mantle.firestore.db.Property" href="#mantle.firestore.db.Property">Property</a></li>
+</ul>
+</dd>
+<dt id="mantle.firestore.db.ReferencePropertyError"><code class="flex name class">
+<span>class <span class="ident">ReferencePropertyError</span></span>
+<span>(</span><span>message)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Raised when a reference property point's to a location the model can't resolve</p></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">class ReferencePropertyError(Exception):
+    &#34;&#34;&#34;Raised when a reference property point&#39;s to a location the model can&#39;t resolve&#34;&#34;&#34;
+    def __init__(self, message):
+        self.message = message
+
+    def __str__(self):
+        return self.message</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+</dd>
+<dt id="mantle.firestore.db.StringProperty"><code class="flex name class">
+<span>class <span class="ident">StringProperty</span></span>
+<span>(</span><span>default=None, length=255, required=False)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>An indexed Property whose value is a text string of limited length.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>default</code></strong></dt>
+<dd>Default value for this property</dd>
+<dt><strong><code>length</code></strong> :&ensp;<code>int</code></dt>
+<dd>The maximum length of this property</dd>
+<dt><strong><code>required</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Enforce whether this value can be empty</dd>
+</dl>
+<h2 id="args_1">Args</h2>
+<dl>
+<dt><strong><code>default</code></strong></dt>
+<dd>The default value of the property</dd>
+<dt><strong><code>required</code></strong></dt>
+<dd>Enforce the property value to be provided</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">class StringProperty(Property):
+    &#34;&#34;&#34;
+    An indexed Property whose value is a text string of limited length.
+
+    Args:
+        default: Default value for this property
+        length (int): The maximum length of this property
+        required (bool): Enforce whether this value can be empty
+    &#34;&#34;&#34;
+    def __init__(self, default=None, length=255, required=False):
+        super(StringProperty, self).__init__(default=default, required=required)
+        self.length = length
+
+    def __get_base_value__(self, user_value):
+        user_value = self.__type_check__(user_value, str)
+        if user_value is not None and len(user_value) &gt; self.length:
+            raise InvalidValueError(self, user_value)
+        return user_value
+
+    def __get_user_value__(self, base_value):
+        return base_value</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="mantle.firestore.db.Property" href="#mantle.firestore.db.Property">Property</a></li>
+</ul>
+</dd>
+<dt id="mantle.firestore.db.TextProperty"><code class="flex name class">
+<span>class <span class="ident">TextProperty</span></span>
+<span>(</span><span>default=None, required=False)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>An Property whose value is a text string of unlimited length.
+I'ts not advisable to index this property</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>default</code></strong></dt>
+<dd>The default value of the property</dd>
+<dt><strong><code>required</code></strong></dt>
+<dd>Enforce the property value to be provided</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">class TextProperty(Property):
+    &#34;&#34;&#34;An Property whose value is a text string of unlimited length.
+    I&#39;ts not advisable to index this property
+    &#34;&#34;&#34;
+    def __get_base_value__(self, user_value):
+        return self.__type_check__(user_value, str)
+
+    def __get_user_value__(self, base_value):
+        return base_value</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="mantle.firestore.db.Property" href="#mantle.firestore.db.Property">Property</a></li>
+</ul>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="mantle.firestore" href="index.html">mantle.firestore</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="mantle.firestore.db.BlobProperty" href="#mantle.firestore.db.BlobProperty">BlobProperty</a></code></h4>
+</li>
+<li>
+<h4><code><a title="mantle.firestore.db.BooleanProperty" href="#mantle.firestore.db.BooleanProperty">BooleanProperty</a></code></h4>
+</li>
+<li>
+<h4><code><a title="mantle.firestore.db.DateProperty" href="#mantle.firestore.db.DateProperty">DateProperty</a></code></h4>
+</li>
+<li>
+<h4><code><a title="mantle.firestore.db.DateTimeProperty" href="#mantle.firestore.db.DateTimeProperty">DateTimeProperty</a></code></h4>
+</li>
+<li>
+<h4><code><a title="mantle.firestore.db.FloatingPointNumberProperty" href="#mantle.firestore.db.FloatingPointNumberProperty">FloatingPointNumberProperty</a></code></h4>
+</li>
+<li>
+<h4><code><a title="mantle.firestore.db.IntegerProperty" href="#mantle.firestore.db.IntegerProperty">IntegerProperty</a></code></h4>
+</li>
+<li>
+<h4><code><a title="mantle.firestore.db.InvalidPropertyError" href="#mantle.firestore.db.InvalidPropertyError">InvalidPropertyError</a></code></h4>
+</li>
+<li>
+<h4><code><a title="mantle.firestore.db.InvalidValueError" href="#mantle.firestore.db.InvalidValueError">InvalidValueError</a></code></h4>
+</li>
+<li>
+<h4><code><a title="mantle.firestore.db.JsonProperty" href="#mantle.firestore.db.JsonProperty">JsonProperty</a></code></h4>
+</li>
+<li>
+<h4><code><a title="mantle.firestore.db.ListProperty" href="#mantle.firestore.db.ListProperty">ListProperty</a></code></h4>
+</li>
+<li>
+<h4><code><a title="mantle.firestore.db.MalformedQueryError" href="#mantle.firestore.db.MalformedQueryError">MalformedQueryError</a></code></h4>
+</li>
+<li>
+<h4><code><a title="mantle.firestore.db.PickledProperty" href="#mantle.firestore.db.PickledProperty">PickledProperty</a></code></h4>
+</li>
+<li>
+<h4><code><a title="mantle.firestore.db.Property" href="#mantle.firestore.db.Property">Property</a></code></h4>
+</li>
+<li>
+<h4><code><a title="mantle.firestore.db.ReferenceProperty" href="#mantle.firestore.db.ReferenceProperty">ReferenceProperty</a></code></h4>
+</li>
+<li>
+<h4><code><a title="mantle.firestore.db.ReferencePropertyError" href="#mantle.firestore.db.ReferencePropertyError">ReferencePropertyError</a></code></h4>
+</li>
+<li>
+<h4><code><a title="mantle.firestore.db.StringProperty" href="#mantle.firestore.db.StringProperty">StringProperty</a></code></h4>
+</li>
+<li>
+<h4><code><a title="mantle.firestore.db.TextProperty" href="#mantle.firestore.db.TextProperty">TextProperty</a></code></h4>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.6.3</a>.</p>
+</footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad()</script>
+</body>
+</html>
