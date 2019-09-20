@@ -65,7 +65,7 @@ class Property(object):
         return user_value
 
 
-class TextProperty(Property):
+class TextProperty(Property, str):
     """An Property whose value is a text string of unlimited length.
     I'ts not advisable to index this property
     """
@@ -76,7 +76,7 @@ class TextProperty(Property):
         return base_value
 
 
-class StringProperty(Property):
+class StringProperty(Property, str):
     """
     An indexed Property whose value is a text string of limited length.
 
@@ -99,7 +99,7 @@ class StringProperty(Property):
         return base_value
 
 
-class IntegerProperty(Property):
+class IntegerProperty(Property, int):
     """A Property whose value is a Python int or long"""
     def __get_base_value__(self, user_value):
         return self.__type_check__(user_value, int)
@@ -108,7 +108,7 @@ class IntegerProperty(Property):
         return base_value
 
 
-class FloatingPointNumberProperty(Property):
+class FloatingPointNumberProperty(Property, float):
     """A Property whose value is a Python float.
 
     Note: int and long are also allowed.
@@ -121,7 +121,7 @@ class FloatingPointNumberProperty(Property):
         return base_value
 
 
-class BlobProperty(Property):
+class BlobProperty(Property, bytes):
     """A Property whose value is a byte string. It may be compressed."""
     def __get_base_value__(self, user_value):
         return self.__type_check__(user_value, (bytes, bytearray))
@@ -145,37 +145,39 @@ class ListProperty(Property, list):
         return base_value
 
 
-class ReferenceProperty(Property):
+def ReferenceProperty(_entity, required=False):
     """
     A property referencing/pointing to another model.
 
     Args:
-        model Type(Entity): The model at which this property will be referencing
+        _entity (Type(Entity)): The model at which this property will be referencing
         required (bool): Enforce that this entity not store empty data
     """
-    def __init__(self, entity, required=False):
-        from mantle.firestore import Entity
-        if not issubclass(entity, Entity):
-            raise ReferencePropertyError("A reference property must reference another model")
-        super(ReferenceProperty, self).__init__(required=required)
-        self.entity = entity
+    class _ReferenceProperty(Property, _entity):
+        def __init__(self, entity, required=False):
+            from mantle.firestore import Entity
+            if not issubclass(entity, Entity):
+                raise ReferencePropertyError("A reference property must reference another model")
+            super(_ReferenceProperty, self).__init__(required=required)
+            self.entity = entity
 
-    def __get_base_value__(self, user_value):
-        user_value = self.__type_check__(user_value, (self.entity))
-        if not user_value:
-            return user_value
-        if not user_value.id:
-            raise ReferencePropertyError("A reference must be put first before it can be referenced")
-        return user_value.__document__()
+        def __get_base_value__(self, user_value):
+            user_value = self.__type_check__(user_value, (self.entity))
+            if not user_value:
+                return user_value
+            if not user_value.id:
+                raise ReferencePropertyError("A reference must be put first before it can be referenced")
+            return user_value.__document__()
 
-    def __get_user_value__(self, base_value):
-        if not base_value:
-            return None
-        user_data = self.entity.__get_user_data__(base_value.get().todict())
-        return self.entity(id=base_value.id, **user_data)
+        def __get_user_value__(self, base_value):
+            if not base_value:
+                return None
+            user_data = self.entity.__get_user_data__(base_value.get().todict())
+            return self.entity(id=base_value.id, **user_data)
+    return _ReferenceProperty(_entity, required=required)
 
 
-class JsonProperty(Property):
+class JsonProperty(Property, dict):
     """A property whose value is any Json-encodable Python object.
     """
     def __init__(self, required=False):
@@ -193,7 +195,7 @@ class JsonProperty(Property):
         return base_value
 
 
-class BooleanProperty(Property):
+class BooleanProperty(Property, bool):
     """A Property whose value is a Python bool."""
     def __get_base_value__(self, user_value):
         return self.__type_check__(user_value, bool)
@@ -202,7 +204,7 @@ class BooleanProperty(Property):
         return base_value
 
 
-class DateTimeProperty(Property):
+class DateTimeProperty(Property, datetime):
     """A Property whose value is a datetime object.
 
     Note: auto_now_add can be overridden by setting the value before writing the entity.
@@ -230,7 +232,7 @@ class DateTimeProperty(Property):
         return base_value
 
 
-class DateProperty(Property):
+class DateProperty(Property, date):
     """A Property whose value is a date object.
 
     Args:
