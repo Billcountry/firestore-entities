@@ -1,4 +1,4 @@
-### Mantle Firestore Model (BETA)([Docs](https://mantle-studio.github.io/models/))
+### Mantle Firestore Entities (BETA)([Docs](https://mantle-studio.github.io/models/))
 
 Implementation of models concept on top of Google cloud firestore.
 It tries to make interaction with firestore as simple as possible for the developer.
@@ -22,7 +22,7 @@ Assume a case of mantle.studio where a user can have
 from mantle.firestore import Entity, SERVER_TIMESTAMP, db
 
 class User(Entity):
-    user_name = db.TextProperty(length=16, required=True)
+    user_name = db.TextProperty( required=True)
     email = db.TextProperty(required=True)
     full_name = db.TextProperty(required=True)
     password = db.TextProperty(required=False)
@@ -32,14 +32,12 @@ class User(Entity):
 
 class Project(Entity):
     name = db.TextProperty(required=True)
-    logo = db.BytesProperty()
+    logo = db.BlobProperty()
 
     def create_account(self, user, roles = None ):
-        # Since account is a sub-collection of an enterprise,
-        # the parent enterprise must be provided
         if roles is None:
             roles = ["admin"]
-        account = Account(__parent__=self, user=user, roles=roles)
+        account = Account(user=user, roles=roles)
         account.put()
         return account
 
@@ -47,7 +45,7 @@ class Project(Entity):
 class Account(Entity):
     __sub_collection__ = Project
     user = db.ReferenceProperty(User)
-    roles = db.ListProperty(field_type=db.TextProperty())
+    roles = db.ListProperty(db.TextProperty())
     date_added = db.DateTimeProperty(auto_add_now=True)
     last_updated = db.DateTimeProperty(auto_now=True)
 
