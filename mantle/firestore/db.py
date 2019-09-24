@@ -195,7 +195,7 @@ class JsonProperty(Property, dict):
         return base_value
 
 
-class BooleanProperty(Property, bool):
+class BooleanProperty(Property, int):
     """A Property whose value is a Python bool."""
     def __get_base_value__(self, user_value):
         return self.__type_check__(user_value, bool)

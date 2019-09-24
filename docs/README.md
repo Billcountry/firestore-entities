@@ -58,6 +58,30 @@ This is a collection of tools used by mantle Database packages, the include prop
 
 
 
+    
+## Functions
+
+
+    
+### Function `ReferenceProperty` {#mantle.firestore.db.ReferenceProperty}
+
+
+
+    
+> `def ReferenceProperty(_entity, required=False)`
+
+
+A property referencing/pointing to another model.
+
+
+###### Args
+
+_entity (Type(Entity)): The model at which this property will be referencing
+**`required`** :&ensp;`bool`
+:   Enforce that this entity not store empty data
+
+
+
 
     
 ## Classes
@@ -90,6 +114,7 @@ A Property whose value is a byte string. It may be compressed.
 #### Ancestors (in MRO)
 
 * [mantle.firestore.db.Property](#mantle.firestore.db.Property)
+* [builtins.bytes](#builtins.bytes)
 
 
 
@@ -123,6 +148,7 @@ A Property whose value is a Python bool.
 #### Ancestors (in MRO)
 
 * [mantle.firestore.db.Property](#mantle.firestore.db.Property)
+* [builtins.int](#builtins.int)
 
 
 
@@ -171,6 +197,7 @@ A Property whose value is a date object.
 #### Ancestors (in MRO)
 
 * [mantle.firestore.db.Property](#mantle.firestore.db.Property)
+* [datetime.date](#datetime.date)
 
 
 
@@ -221,6 +248,8 @@ default (datetime)
 #### Ancestors (in MRO)
 
 * [mantle.firestore.db.Property](#mantle.firestore.db.Property)
+* [datetime.datetime](#datetime.datetime)
+* [datetime.date](#datetime.date)
 
 
 
@@ -256,6 +285,7 @@ Note: int and long are also allowed.
 #### Ancestors (in MRO)
 
 * [mantle.firestore.db.Property](#mantle.firestore.db.Property)
+* [builtins.float](#builtins.float)
 
 
 
@@ -289,6 +319,7 @@ A Property whose value is a Python int or long
 #### Ancestors (in MRO)
 
 * [mantle.firestore.db.Property](#mantle.firestore.db.Property)
+* [builtins.int](#builtins.int)
 
 
 
@@ -370,6 +401,7 @@ A property whose value is any Json-encodable Python object.
 #### Ancestors (in MRO)
 
 * [mantle.firestore.db.Property](#mantle.firestore.db.Property)
+* [builtins.dict](#builtins.dict)
 
 
 
@@ -499,53 +531,11 @@ A class describing a typed, persisted attribute of a database entity
 * [mantle.firestore.db.FloatingPointNumberProperty](#mantle.firestore.db.FloatingPointNumberProperty)
 * [mantle.firestore.db.BlobProperty](#mantle.firestore.db.BlobProperty)
 * [mantle.firestore.db.ListProperty](#mantle.firestore.db.ListProperty)
-* [mantle.firestore.db.ReferenceProperty](#mantle.firestore.db.ReferenceProperty)
 * [mantle.firestore.db.JsonProperty](#mantle.firestore.db.JsonProperty)
 * [mantle.firestore.db.BooleanProperty](#mantle.firestore.db.BooleanProperty)
 * [mantle.firestore.db.DateTimeProperty](#mantle.firestore.db.DateTimeProperty)
 * [mantle.firestore.db.DateProperty](#mantle.firestore.db.DateProperty)
 * [mantle.firestore.db.PickledProperty](#mantle.firestore.db.PickledProperty)
-
-
-
-
-
-    
-### Class `ReferenceProperty` {#mantle.firestore.db.ReferenceProperty}
-
-
-
-> `class ReferenceProperty(entity, required=False)`
-
-
-A property referencing/pointing to another model.
-
-
-#### Args
-
-model Type(Entity): The model at which this property will be referencing
-**`required`** :&ensp;`bool`
-:   Enforce that this entity not store empty data
-
-
-
-#### Args
-
-**`default`**
-:   The default value of the property
-
-
-**`required`**
-:   Enforce the property value to be provided
-
-
-
-
-    
-#### Ancestors (in MRO)
-
-* [mantle.firestore.db.Property](#mantle.firestore.db.Property)
-
 
 
 
@@ -616,6 +606,7 @@ An indexed Property whose value is a text string of limited length.
 #### Ancestors (in MRO)
 
 * [mantle.firestore.db.Property](#mantle.firestore.db.Property)
+* [builtins.str](#builtins.str)
 
 
 
@@ -650,6 +641,7 @@ I'ts not advisable to index this property
 #### Ancestors (in MRO)
 
 * [mantle.firestore.db.Property](#mantle.firestore.db.Property)
+* [builtins.str](#builtins.str)
 
 
 
