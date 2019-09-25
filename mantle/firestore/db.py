@@ -65,7 +65,7 @@ class Property(object):
         return user_value
 
 
-class TextProperty(Property, str):
+class TextProperty(Property):
     """An Property whose value is a text string of unlimited length.
     I'ts not advisable to index this property
     """
@@ -76,7 +76,7 @@ class TextProperty(Property, str):
         return base_value
 
 
-class StringProperty(Property, str):
+class StringProperty(Property):
     """
     An indexed Property whose value is a text string of limited length.
 
@@ -99,7 +99,7 @@ class StringProperty(Property, str):
         return base_value
 
 
-class IntegerProperty(Property, int):
+class IntegerProperty(Property):
     """A Property whose value is a Python int or long"""
     def __get_base_value__(self, user_value):
         return self.__type_check__(user_value, int)
@@ -108,7 +108,7 @@ class IntegerProperty(Property, int):
         return base_value
 
 
-class FloatingPointNumberProperty(Property, float):
+class FloatingPointNumberProperty(Property):
     """A Property whose value is a Python float.
 
     Note: int and long are also allowed.
@@ -121,7 +121,7 @@ class FloatingPointNumberProperty(Property, float):
         return base_value
 
 
-class BlobProperty(Property, bytes):
+class BlobProperty(Property):
     """A Property whose value is a byte string. It may be compressed."""
     def __get_base_value__(self, user_value):
         return self.__type_check__(user_value, (bytes, bytearray))
@@ -130,7 +130,7 @@ class BlobProperty(Property, bytes):
         return base_value
 
 
-class ListProperty(Property, list):
+class ListProperty(Property):
     """A List property"""
     def __init__(self, property_type: Property):
         super(ListProperty, self).__init__(default=[])
@@ -177,7 +177,7 @@ def ReferenceProperty(_entity, required=False):
     return _ReferenceProperty(_entity, required=required)
 
 
-class JsonProperty(Property, dict):
+class JsonProperty(Property):
     """A property whose value is any Json-encodable Python object.
     """
     def __init__(self, required=False):
@@ -195,7 +195,7 @@ class JsonProperty(Property, dict):
         return base_value
 
 
-class BooleanProperty(Property, int):
+class BooleanProperty(Property):
     """A Property whose value is a Python bool."""
     def __get_base_value__(self, user_value):
         return self.__type_check__(user_value, bool)
@@ -204,7 +204,7 @@ class BooleanProperty(Property, int):
         return base_value
 
 
-class DateTimeProperty(Property, datetime):
+class DateTimeProperty(Property):
     """A Property whose value is a datetime object.
 
     Note: auto_now_add can be overridden by setting the value before writing the entity.
@@ -232,7 +232,7 @@ class DateTimeProperty(Property, datetime):
         return base_value
 
 
-class DateProperty(Property, date):
+class DateProperty(Property):
     """A Property whose value is a date object.
 
     Args:
