@@ -145,36 +145,27 @@ class ListProperty(Property):
         return base_value
 
 
-def ReferenceProperty(_entity, required=False):
-    """
-    A property referencing/pointing to another model.
+class ReferenceProperty(Property):
+    def __init__(self, entity, required=False):
+        from mantle.firestore import Entity
+        if not issubclass(entity, Entity):
+            raise ReferencePropertyError("A reference property must reference another model")
+        super(ReferenceProperty, self).__init__(required=required)
+        self.entity = entity
 
-    Args:
-        _entity (Type(Entity)): The model at which this property will be referencing
-        required (bool): Enforce that this entity not store empty data
-    """
-    class _ReferenceProperty(Property, _entity):
-        def __init__(self, entity, required=False):
-            from mantle.firestore import Entity
-            if not issubclass(entity, Entity):
-                raise ReferencePropertyError("A reference property must reference another model")
-            super(_ReferenceProperty, self).__init__(required=required)
-            self.entity = entity
+    def __get_base_value__(self, user_value):
+        user_value = self.__type_check__(user_value, (self.entity))
+        if not user_value:
+            return user_value
+        if not user_value.id:
+            raise ReferencePropertyError("A reference must be put first before it can be referenced")
+        return user_value.__document__()
 
-        def __get_base_value__(self, user_value):
-            user_value = self.__type_check__(user_value, (self.entity))
-            if not user_value:
-                return user_value
-            if not user_value.id:
-                raise ReferencePropertyError("A reference must be put first before it can be referenced")
-            return user_value.__document__()
-
-        def __get_user_value__(self, base_value):
-            if not base_value:
-                return None
-            user_data = self.entity.__get_user_data__(base_value.get().todict())
-            return self.entity(id=base_value.id, **user_data)
-    return _ReferenceProperty(_entity, required=required)
+    def __get_user_value__(self, base_value):
+        if not base_value:
+            return None
+        user_data = self.entity.__get_user_data__(base_value.get().todict())
+        return self.entity(id=base_value.id, **user_data)
 
 
 class JsonProperty(Property):
