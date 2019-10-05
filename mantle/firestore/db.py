@@ -164,7 +164,7 @@ class ReferenceProperty(Property):
     def __get_user_value__(self, base_value):
         if not base_value:
             return None
-        user_data = self.entity.__get_user_data__(base_value.get().todict())
+        user_data = self.entity.__get_user_data__(base_value.get().to_dict())
         return self.entity(id=base_value.id, **user_data)
 
 
