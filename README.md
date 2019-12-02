@@ -1,6 +1,6 @@
 ### Firestore Entities (BETA)([Docs](https://billcountry.github.io/firestore-entities/))
 
-[![PyPI version](https://badge.fury.io/py/firestore-entities.svg)](https://badge.fury.io/py/firestore-entities)
+[![PyPI version](https://badge.fury.io/py/firestore-entities.svg)](https://pypi.org/project/firestore-entities/)
 [![CircleCI](https://circleci.com/gh/Billcountry/firestore-entities/tree/master.svg?style=svg)](https://circleci.com/gh/Billcountry/firestore-entities/tree/master)
 [![codecov](https://codecov.io/gh/Billcountry/firestore-entities/branch/master/graph/badge.svg)](https://codecov.io/gh/Billcountry/firestore-entities)
 [![Known Vulnerabilities](https://snyk.io/test/github/Billcountry/firestore-entities/badge.svg?targetFile=requirements.txt)](https://snyk.io/test/github/Billcountry/firestore-entities?targetFile=requirements.txt)
