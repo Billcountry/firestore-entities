@@ -147,7 +147,7 @@ class ListProperty(Property):
 
 class ReferenceProperty(Property):
     def __init__(self, entity, required=False):
-        from mantle.firestore import Entity
+        from firestore import Entity
         if not issubclass(entity, Entity):
             raise ReferencePropertyError("A reference property must reference another model")
         super(ReferenceProperty, self).__init__(required=required)

@@ -1,5 +1,6 @@
 import unittest
-from mantle.firestore import SERVER_TIMESTAMP, db
+from firestore import SERVER_TIMESTAMP
+from firestore import db
 import json
 from datetime import datetime, date
 from mockfirestore import MockFirestore

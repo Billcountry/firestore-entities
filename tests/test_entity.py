@@ -1,5 +1,6 @@
 import unittest
-from mantle.firestore import Entity, db
+from firestore import Entity
+from firestore import db
 
 """
 A small chat application with conservations support.

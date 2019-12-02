@@ -1,5 +1,5 @@
 from google.cloud.firestore import Query as FSQuery
-from mantle.firestore.db import MalformedQueryError, ListProperty
+from firestore.db import MalformedQueryError, ListProperty
 
 
 class Query(object):
@@ -18,7 +18,7 @@ class Query(object):
             limit: Maximum number of results to return
         """
         print(entity)
-        from mantle.firestore.entity import __get_client__
+        from firestore.entity import __get_client__
         self.__query = __get_client__().collection(entity.__name__)
         if offset:
             self.__query = self.__query.offset(offset)

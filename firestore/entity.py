@@ -1,6 +1,6 @@
 from google.cloud.firestore import Client
-from mantle.firestore.db import InvalidPropertyError, Property
-from mantle.firestore.query import Query
+from firestore.db import InvalidPropertyError, Property
+from firestore.query import Query
 
 
 def __get_client__():
