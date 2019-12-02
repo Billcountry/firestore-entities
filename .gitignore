@@ -3,7 +3,6 @@ __pycache__
 *.pyc
 .idea
 .coverage
-mantle_firestore.egg-info
 dist
 coverage.xml
 setuptools

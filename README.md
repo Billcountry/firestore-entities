@@ -1,10 +1,10 @@
-### Firestore Entities (BETA)([Docs](https://mantle-studio.github.io/models/))
+### Firestore Entities (BETA)([Docs](https://billcountry.github.io/firestore-entities/))
 
 [![CircleCI](https://circleci.com/gh/Billcountry/firestore-entities/tree/master.svg?style=svg)](https://circleci.com/gh/Billcountry/firestore-entities/tree/master)
 [![codecov](https://codecov.io/gh/Billcountry/firestore-entities/branch/master/graph/badge.svg)](https://codecov.io/gh/Billcountry/firestore-entities)
 
 Implementation of models concept on top of Google cloud firestore.
-It tries to make interaction with firestore as simple as possible for the developer.
+Firestore entities try to make interaction with firestore as simple as possible for the developer.
 
 #### Installation
 ```shell script
@@ -14,9 +14,9 @@ pip install firestore-entities
 #### Examples
 ```python
 """
-This code creates a model with some possible scenarios when working with db.FirestoreModel
+This code creates a model with some possible scenarios when working with firestore.Entity
 
-Assume a case of mantle.studio where a user can have
+Assume a case where a user can have
 - Single login
 - Be in multiple projects
 - Have an account in each project
