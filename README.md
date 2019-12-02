@@ -1,4 +1,4 @@
-### Mantle Firestore Entities (BETA)([Docs](https://mantle-studio.github.io/models/))
+### Firestore Entities (BETA)([Docs](https://mantle-studio.github.io/models/))
 
 Implementation of models concept on top of Google cloud firestore.
 It tries to make interaction with firestore as simple as possible for the developer.
