@@ -1,6 +1,7 @@
 ### Firestore Entities (BETA)([Docs](https://mantle-studio.github.io/models/))
 
 [![CircleCI](https://circleci.com/gh/Billcountry/firestore-entities/tree/master.svg?style=svg)](https://circleci.com/gh/Billcountry/firestore-entities/tree/master)
+[![codecov](https://codecov.io/gh/Billcountry/firestore-entities/branch/master/graph/badge.svg)](https://codecov.io/gh/Billcountry/firestore-entities)
 
 Implementation of models concept on top of Google cloud firestore.
 It tries to make interaction with firestore as simple as possible for the developer.

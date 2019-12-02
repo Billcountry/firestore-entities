@@ -50,7 +50,8 @@ jobs:
           name: run tests
           command: |
             . venv/bin/activate
-            python tests/run.py
+            coverage run tests/run.py
+            codecov
 
       - store_artifacts:
           path: test-reports
