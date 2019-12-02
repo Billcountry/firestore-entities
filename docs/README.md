@@ -1,6 +1,6 @@
 ---
 description: |
-    API documentation for modules: mantle, mantle.firestore, mantle.firestore.db, mantle.firestore.entity, mantle.firestore.query.
+    API documentation for modules: firestore, firestore.db, firestore.entity, firestore.query.
 
 lang: en
 
@@ -14,24 +14,7 @@ links-as-notes: true
 
 
     
-# Module `mantle` {#mantle}
-
-Mantle is a collection of backend libraries for easy creation of backend systems
-
-
-
-    
-## Sub-modules
-
-* [mantle.firestore](#mantle.firestore)
-
-
-
-
-
-
-    
-# Module `mantle.firestore` {#mantle.firestore}
+# Module `firestore` {#firestore}
 
 
 
@@ -40,9 +23,9 @@ Mantle is a collection of backend libraries for easy creation of backend systems
     
 ## Sub-modules
 
-* [mantle.firestore.db](#mantle.firestore.db)
-* [mantle.firestore.entity](#mantle.firestore.entity)
-* [mantle.firestore.query](#mantle.firestore.query)
+* [firestore.db](#firestore.db)
+* [firestore.entity](#firestore.entity)
+* [firestore.query](#firestore.query)
 
 
 
@@ -50,35 +33,11 @@ Mantle is a collection of backend libraries for easy creation of backend systems
 
 
     
-# Module `mantle.firestore.db` {#mantle.firestore.db}
+# Module `firestore.db` {#firestore.db}
 
 This is a collection of tools used by mantle Database packages, the include property types and common errors
 
 
-
-
-
-    
-## Functions
-
-
-    
-### Function `ReferenceProperty` {#mantle.firestore.db.ReferenceProperty}
-
-
-
-    
-> `def ReferenceProperty(_entity, required=False)`
-
-
-A property referencing/pointing to another model.
-
-
-###### Args
-
-_entity (Type(Entity)): The model at which this property will be referencing
-**`required`** :&ensp;`bool`
-:   Enforce that this entity not store empty data
 
 
 
@@ -88,7 +47,7 @@ _entity (Type(Entity)): The model at which this property will be referencing
 
 
     
-### Class `BlobProperty` {#mantle.firestore.db.BlobProperty}
+### Class `BlobProperty` {#firestore.db.BlobProperty}
 
 
 
@@ -113,8 +72,7 @@ A Property whose value is a byte string. It may be compressed.
     
 #### Ancestors (in MRO)
 
-* [mantle.firestore.db.Property](#mantle.firestore.db.Property)
-* [builtins.bytes](#builtins.bytes)
+* [firestore.db.Property](#firestore.db.Property)
 
 
 
@@ -122,7 +80,7 @@ A Property whose value is a byte string. It may be compressed.
 
 
     
-### Class `BooleanProperty` {#mantle.firestore.db.BooleanProperty}
+### Class `BooleanProperty` {#firestore.db.BooleanProperty}
 
 
 
@@ -147,8 +105,7 @@ A Property whose value is a Python bool.
     
 #### Ancestors (in MRO)
 
-* [mantle.firestore.db.Property](#mantle.firestore.db.Property)
-* [builtins.int](#builtins.int)
+* [firestore.db.Property](#firestore.db.Property)
 
 
 
@@ -156,7 +113,7 @@ A Property whose value is a Python bool.
 
 
     
-### Class `DateProperty` {#mantle.firestore.db.DateProperty}
+### Class `DateProperty` {#firestore.db.DateProperty}
 
 
 
@@ -196,8 +153,7 @@ A Property whose value is a date object.
     
 #### Ancestors (in MRO)
 
-* [mantle.firestore.db.Property](#mantle.firestore.db.Property)
-* [datetime.date](#datetime.date)
+* [firestore.db.Property](#firestore.db.Property)
 
 
 
@@ -205,7 +161,7 @@ A Property whose value is a date object.
 
 
     
-### Class `DateTimeProperty` {#mantle.firestore.db.DateTimeProperty}
+### Class `DateTimeProperty` {#firestore.db.DateTimeProperty}
 
 
 
@@ -247,9 +203,7 @@ default (datetime)
     
 #### Ancestors (in MRO)
 
-* [mantle.firestore.db.Property](#mantle.firestore.db.Property)
-* [datetime.datetime](#datetime.datetime)
-* [datetime.date](#datetime.date)
+* [firestore.db.Property](#firestore.db.Property)
 
 
 
@@ -257,7 +211,7 @@ default (datetime)
 
 
     
-### Class `FloatingPointNumberProperty` {#mantle.firestore.db.FloatingPointNumberProperty}
+### Class `FloatingPointNumberProperty` {#firestore.db.FloatingPointNumberProperty}
 
 
 
@@ -284,8 +238,7 @@ Note: int and long are also allowed.
     
 #### Ancestors (in MRO)
 
-* [mantle.firestore.db.Property](#mantle.firestore.db.Property)
-* [builtins.float](#builtins.float)
+* [firestore.db.Property](#firestore.db.Property)
 
 
 
@@ -293,7 +246,7 @@ Note: int and long are also allowed.
 
 
     
-### Class `IntegerProperty` {#mantle.firestore.db.IntegerProperty}
+### Class `IntegerProperty` {#firestore.db.IntegerProperty}
 
 
 
@@ -318,8 +271,7 @@ A Property whose value is a Python int or long
     
 #### Ancestors (in MRO)
 
-* [mantle.firestore.db.Property](#mantle.firestore.db.Property)
-* [builtins.int](#builtins.int)
+* [firestore.db.Property](#firestore.db.Property)
 
 
 
@@ -327,7 +279,7 @@ A Property whose value is a Python int or long
 
 
     
-### Class `InvalidPropertyError` {#mantle.firestore.db.InvalidPropertyError}
+### Class `InvalidPropertyError` {#firestore.db.InvalidPropertyError}
 
 
 
@@ -350,7 +302,7 @@ Raised if a non-existent property is provided during the creation of a model
 
 
     
-### Class `InvalidValueError` {#mantle.firestore.db.InvalidValueError}
+### Class `InvalidValueError` {#firestore.db.InvalidValueError}
 
 
 
@@ -374,7 +326,7 @@ Raised if the value of a property does not fit the property type
 
 
     
-### Class `JsonProperty` {#mantle.firestore.db.JsonProperty}
+### Class `JsonProperty` {#firestore.db.JsonProperty}
 
 
 
@@ -400,8 +352,7 @@ A property whose value is any Json-encodable Python object.
     
 #### Ancestors (in MRO)
 
-* [mantle.firestore.db.Property](#mantle.firestore.db.Property)
-* [builtins.dict](#builtins.dict)
+* [firestore.db.Property](#firestore.db.Property)
 
 
 
@@ -409,7 +360,7 @@ A property whose value is any Json-encodable Python object.
 
 
     
-### Class `ListProperty` {#mantle.firestore.db.ListProperty}
+### Class `ListProperty` {#firestore.db.ListProperty}
 
 
 
@@ -434,8 +385,7 @@ A List property
     
 #### Ancestors (in MRO)
 
-* [mantle.firestore.db.Property](#mantle.firestore.db.Property)
-* [builtins.list](#builtins.list)
+* [firestore.db.Property](#firestore.db.Property)
 
 
 
@@ -443,7 +393,7 @@ A List property
 
 
     
-### Class `MalformedQueryError` {#mantle.firestore.db.MalformedQueryError}
+### Class `MalformedQueryError` {#firestore.db.MalformedQueryError}
 
 
 
@@ -466,7 +416,7 @@ Raised when the rules of a query are broken
 
 
     
-### Class `PickledProperty` {#mantle.firestore.db.PickledProperty}
+### Class `PickledProperty` {#firestore.db.PickledProperty}
 
 
 
@@ -491,7 +441,7 @@ A Property whose value is any picklable Python object.
     
 #### Ancestors (in MRO)
 
-* [mantle.firestore.db.Property](#mantle.firestore.db.Property)
+* [firestore.db.Property](#firestore.db.Property)
 
 
 
@@ -499,7 +449,7 @@ A Property whose value is any picklable Python object.
 
 
     
-### Class `Property` {#mantle.firestore.db.Property}
+### Class `Property` {#firestore.db.Property}
 
 
 
@@ -525,24 +475,58 @@ A class describing a typed, persisted attribute of a database entity
     
 #### Descendants
 
-* [mantle.firestore.db.TextProperty](#mantle.firestore.db.TextProperty)
-* [mantle.firestore.db.StringProperty](#mantle.firestore.db.StringProperty)
-* [mantle.firestore.db.IntegerProperty](#mantle.firestore.db.IntegerProperty)
-* [mantle.firestore.db.FloatingPointNumberProperty](#mantle.firestore.db.FloatingPointNumberProperty)
-* [mantle.firestore.db.BlobProperty](#mantle.firestore.db.BlobProperty)
-* [mantle.firestore.db.ListProperty](#mantle.firestore.db.ListProperty)
-* [mantle.firestore.db.JsonProperty](#mantle.firestore.db.JsonProperty)
-* [mantle.firestore.db.BooleanProperty](#mantle.firestore.db.BooleanProperty)
-* [mantle.firestore.db.DateTimeProperty](#mantle.firestore.db.DateTimeProperty)
-* [mantle.firestore.db.DateProperty](#mantle.firestore.db.DateProperty)
-* [mantle.firestore.db.PickledProperty](#mantle.firestore.db.PickledProperty)
+* [firestore.db.TextProperty](#firestore.db.TextProperty)
+* [firestore.db.StringProperty](#firestore.db.StringProperty)
+* [firestore.db.IntegerProperty](#firestore.db.IntegerProperty)
+* [firestore.db.FloatingPointNumberProperty](#firestore.db.FloatingPointNumberProperty)
+* [firestore.db.BlobProperty](#firestore.db.BlobProperty)
+* [firestore.db.ListProperty](#firestore.db.ListProperty)
+* [firestore.db.ReferenceProperty](#firestore.db.ReferenceProperty)
+* [firestore.db.JsonProperty](#firestore.db.JsonProperty)
+* [firestore.db.BooleanProperty](#firestore.db.BooleanProperty)
+* [firestore.db.DateTimeProperty](#firestore.db.DateTimeProperty)
+* [firestore.db.DateProperty](#firestore.db.DateProperty)
+* [firestore.db.PickledProperty](#firestore.db.PickledProperty)
 
 
 
 
 
     
-### Class `ReferencePropertyError` {#mantle.firestore.db.ReferencePropertyError}
+### Class `ReferenceProperty` {#firestore.db.ReferenceProperty}
+
+
+
+> `class ReferenceProperty(entity, required=False)`
+
+
+A class describing a typed, persisted attribute of a database entity
+
+
+#### Args
+
+**`default`**
+:   The default value of the property
+
+
+**`required`**
+:   Enforce the property value to be provided
+
+
+
+
+    
+#### Ancestors (in MRO)
+
+* [firestore.db.Property](#firestore.db.Property)
+
+
+
+
+
+
+    
+### Class `ReferencePropertyError` {#firestore.db.ReferencePropertyError}
 
 
 
@@ -565,7 +549,7 @@ Raised when a reference property point's to a location the model can't resolve
 
 
     
-### Class `StringProperty` {#mantle.firestore.db.StringProperty}
+### Class `StringProperty` {#firestore.db.StringProperty}
 
 
 
@@ -605,8 +589,7 @@ An indexed Property whose value is a text string of limited length.
     
 #### Ancestors (in MRO)
 
-* [mantle.firestore.db.Property](#mantle.firestore.db.Property)
-* [builtins.str](#builtins.str)
+* [firestore.db.Property](#firestore.db.Property)
 
 
 
@@ -614,7 +597,7 @@ An indexed Property whose value is a text string of limited length.
 
 
     
-### Class `TextProperty` {#mantle.firestore.db.TextProperty}
+### Class `TextProperty` {#firestore.db.TextProperty}
 
 
 
@@ -640,8 +623,7 @@ I'ts not advisable to index this property
     
 #### Ancestors (in MRO)
 
-* [mantle.firestore.db.Property](#mantle.firestore.db.Property)
-* [builtins.str](#builtins.str)
+* [firestore.db.Property](#firestore.db.Property)
 
 
 
@@ -651,7 +633,7 @@ I'ts not advisable to index this property
 
 
     
-# Module `mantle.firestore.entity` {#mantle.firestore.entity}
+# Module `firestore.entity` {#firestore.entity}
 
 
 
@@ -665,7 +647,7 @@ I'ts not advisable to index this property
 
 
     
-### Class `Entity` {#mantle.firestore.entity.Entity}
+### Class `Entity` {#firestore.entity.Entity}
 
 
 
@@ -700,7 +682,7 @@ Creates a firestore document under the collection [YourEntity]
 
 
     
-##### `Method get` {#mantle.firestore.entity.Entity.get}
+##### `Method get` {#firestore.entity.Entity.get}
 
 
 
@@ -721,7 +703,7 @@ Get a model with the given id
 
 ###### Returns
 
-**[`Entity`](#mantle.firestore.entity.Entity)**
+**[`Entity`](#firestore.entity.Entity)**
 :   An instance of the firestore entity calling get
 
 
@@ -731,7 +713,7 @@ Get a model with the given id
 
 
     
-##### `Method query` {#mantle.firestore.entity.Entity.query}
+##### `Method query` {#firestore.entity.Entity.query}
 
 
 
@@ -766,7 +748,7 @@ Create a query to this model
 
 
     
-##### Method `delete` {#mantle.firestore.entity.Entity.delete}
+##### Method `delete` {#firestore.entity.Entity.delete}
 
 
 
@@ -778,7 +760,7 @@ Delete the document connected to this model from firestore
 
 
     
-##### Method `put` {#mantle.firestore.entity.Entity.put}
+##### Method `put` {#firestore.entity.Entity.put}
 
 
 
@@ -799,7 +781,7 @@ Save the models data to Firestore
 
 
     
-# Module `mantle.firestore.query` {#mantle.firestore.query}
+# Module `firestore.query` {#firestore.query}
 
 
 
@@ -813,7 +795,7 @@ Save the models data to Firestore
 
 
     
-### Class `Query` {#mantle.firestore.query.Query}
+### Class `Query` {#firestore.query.Query}
 
 
 
@@ -853,7 +835,7 @@ Initialize a query
 
 
     
-##### Method `contains` {#mantle.firestore.query.Query.contains}
+##### Method `contains` {#firestore.query.Query.contains}
 
 
 
@@ -877,7 +859,7 @@ A query condition where `value in property`
 
 ###### Returns
 
-**[`Query`](#mantle.firestore.query.Query)**
+**[`Query`](#firestore.query.Query)**
 :   A query object with this condition added
 
 
@@ -891,7 +873,7 @@ A query condition where `value in property`
 
 
     
-##### Method `equal` {#mantle.firestore.query.Query.equal}
+##### Method `equal` {#firestore.query.Query.equal}
 
 
 
@@ -915,13 +897,13 @@ A query condition where property == value
 
 ###### Returns
 
-**[`Query`](#mantle.firestore.query.Query)**
+**[`Query`](#firestore.query.Query)**
 :   A query object with this condition added
 
 
 
     
-##### Method `fetch` {#mantle.firestore.query.Query.fetch}
+##### Method `fetch` {#firestore.query.Query.fetch}
 
 
 
@@ -940,7 +922,7 @@ Get the results of the query as a list
 
 
     
-##### Method `greater_than` {#mantle.firestore.query.Query.greater_than}
+##### Method `greater_than` {#firestore.query.Query.greater_than}
 
 
 
@@ -964,13 +946,13 @@ A query condition where property > value
 
 ###### Returns
 
-**[`Query`](#mantle.firestore.query.Query)**
+**[`Query`](#firestore.query.Query)**
 :   A query object with this condition added
 
 
 
     
-##### Method `greater_than_or_equal` {#mantle.firestore.query.Query.greater_than_or_equal}
+##### Method `greater_than_or_equal` {#firestore.query.Query.greater_than_or_equal}
 
 
 
@@ -994,13 +976,13 @@ A query condition where property >= value
 
 ###### Returns
 
-**[`Query`](#mantle.firestore.query.Query)**
+**[`Query`](#firestore.query.Query)**
 :   A query object with this condition added
 
 
 
     
-##### Method `less_than` {#mantle.firestore.query.Query.less_than}
+##### Method `less_than` {#firestore.query.Query.less_than}
 
 
 
@@ -1024,13 +1006,13 @@ A query condition where property < value
 
 ###### Returns
 
-**[`Query`](#mantle.firestore.query.Query)**
+**[`Query`](#firestore.query.Query)**
 :   A query object with this condition added
 
 
 
     
-##### Method `less_than_or_equal` {#mantle.firestore.query.Query.less_than_or_equal}
+##### Method `less_than_or_equal` {#firestore.query.Query.less_than_or_equal}
 
 
 
@@ -1054,13 +1036,13 @@ A query condition where property <= value
 
 ###### Returns
 
-**[`Query`](#mantle.firestore.query.Query)**
+**[`Query`](#firestore.query.Query)**
 :   A query object with this condition added
 
 
 
     
-##### Method `order_by` {#mantle.firestore.query.Query.order_by}
+##### Method `order_by` {#firestore.query.Query.order_by}
 
 
 
@@ -1081,7 +1063,7 @@ direction (str: "ASC" or "DESC"), optional:
 
 ###### Returns
 
-**[`Query`](#mantle.firestore.query.Query)**
+**[`Query`](#firestore.query.Query)**
 :   A query object with order applied
 
 

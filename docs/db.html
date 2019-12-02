@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.6.3" />
-<title>mantle.firestore.db API documentation</title>
+<title>firestore.db API documentation</title>
 <meta name="description" content="This is a collection of tools used by mantle Database packages, the include property types and common errors" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
@@ -17,7 +17,7 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>mantle.firestore.db</code></h1>
+<h1 class="title">Module <code>firestore.db</code></h1>
 </header>
 <section id="section-intro">
 <p>This is a collection of tools used by mantle Database packages, the include property types and common errors</p>
@@ -90,7 +90,7 @@ class Property(object):
         return user_value
 
 
-class TextProperty(Property, str):
+class TextProperty(Property):
     &#34;&#34;&#34;An Property whose value is a text string of unlimited length.
     I&#39;ts not advisable to index this property
     &#34;&#34;&#34;
@@ -101,7 +101,7 @@ class TextProperty(Property, str):
         return base_value
 
 
-class StringProperty(Property, str):
+class StringProperty(Property):
     &#34;&#34;&#34;
     An indexed Property whose value is a text string of limited length.
 
@@ -124,7 +124,7 @@ class StringProperty(Property, str):
         return base_value
 
 
-class IntegerProperty(Property, int):
+class IntegerProperty(Property):
     &#34;&#34;&#34;A Property whose value is a Python int or long&#34;&#34;&#34;
     def __get_base_value__(self, user_value):
         return self.__type_check__(user_value, int)
@@ -133,7 +133,7 @@ class IntegerProperty(Property, int):
         return base_value
 
 
-class FloatingPointNumberProperty(Property, float):
+class FloatingPointNumberProperty(Property):
     &#34;&#34;&#34;A Property whose value is a Python float.
 
     Note: int and long are also allowed.
@@ -146,7 +146,7 @@ class FloatingPointNumberProperty(Property, float):
         return base_value
 
 
-class BlobProperty(Property, bytes):
+class BlobProperty(Property):
     &#34;&#34;&#34;A Property whose value is a byte string. It may be compressed.&#34;&#34;&#34;
     def __get_base_value__(self, user_value):
         return self.__type_check__(user_value, (bytes, bytearray))
@@ -155,7 +155,7 @@ class BlobProperty(Property, bytes):
         return base_value
 
 
-class ListProperty(Property, list):
+class ListProperty(Property):
     &#34;&#34;&#34;A List property&#34;&#34;&#34;
     def __init__(self, property_type: Property):
         super(ListProperty, self).__init__(default=[])
@@ -170,39 +170,30 @@ class ListProperty(Property, list):
         return base_value
 
 
-def ReferenceProperty(_entity, required=False):
-    &#34;&#34;&#34;
-    A property referencing/pointing to another model.
+class ReferenceProperty(Property):
+    def __init__(self, entity, required=False):
+        from firestore import Entity
+        if not issubclass(entity, Entity):
+            raise ReferencePropertyError(&#34;A reference property must reference another model&#34;)
+        super(ReferenceProperty, self).__init__(required=required)
+        self.entity = entity
 
-    Args:
-        _entity (Type(Entity)): The model at which this property will be referencing
-        required (bool): Enforce that this entity not store empty data
-    &#34;&#34;&#34;
-    class _ReferenceProperty(Property, _entity):
-        def __init__(self, entity, required=False):
-            from mantle.firestore import Entity
-            if not issubclass(entity, Entity):
-                raise ReferencePropertyError(&#34;A reference property must reference another model&#34;)
-            super(_ReferenceProperty, self).__init__(required=required)
-            self.entity = entity
+    def __get_base_value__(self, user_value):
+        user_value = self.__type_check__(user_value, (self.entity))
+        if not user_value:
+            return user_value
+        if not user_value.id:
+            raise ReferencePropertyError(&#34;A reference must be put first before it can be referenced&#34;)
+        return user_value.__document__()
 
-        def __get_base_value__(self, user_value):
-            user_value = self.__type_check__(user_value, (self.entity))
-            if not user_value:
-                return user_value
-            if not user_value.id:
-                raise ReferencePropertyError(&#34;A reference must be put first before it can be referenced&#34;)
-            return user_value.__document__()
-
-        def __get_user_value__(self, base_value):
-            if not base_value:
-                return None
-            user_data = self.entity.__get_user_data__(base_value.get().todict())
-            return self.entity(id=base_value.id, **user_data)
-    return _ReferenceProperty(_entity, required=required)
+    def __get_user_value__(self, base_value):
+        if not base_value:
+            return None
+        user_data = self.entity.__get_user_data__(base_value.get().to_dict())
+        return self.entity(id=base_value.id, **user_data)
 
 
-class JsonProperty(Property, dict):
+class JsonProperty(Property):
     &#34;&#34;&#34;A property whose value is any Json-encodable Python object.
     &#34;&#34;&#34;
     def __init__(self, required=False):
@@ -220,7 +211,7 @@ class JsonProperty(Property, dict):
         return base_value
 
 
-class BooleanProperty(Property, int):
+class BooleanProperty(Property):
     &#34;&#34;&#34;A Property whose value is a Python bool.&#34;&#34;&#34;
     def __get_base_value__(self, user_value):
         return self.__type_check__(user_value, bool)
@@ -229,7 +220,7 @@ class BooleanProperty(Property, int):
         return base_value
 
 
-class DateTimeProperty(Property, datetime):
+class DateTimeProperty(Property):
     &#34;&#34;&#34;A Property whose value is a datetime object.
 
     Note: auto_now_add can be overridden by setting the value before writing the entity.
@@ -257,7 +248,7 @@ class DateTimeProperty(Property, datetime):
         return base_value
 
 
-class DateProperty(Property, date):
+class DateProperty(Property):
     &#34;&#34;&#34;A Property whose value is a date object.
 
     Args:
@@ -343,59 +334,11 @@ class ReferencePropertyError(Exception):
 <section>
 </section>
 <section>
-<h2 class="section-title" id="header-functions">Functions</h2>
-<dl>
-<dt id="mantle.firestore.db.ReferenceProperty"><code class="name flex">
-<span>def <span class="ident">ReferenceProperty</span></span>(<span>_entity, required=False)</span>
-</code></dt>
-<dd>
-<section class="desc"><p>A property referencing/pointing to another model.</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt>_entity (Type(Entity)): The model at which this property will be referencing</dt>
-<dt><strong><code>required</code></strong> :&ensp;<code>bool</code></dt>
-<dd>Enforce that this entity not store empty data</dd>
-</dl></section>
-<details class="source">
-<summary>Source code</summary>
-<pre><code class="python">def ReferenceProperty(_entity, required=False):
-    &#34;&#34;&#34;
-    A property referencing/pointing to another model.
-
-    Args:
-        _entity (Type(Entity)): The model at which this property will be referencing
-        required (bool): Enforce that this entity not store empty data
-    &#34;&#34;&#34;
-    class _ReferenceProperty(Property, _entity):
-        def __init__(self, entity, required=False):
-            from mantle.firestore import Entity
-            if not issubclass(entity, Entity):
-                raise ReferencePropertyError(&#34;A reference property must reference another model&#34;)
-            super(_ReferenceProperty, self).__init__(required=required)
-            self.entity = entity
-
-        def __get_base_value__(self, user_value):
-            user_value = self.__type_check__(user_value, (self.entity))
-            if not user_value:
-                return user_value
-            if not user_value.id:
-                raise ReferencePropertyError(&#34;A reference must be put first before it can be referenced&#34;)
-            return user_value.__document__()
-
-        def __get_user_value__(self, base_value):
-            if not base_value:
-                return None
-            user_data = self.entity.__get_user_data__(base_value.get().todict())
-            return self.entity(id=base_value.id, **user_data)
-    return _ReferenceProperty(_entity, required=required)</code></pre>
-</details>
-</dd>
-</dl>
 </section>
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="mantle.firestore.db.BlobProperty"><code class="flex name class">
+<dt id="firestore.db.BlobProperty"><code class="flex name class">
 <span>class <span class="ident">BlobProperty</span></span>
 <span>(</span><span>default=None, required=False)</span>
 </code></dt>
@@ -410,7 +353,7 @@ class ReferencePropertyError(Exception):
 </dl></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">class BlobProperty(Property, bytes):
+<pre><code class="python">class BlobProperty(Property):
     &#34;&#34;&#34;A Property whose value is a byte string. It may be compressed.&#34;&#34;&#34;
     def __get_base_value__(self, user_value):
         return self.__type_check__(user_value, (bytes, bytearray))
@@ -420,11 +363,10 @@ class ReferencePropertyError(Exception):
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="mantle.firestore.db.Property" href="#mantle.firestore.db.Property">Property</a></li>
-<li>builtins.bytes</li>
+<li><a title="firestore.db.Property" href="#firestore.db.Property">Property</a></li>
 </ul>
 </dd>
-<dt id="mantle.firestore.db.BooleanProperty"><code class="flex name class">
+<dt id="firestore.db.BooleanProperty"><code class="flex name class">
 <span>class <span class="ident">BooleanProperty</span></span>
 <span>(</span><span>default=None, required=False)</span>
 </code></dt>
@@ -439,7 +381,7 @@ class ReferencePropertyError(Exception):
 </dl></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">class BooleanProperty(Property, int):
+<pre><code class="python">class BooleanProperty(Property):
     &#34;&#34;&#34;A Property whose value is a Python bool.&#34;&#34;&#34;
     def __get_base_value__(self, user_value):
         return self.__type_check__(user_value, bool)
@@ -449,11 +391,10 @@ class ReferencePropertyError(Exception):
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="mantle.firestore.db.Property" href="#mantle.firestore.db.Property">Property</a></li>
-<li>builtins.int</li>
+<li><a title="firestore.db.Property" href="#firestore.db.Property">Property</a></li>
 </ul>
 </dd>
-<dt id="mantle.firestore.db.DateProperty"><code class="flex name class">
+<dt id="firestore.db.DateProperty"><code class="flex name class">
 <span>class <span class="ident">DateProperty</span></span>
 <span>(</span><span>default=None, required=False, auto_add_now=False)</span>
 </code></dt>
@@ -477,7 +418,7 @@ class ReferencePropertyError(Exception):
 </dl></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">class DateProperty(Property, date):
+<pre><code class="python">class DateProperty(Property):
     &#34;&#34;&#34;A Property whose value is a date object.
 
     Args:
@@ -505,11 +446,10 @@ class ReferencePropertyError(Exception):
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="mantle.firestore.db.Property" href="#mantle.firestore.db.Property">Property</a></li>
-<li>datetime.date</li>
+<li><a title="firestore.db.Property" href="#firestore.db.Property">Property</a></li>
 </ul>
 </dd>
-<dt id="mantle.firestore.db.DateTimeProperty"><code class="flex name class">
+<dt id="firestore.db.DateTimeProperty"><code class="flex name class">
 <span>class <span class="ident">DateTimeProperty</span></span>
 <span>(</span><span>default=None, required=False, auto_now=False, auto_add_now=False)</span>
 </code></dt>
@@ -535,7 +475,7 @@ class ReferencePropertyError(Exception):
 </dl></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">class DateTimeProperty(Property, datetime):
+<pre><code class="python">class DateTimeProperty(Property):
     &#34;&#34;&#34;A Property whose value is a datetime object.
 
     Note: auto_now_add can be overridden by setting the value before writing the entity.
@@ -564,12 +504,10 @@ class ReferencePropertyError(Exception):
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="mantle.firestore.db.Property" href="#mantle.firestore.db.Property">Property</a></li>
-<li>datetime.datetime</li>
-<li>datetime.date</li>
+<li><a title="firestore.db.Property" href="#firestore.db.Property">Property</a></li>
 </ul>
 </dd>
-<dt id="mantle.firestore.db.FloatingPointNumberProperty"><code class="flex name class">
+<dt id="firestore.db.FloatingPointNumberProperty"><code class="flex name class">
 <span>class <span class="ident">FloatingPointNumberProperty</span></span>
 <span>(</span><span>default=None, required=False)</span>
 </code></dt>
@@ -585,7 +523,7 @@ class ReferencePropertyError(Exception):
 </dl></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">class FloatingPointNumberProperty(Property, float):
+<pre><code class="python">class FloatingPointNumberProperty(Property):
     &#34;&#34;&#34;A Property whose value is a Python float.
 
     Note: int and long are also allowed.
@@ -599,11 +537,10 @@ class ReferencePropertyError(Exception):
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="mantle.firestore.db.Property" href="#mantle.firestore.db.Property">Property</a></li>
-<li>builtins.float</li>
+<li><a title="firestore.db.Property" href="#firestore.db.Property">Property</a></li>
 </ul>
 </dd>
-<dt id="mantle.firestore.db.IntegerProperty"><code class="flex name class">
+<dt id="firestore.db.IntegerProperty"><code class="flex name class">
 <span>class <span class="ident">IntegerProperty</span></span>
 <span>(</span><span>default=None, required=False)</span>
 </code></dt>
@@ -618,7 +555,7 @@ class ReferencePropertyError(Exception):
 </dl></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">class IntegerProperty(Property, int):
+<pre><code class="python">class IntegerProperty(Property):
     &#34;&#34;&#34;A Property whose value is a Python int or long&#34;&#34;&#34;
     def __get_base_value__(self, user_value):
         return self.__type_check__(user_value, int)
@@ -628,11 +565,10 @@ class ReferencePropertyError(Exception):
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="mantle.firestore.db.Property" href="#mantle.firestore.db.Property">Property</a></li>
-<li>builtins.int</li>
+<li><a title="firestore.db.Property" href="#firestore.db.Property">Property</a></li>
 </ul>
 </dd>
-<dt id="mantle.firestore.db.InvalidPropertyError"><code class="flex name class">
+<dt id="firestore.db.InvalidPropertyError"><code class="flex name class">
 <span>class <span class="ident">InvalidPropertyError</span></span>
 <span>(</span><span>prop_name, model_name)</span>
 </code></dt>
@@ -656,7 +592,7 @@ class ReferencePropertyError(Exception):
 <li>builtins.BaseException</li>
 </ul>
 </dd>
-<dt id="mantle.firestore.db.InvalidValueError"><code class="flex name class">
+<dt id="firestore.db.InvalidValueError"><code class="flex name class">
 <span>class <span class="ident">InvalidValueError</span></span>
 <span>(</span><span>property, value)</span>
 </code></dt>
@@ -682,7 +618,7 @@ class ReferencePropertyError(Exception):
 <li>builtins.BaseException</li>
 </ul>
 </dd>
-<dt id="mantle.firestore.db.JsonProperty"><code class="flex name class">
+<dt id="firestore.db.JsonProperty"><code class="flex name class">
 <span>class <span class="ident">JsonProperty</span></span>
 <span>(</span><span>required=False)</span>
 </code></dt>
@@ -697,7 +633,7 @@ class ReferencePropertyError(Exception):
 </dl></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">class JsonProperty(Property, dict):
+<pre><code class="python">class JsonProperty(Property):
     &#34;&#34;&#34;A property whose value is any Json-encodable Python object.
     &#34;&#34;&#34;
     def __init__(self, required=False):
@@ -716,11 +652,10 @@ class ReferencePropertyError(Exception):
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="mantle.firestore.db.Property" href="#mantle.firestore.db.Property">Property</a></li>
-<li>builtins.dict</li>
+<li><a title="firestore.db.Property" href="#firestore.db.Property">Property</a></li>
 </ul>
 </dd>
-<dt id="mantle.firestore.db.ListProperty"><code class="flex name class">
+<dt id="firestore.db.ListProperty"><code class="flex name class">
 <span>class <span class="ident">ListProperty</span></span>
 <span>(</span><span>property_type)</span>
 </code></dt>
@@ -735,7 +670,7 @@ class ReferencePropertyError(Exception):
 </dl></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">class ListProperty(Property, list):
+<pre><code class="python">class ListProperty(Property):
     &#34;&#34;&#34;A List property&#34;&#34;&#34;
     def __init__(self, property_type: Property):
         super(ListProperty, self).__init__(default=[])
@@ -751,11 +686,10 @@ class ReferencePropertyError(Exception):
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="mantle.firestore.db.Property" href="#mantle.firestore.db.Property">Property</a></li>
-<li>builtins.list</li>
+<li><a title="firestore.db.Property" href="#firestore.db.Property">Property</a></li>
 </ul>
 </dd>
-<dt id="mantle.firestore.db.MalformedQueryError"><code class="flex name class">
+<dt id="firestore.db.MalformedQueryError"><code class="flex name class">
 <span>class <span class="ident">MalformedQueryError</span></span>
 <span>(</span><span>message)</span>
 </code></dt>
@@ -778,7 +712,7 @@ class ReferencePropertyError(Exception):
 <li>builtins.BaseException</li>
 </ul>
 </dd>
-<dt id="mantle.firestore.db.PickledProperty"><code class="flex name class">
+<dt id="firestore.db.PickledProperty"><code class="flex name class">
 <span>class <span class="ident">PickledProperty</span></span>
 <span>(</span><span>default=None, required=False)</span>
 </code></dt>
@@ -806,10 +740,10 @@ class ReferencePropertyError(Exception):
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="mantle.firestore.db.Property" href="#mantle.firestore.db.Property">Property</a></li>
+<li><a title="firestore.db.Property" href="#firestore.db.Property">Property</a></li>
 </ul>
 </dd>
-<dt id="mantle.firestore.db.Property"><code class="flex name class">
+<dt id="firestore.db.Property"><code class="flex name class">
 <span>class <span class="ident">Property</span></span>
 <span>(</span><span>default=None, required=False)</span>
 </code></dt>
@@ -882,20 +816,63 @@ class ReferencePropertyError(Exception):
 </details>
 <h3>Subclasses</h3>
 <ul class="hlist">
-<li><a title="mantle.firestore.db.TextProperty" href="#mantle.firestore.db.TextProperty">TextProperty</a></li>
-<li><a title="mantle.firestore.db.StringProperty" href="#mantle.firestore.db.StringProperty">StringProperty</a></li>
-<li><a title="mantle.firestore.db.IntegerProperty" href="#mantle.firestore.db.IntegerProperty">IntegerProperty</a></li>
-<li><a title="mantle.firestore.db.FloatingPointNumberProperty" href="#mantle.firestore.db.FloatingPointNumberProperty">FloatingPointNumberProperty</a></li>
-<li><a title="mantle.firestore.db.BlobProperty" href="#mantle.firestore.db.BlobProperty">BlobProperty</a></li>
-<li><a title="mantle.firestore.db.ListProperty" href="#mantle.firestore.db.ListProperty">ListProperty</a></li>
-<li><a title="mantle.firestore.db.JsonProperty" href="#mantle.firestore.db.JsonProperty">JsonProperty</a></li>
-<li><a title="mantle.firestore.db.BooleanProperty" href="#mantle.firestore.db.BooleanProperty">BooleanProperty</a></li>
-<li><a title="mantle.firestore.db.DateTimeProperty" href="#mantle.firestore.db.DateTimeProperty">DateTimeProperty</a></li>
-<li><a title="mantle.firestore.db.DateProperty" href="#mantle.firestore.db.DateProperty">DateProperty</a></li>
-<li><a title="mantle.firestore.db.PickledProperty" href="#mantle.firestore.db.PickledProperty">PickledProperty</a></li>
+<li><a title="firestore.db.TextProperty" href="#firestore.db.TextProperty">TextProperty</a></li>
+<li><a title="firestore.db.StringProperty" href="#firestore.db.StringProperty">StringProperty</a></li>
+<li><a title="firestore.db.IntegerProperty" href="#firestore.db.IntegerProperty">IntegerProperty</a></li>
+<li><a title="firestore.db.FloatingPointNumberProperty" href="#firestore.db.FloatingPointNumberProperty">FloatingPointNumberProperty</a></li>
+<li><a title="firestore.db.BlobProperty" href="#firestore.db.BlobProperty">BlobProperty</a></li>
+<li><a title="firestore.db.ListProperty" href="#firestore.db.ListProperty">ListProperty</a></li>
+<li><a title="firestore.db.ReferenceProperty" href="#firestore.db.ReferenceProperty">ReferenceProperty</a></li>
+<li><a title="firestore.db.JsonProperty" href="#firestore.db.JsonProperty">JsonProperty</a></li>
+<li><a title="firestore.db.BooleanProperty" href="#firestore.db.BooleanProperty">BooleanProperty</a></li>
+<li><a title="firestore.db.DateTimeProperty" href="#firestore.db.DateTimeProperty">DateTimeProperty</a></li>
+<li><a title="firestore.db.DateProperty" href="#firestore.db.DateProperty">DateProperty</a></li>
+<li><a title="firestore.db.PickledProperty" href="#firestore.db.PickledProperty">PickledProperty</a></li>
 </ul>
 </dd>
-<dt id="mantle.firestore.db.ReferencePropertyError"><code class="flex name class">
+<dt id="firestore.db.ReferenceProperty"><code class="flex name class">
+<span>class <span class="ident">ReferenceProperty</span></span>
+<span>(</span><span>entity, required=False)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>A class describing a typed, persisted attribute of a database entity</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>default</code></strong></dt>
+<dd>The default value of the property</dd>
+<dt><strong><code>required</code></strong></dt>
+<dd>Enforce the property value to be provided</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">class ReferenceProperty(Property):
+    def __init__(self, entity, required=False):
+        from firestore import Entity
+        if not issubclass(entity, Entity):
+            raise ReferencePropertyError(&#34;A reference property must reference another model&#34;)
+        super(ReferenceProperty, self).__init__(required=required)
+        self.entity = entity
+
+    def __get_base_value__(self, user_value):
+        user_value = self.__type_check__(user_value, (self.entity))
+        if not user_value:
+            return user_value
+        if not user_value.id:
+            raise ReferencePropertyError(&#34;A reference must be put first before it can be referenced&#34;)
+        return user_value.__document__()
+
+    def __get_user_value__(self, base_value):
+        if not base_value:
+            return None
+        user_data = self.entity.__get_user_data__(base_value.get().to_dict())
+        return self.entity(id=base_value.id, **user_data)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="firestore.db.Property" href="#firestore.db.Property">Property</a></li>
+</ul>
+</dd>
+<dt id="firestore.db.ReferencePropertyError"><code class="flex name class">
 <span>class <span class="ident">ReferencePropertyError</span></span>
 <span>(</span><span>message)</span>
 </code></dt>
@@ -917,7 +894,7 @@ class ReferencePropertyError(Exception):
 <li>builtins.BaseException</li>
 </ul>
 </dd>
-<dt id="mantle.firestore.db.StringProperty"><code class="flex name class">
+<dt id="firestore.db.StringProperty"><code class="flex name class">
 <span>class <span class="ident">StringProperty</span></span>
 <span>(</span><span>default=None, length=255, required=False)</span>
 </code></dt>
@@ -941,7 +918,7 @@ class ReferencePropertyError(Exception):
 </dl></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">class StringProperty(Property, str):
+<pre><code class="python">class StringProperty(Property):
     &#34;&#34;&#34;
     An indexed Property whose value is a text string of limited length.
 
@@ -965,11 +942,10 @@ class ReferencePropertyError(Exception):
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="mantle.firestore.db.Property" href="#mantle.firestore.db.Property">Property</a></li>
-<li>builtins.str</li>
+<li><a title="firestore.db.Property" href="#firestore.db.Property">Property</a></li>
 </ul>
 </dd>
-<dt id="mantle.firestore.db.TextProperty"><code class="flex name class">
+<dt id="firestore.db.TextProperty"><code class="flex name class">
 <span>class <span class="ident">TextProperty</span></span>
 <span>(</span><span>default=None, required=False)</span>
 </code></dt>
@@ -985,7 +961,7 @@ I'ts not advisable to index this property</p>
 </dl></section>
 <details class="source">
 <summary>Source code</summary>
-<pre><code class="python">class TextProperty(Property, str):
+<pre><code class="python">class TextProperty(Property):
     &#34;&#34;&#34;An Property whose value is a text string of unlimited length.
     I&#39;ts not advisable to index this property
     &#34;&#34;&#34;
@@ -997,8 +973,7 @@ I'ts not advisable to index this property</p>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="mantle.firestore.db.Property" href="#mantle.firestore.db.Property">Property</a></li>
-<li>builtins.str</li>
+<li><a title="firestore.db.Property" href="#firestore.db.Property">Property</a></li>
 </ul>
 </dd>
 </dl>
@@ -1012,63 +987,61 @@ I'ts not advisable to index this property</p>
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="mantle.firestore" href="index.html">mantle.firestore</a></code></li>
-</ul>
-</li>
-<li><h3><a href="#header-functions">Functions</a></h3>
-<ul class="">
-<li><code><a title="mantle.firestore.db.ReferenceProperty" href="#mantle.firestore.db.ReferenceProperty">ReferenceProperty</a></code></li>
+<li><code><a title="firestore" href="index.html">firestore</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="mantle.firestore.db.BlobProperty" href="#mantle.firestore.db.BlobProperty">BlobProperty</a></code></h4>
+<h4><code><a title="firestore.db.BlobProperty" href="#firestore.db.BlobProperty">BlobProperty</a></code></h4>
 </li>
 <li>
-<h4><code><a title="mantle.firestore.db.BooleanProperty" href="#mantle.firestore.db.BooleanProperty">BooleanProperty</a></code></h4>
+<h4><code><a title="firestore.db.BooleanProperty" href="#firestore.db.BooleanProperty">BooleanProperty</a></code></h4>
 </li>
 <li>
-<h4><code><a title="mantle.firestore.db.DateProperty" href="#mantle.firestore.db.DateProperty">DateProperty</a></code></h4>
+<h4><code><a title="firestore.db.DateProperty" href="#firestore.db.DateProperty">DateProperty</a></code></h4>
 </li>
 <li>
-<h4><code><a title="mantle.firestore.db.DateTimeProperty" href="#mantle.firestore.db.DateTimeProperty">DateTimeProperty</a></code></h4>
+<h4><code><a title="firestore.db.DateTimeProperty" href="#firestore.db.DateTimeProperty">DateTimeProperty</a></code></h4>
 </li>
 <li>
-<h4><code><a title="mantle.firestore.db.FloatingPointNumberProperty" href="#mantle.firestore.db.FloatingPointNumberProperty">FloatingPointNumberProperty</a></code></h4>
+<h4><code><a title="firestore.db.FloatingPointNumberProperty" href="#firestore.db.FloatingPointNumberProperty">FloatingPointNumberProperty</a></code></h4>
 </li>
 <li>
-<h4><code><a title="mantle.firestore.db.IntegerProperty" href="#mantle.firestore.db.IntegerProperty">IntegerProperty</a></code></h4>
+<h4><code><a title="firestore.db.IntegerProperty" href="#firestore.db.IntegerProperty">IntegerProperty</a></code></h4>
 </li>
 <li>
-<h4><code><a title="mantle.firestore.db.InvalidPropertyError" href="#mantle.firestore.db.InvalidPropertyError">InvalidPropertyError</a></code></h4>
+<h4><code><a title="firestore.db.InvalidPropertyError" href="#firestore.db.InvalidPropertyError">InvalidPropertyError</a></code></h4>
 </li>
 <li>
-<h4><code><a title="mantle.firestore.db.InvalidValueError" href="#mantle.firestore.db.InvalidValueError">InvalidValueError</a></code></h4>
+<h4><code><a title="firestore.db.InvalidValueError" href="#firestore.db.InvalidValueError">InvalidValueError</a></code></h4>
 </li>
 <li>
-<h4><code><a title="mantle.firestore.db.JsonProperty" href="#mantle.firestore.db.JsonProperty">JsonProperty</a></code></h4>
+<h4><code><a title="firestore.db.JsonProperty" href="#firestore.db.JsonProperty">JsonProperty</a></code></h4>
 </li>
 <li>
-<h4><code><a title="mantle.firestore.db.ListProperty" href="#mantle.firestore.db.ListProperty">ListProperty</a></code></h4>
+<h4><code><a title="firestore.db.ListProperty" href="#firestore.db.ListProperty">ListProperty</a></code></h4>
 </li>
 <li>
-<h4><code><a title="mantle.firestore.db.MalformedQueryError" href="#mantle.firestore.db.MalformedQueryError">MalformedQueryError</a></code></h4>
+<h4><code><a title="firestore.db.MalformedQueryError" href="#firestore.db.MalformedQueryError">MalformedQueryError</a></code></h4>
 </li>
 <li>
-<h4><code><a title="mantle.firestore.db.PickledProperty" href="#mantle.firestore.db.PickledProperty">PickledProperty</a></code></h4>
+<h4><code><a title="firestore.db.PickledProperty" href="#firestore.db.PickledProperty">PickledProperty</a></code></h4>
 </li>
 <li>
-<h4><code><a title="mantle.firestore.db.Property" href="#mantle.firestore.db.Property">Property</a></code></h4>
+<h4><code><a title="firestore.db.Property" href="#firestore.db.Property">Property</a></code></h4>
 </li>
 <li>
-<h4><code><a title="mantle.firestore.db.ReferencePropertyError" href="#mantle.firestore.db.ReferencePropertyError">ReferencePropertyError</a></code></h4>
+<h4><code><a title="firestore.db.ReferenceProperty" href="#firestore.db.ReferenceProperty">ReferenceProperty</a></code></h4>
 </li>
 <li>
-<h4><code><a title="mantle.firestore.db.StringProperty" href="#mantle.firestore.db.StringProperty">StringProperty</a></code></h4>
+<h4><code><a title="firestore.db.ReferencePropertyError" href="#firestore.db.ReferencePropertyError">ReferencePropertyError</a></code></h4>
 </li>
 <li>
-<h4><code><a title="mantle.firestore.db.TextProperty" href="#mantle.firestore.db.TextProperty">TextProperty</a></code></h4>
+<h4><code><a title="firestore.db.StringProperty" href="#firestore.db.StringProperty">StringProperty</a></code></h4>
+</li>
+<li>
+<h4><code><a title="firestore.db.TextProperty" href="#firestore.db.TextProperty">TextProperty</a></code></h4>
 </li>
 </ul>
 </li>

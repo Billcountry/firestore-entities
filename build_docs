@@ -1,5 +1,5 @@
 [ -e docs ] && rm -r docs
-pdoc --html mantle
-mv html/mantle docs
-pdoc --pdf mantle>docs/README.md
+pdoc --html firestore
+mv html/firestore docs
+pdoc --pdf firestore>docs/README.md
 rm -r html

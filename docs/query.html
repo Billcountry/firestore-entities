@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.6.3" />
-<title>mantle.firestore.query API documentation</title>
+<title>firestore.query API documentation</title>
 <meta name="description" content="" />
 <link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
 <link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
@@ -17,13 +17,13 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>mantle.firestore.query</code></h1>
+<h1 class="title">Module <code>firestore.query</code></h1>
 </header>
 <section id="section-intro">
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">from google.cloud.firestore import Query as FSQuery
-from mantle.firestore.db import MalformedQueryError, ListProperty
+from firestore.db import MalformedQueryError, ListProperty
 
 
 class Query(object):
@@ -42,7 +42,7 @@ class Query(object):
             limit: Maximum number of results to return
         &#34;&#34;&#34;
         print(entity)
-        from mantle.firestore.entity import __get_client__
+        from firestore.entity import __get_client__
         self.__query = __get_client__().collection(entity.__name__)
         if offset:
             self.__query = self.__query.offset(offset)
@@ -214,7 +214,7 @@ class Query(object):
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="mantle.firestore.query.Query"><code class="flex name class">
+<dt id="firestore.query.Query"><code class="flex name class">
 <span>class <span class="ident">Query</span></span>
 <span>(</span><span>entity, offset, limit)</span>
 </code></dt>
@@ -251,7 +251,7 @@ You can iterate over the query to get the results of your query one by one. Each
             limit: Maximum number of results to return
         &#34;&#34;&#34;
         print(entity)
-        from mantle.firestore.entity import __get_client__
+        from firestore.entity import __get_client__
         self.__query = __get_client__().collection(entity.__name__)
         if offset:
             self.__query = self.__query.offset(offset)
@@ -415,7 +415,7 @@ You can iterate over the query to get the results of your query one by one. Each
 </details>
 <h3>Methods</h3>
 <dl>
-<dt id="mantle.firestore.query.Query.contains"><code class="name flex">
+<dt id="firestore.query.Query.contains"><code class="name flex">
 <span>def <span class="ident">contains</span></span>(<span>self, property, value)</span>
 </code></dt>
 <dd>
@@ -429,7 +429,7 @@ You can iterate over the query to get the results of your query one by one. Each
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><strong><a title="mantle.firestore.query.Query" href="#mantle.firestore.query.Query"><code>Query</code></a></strong></dt>
+<dt><strong><a title="firestore.query.Query" href="#firestore.query.Query"><code>Query</code></a></strong></dt>
 <dd>A query object with this condition added</dd>
 </dl>
 <h2 id="raises">Raises</h2>
@@ -469,7 +469,7 @@ the query has more than one contains condition</dd>
     return self</code></pre>
 </details>
 </dd>
-<dt id="mantle.firestore.query.Query.equal"><code class="name flex">
+<dt id="firestore.query.Query.equal"><code class="name flex">
 <span>def <span class="ident">equal</span></span>(<span>self, property, value)</span>
 </code></dt>
 <dd>
@@ -483,7 +483,7 @@ the query has more than one contains condition</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><strong><a title="mantle.firestore.query.Query" href="#mantle.firestore.query.Query"><code>Query</code></a></strong></dt>
+<dt><strong><a title="firestore.query.Query" href="#firestore.query.Query"><code>Query</code></a></strong></dt>
 <dd>A query object with this condition added</dd>
 </dl></section>
 <details class="source">
@@ -503,7 +503,7 @@ the query has more than one contains condition</dd>
     return self</code></pre>
 </details>
 </dd>
-<dt id="mantle.firestore.query.Query.fetch"><code class="name flex">
+<dt id="firestore.query.Query.fetch"><code class="name flex">
 <span>def <span class="ident">fetch</span></span>(<span>self)</span>
 </code></dt>
 <dd>
@@ -525,7 +525,7 @@ the query has more than one contains condition</dd>
     return [entity for entity in self]</code></pre>
 </details>
 </dd>
-<dt id="mantle.firestore.query.Query.greater_than"><code class="name flex">
+<dt id="firestore.query.Query.greater_than"><code class="name flex">
 <span>def <span class="ident">greater_than</span></span>(<span>self, property, value)</span>
 </code></dt>
 <dd>
@@ -539,7 +539,7 @@ the query has more than one contains condition</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><strong><a title="mantle.firestore.query.Query" href="#mantle.firestore.query.Query"><code>Query</code></a></strong></dt>
+<dt><strong><a title="firestore.query.Query" href="#firestore.query.Query"><code>Query</code></a></strong></dt>
 <dd>A query object with this condition added</dd>
 </dl></section>
 <details class="source">
@@ -559,7 +559,7 @@ the query has more than one contains condition</dd>
     self.__query = self.__query.where(property, &#34;&gt;&#34;, self.__validate_value(property, value))</code></pre>
 </details>
 </dd>
-<dt id="mantle.firestore.query.Query.greater_than_or_equal"><code class="name flex">
+<dt id="firestore.query.Query.greater_than_or_equal"><code class="name flex">
 <span>def <span class="ident">greater_than_or_equal</span></span>(<span>self, property, value)</span>
 </code></dt>
 <dd>
@@ -573,7 +573,7 @@ the query has more than one contains condition</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><strong><a title="mantle.firestore.query.Query" href="#mantle.firestore.query.Query"><code>Query</code></a></strong></dt>
+<dt><strong><a title="firestore.query.Query" href="#firestore.query.Query"><code>Query</code></a></strong></dt>
 <dd>A query object with this condition added</dd>
 </dl></section>
 <details class="source">
@@ -593,7 +593,7 @@ the query has more than one contains condition</dd>
     self.__query = self.__query.where(property, &#34;&gt;=&#34;, self.__validate_value(property, value))</code></pre>
 </details>
 </dd>
-<dt id="mantle.firestore.query.Query.less_than"><code class="name flex">
+<dt id="firestore.query.Query.less_than"><code class="name flex">
 <span>def <span class="ident">less_than</span></span>(<span>self, property, value)</span>
 </code></dt>
 <dd>
@@ -607,7 +607,7 @@ the query has more than one contains condition</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><strong><a title="mantle.firestore.query.Query" href="#mantle.firestore.query.Query"><code>Query</code></a></strong></dt>
+<dt><strong><a title="firestore.query.Query" href="#firestore.query.Query"><code>Query</code></a></strong></dt>
 <dd>A query object with this condition added</dd>
 </dl></section>
 <details class="source">
@@ -627,7 +627,7 @@ the query has more than one contains condition</dd>
     self.__query = self.__query.where(property, &#34;&lt;&#34;, self.__validate_value(property, value))</code></pre>
 </details>
 </dd>
-<dt id="mantle.firestore.query.Query.less_than_or_equal"><code class="name flex">
+<dt id="firestore.query.Query.less_than_or_equal"><code class="name flex">
 <span>def <span class="ident">less_than_or_equal</span></span>(<span>self, property, value)</span>
 </code></dt>
 <dd>
@@ -641,7 +641,7 @@ the query has more than one contains condition</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><strong><a title="mantle.firestore.query.Query" href="#mantle.firestore.query.Query"><code>Query</code></a></strong></dt>
+<dt><strong><a title="firestore.query.Query" href="#firestore.query.Query"><code>Query</code></a></strong></dt>
 <dd>A query object with this condition added</dd>
 </dl></section>
 <details class="source">
@@ -661,7 +661,7 @@ the query has more than one contains condition</dd>
     self.__query = self.__query.where(property, &#34;&lt;=&#34;, self.__validate_value(property, value))</code></pre>
 </details>
 </dd>
-<dt id="mantle.firestore.query.Query.order_by"><code class="name flex">
+<dt id="firestore.query.Query.order_by"><code class="name flex">
 <span>def <span class="ident">order_by</span></span>(<span>self, property, direction='ASC')</span>
 </code></dt>
 <dd>
@@ -674,7 +674,7 @@ the query has more than one contains condition</dd>
 <p>direction (str: "ASC" or "DESC"), optional:</p>
 <h2 id="returns">Returns</h2>
 <dl>
-<dt><strong><a title="mantle.firestore.query.Query" href="#mantle.firestore.query.Query"><code>Query</code></a></strong></dt>
+<dt><strong><a title="firestore.query.Query" href="#firestore.query.Query"><code>Query</code></a></strong></dt>
 <dd>A query object with order applied</dd>
 </dl></section>
 <details class="source">
@@ -710,22 +710,22 @@ the query has more than one contains condition</dd>
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
-<li><code><a title="mantle.firestore" href="index.html">mantle.firestore</a></code></li>
+<li><code><a title="firestore" href="index.html">firestore</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="mantle.firestore.query.Query" href="#mantle.firestore.query.Query">Query</a></code></h4>
+<h4><code><a title="firestore.query.Query" href="#firestore.query.Query">Query</a></code></h4>
 <ul class="">
-<li><code><a title="mantle.firestore.query.Query.contains" href="#mantle.firestore.query.Query.contains">contains</a></code></li>
-<li><code><a title="mantle.firestore.query.Query.equal" href="#mantle.firestore.query.Query.equal">equal</a></code></li>
-<li><code><a title="mantle.firestore.query.Query.fetch" href="#mantle.firestore.query.Query.fetch">fetch</a></code></li>
-<li><code><a title="mantle.firestore.query.Query.greater_than" href="#mantle.firestore.query.Query.greater_than">greater_than</a></code></li>
-<li><code><a title="mantle.firestore.query.Query.greater_than_or_equal" href="#mantle.firestore.query.Query.greater_than_or_equal">greater_than_or_equal</a></code></li>
-<li><code><a title="mantle.firestore.query.Query.less_than" href="#mantle.firestore.query.Query.less_than">less_than</a></code></li>
-<li><code><a title="mantle.firestore.query.Query.less_than_or_equal" href="#mantle.firestore.query.Query.less_than_or_equal">less_than_or_equal</a></code></li>
-<li><code><a title="mantle.firestore.query.Query.order_by" href="#mantle.firestore.query.Query.order_by">order_by</a></code></li>
+<li><code><a title="firestore.query.Query.contains" href="#firestore.query.Query.contains">contains</a></code></li>
+<li><code><a title="firestore.query.Query.equal" href="#firestore.query.Query.equal">equal</a></code></li>
+<li><code><a title="firestore.query.Query.fetch" href="#firestore.query.Query.fetch">fetch</a></code></li>
+<li><code><a title="firestore.query.Query.greater_than" href="#firestore.query.Query.greater_than">greater_than</a></code></li>
+<li><code><a title="firestore.query.Query.greater_than_or_equal" href="#firestore.query.Query.greater_than_or_equal">greater_than_or_equal</a></code></li>
+<li><code><a title="firestore.query.Query.less_than" href="#firestore.query.Query.less_than">less_than</a></code></li>
+<li><code><a title="firestore.query.Query.less_than_or_equal" href="#firestore.query.Query.less_than_or_equal">less_than_or_equal</a></code></li>
+<li><code><a title="firestore.query.Query.order_by" href="#firestore.query.Query.order_by">order_by</a></code></li>
 </ul>
 </li>
 </ul>
