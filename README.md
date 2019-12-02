@@ -5,7 +5,7 @@ It tries to make interaction with firestore as simple as possible for the develo
 
 #### Installation
 ```shell script
-pip install mantle-firestore
+pip install firestore-entities
 ```
 
 #### Examples
