@@ -7,4 +7,4 @@ twine upload --verbose dist/*
 echo "Removing build files"
 rm -r dist
 rm -r build
-rm -r mantle_firestore.egg-info
+rm -r firestore_entities.egg-info

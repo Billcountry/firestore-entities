@@ -4,9 +4,9 @@ from firestore.db import MalformedQueryError, ListProperty
 
 class Query(object):
     """
-    A  query object is returned when you call :class:`~.mantle.firestore.db.Entity`.query().
-    You can iterate over the query to get the results of your query one by one. Each item is an instance of a
-    :class:`Model`
+    A  query object is returned when you call `firestore.db.Entity.query()`.
+    You can iterate over the query to get the results of your query one by one. Each item is an instance of
+    `firestore.db.Entity`
     """
 
     def __init__(self, entity, offset: int, limit: int):
@@ -30,93 +30,93 @@ class Query(object):
         self.__range_filter_queries = {}
 
     def __validate_value(self, property_name, value):
-        property = getattr(self.__entity, property_name)
-        return property.__get_base_value__(value)
+        prop = getattr(self.__entity, property_name)
+        return prop.__get_base_value__(value)
 
-    def __add_range_filter(self, property):
-        self.__range_filter_queries[property] = True
+    def __add_range_filter(self, prop):
+        self.__range_filter_queries[prop] = True
 
         # Range filter queries are only allowed on a single property at any given time
         if len(self.__range_filter_queries.keys()) > 1:
             raise MalformedQueryError("Range filter queries i.e (<), (>), (<=) and (>=) "
                                       "can only be performed on a single property in a query")
 
-    def equal(self, property, value):
+    def equal(self, prop, value):
         """
-        A query condition where property == value
+        A query condition where prop == value
 
         Args:
-             property (str): The name of a property to compare
+             prop (str): The name of a property to compare
              value (Any): The value to compare from the property
 
         Returns:
             Query: A query object with this condition added
         """
-        self.__query = self.__query.where(property, "==", self.__validate_value(property, value))
+        self.__query = self.__query.where(prop, "==", self.__validate_value(prop, value))
         return self
 
-    def greater_than(self, property, value):
+    def greater_than(self, prop, value):
         """
-        A query condition where property > value
+        A query condition where prop > value
 
         Args:
-             property (str): The name of a property to compare
+             prop (str): The name of a property to compare
              value (Any): The value to compare from the property
 
         Returns:
             Query: A query object with this condition added
         """
-        self.__add_range_filter(property)
-        self.__query = self.__query.where(property, ">", self.__validate_value(property, value))
+        self.__add_range_filter(prop)
+        self.__query = self.__query.where(prop, ">", self.__validate_value(prop, value))
 
-    def less_than(self, property, value):
+    def less_than(self, prop, value):
         """
-        A query condition where property < value
+        A query condition where prop < value
 
         Args:
-             property (str): The name of a property to compare
+             prop (str): The name of a property to compare
              value (Any): The value to compare from the property
 
         Returns:
             Query: A query object with this condition added
         """
-        self.__add_range_filter(property)
-        self.__query = self.__query.where(property, "<", self.__validate_value(property, value))
+        self.__add_range_filter(prop)
+        self.__query = self.__query.where(prop, "<", self.__validate_value(prop, value))
 
-    def greater_than_or_equal(self, property, value):
+    def greater_than_or_equal(self, prop, value):
         """
-        A query condition where property >= value
+        A query condition where prop >= value
 
         Args:
-             property (str): The name of a property to compare
+             prop (str): The name of a property to compare
              value (Any): The value to compare from the property
 
         Returns:
             Query: A query object with this condition added
         """
-        self.__add_range_filter(property)
-        self.__query = self.__query.where(property, ">=", self.__validate_value(property, value))
+        self.__add_range_filter(prop)
+        self.__query = self.__query.where(prop, ">=", self.__validate_value(prop, value))
 
-    def less_than_or_equal(self, property, value):
+    def less_than_or_equal(self, prop, value):
         """
-        A query condition where property <= value
+        A query condition where prop <= value
 
         Args:
-             property (str): The name of a property to compare
+             prop (str): The name of a property to compare
              value (Any): The value to compare from the property
 
         Returns:
             Query: A query object with this condition added
         """
-        self.__add_range_filter(property)
-        self.__query = self.__query.where(property, "<=", self.__validate_value(property, value))
+        self.__add_range_filter(prop)
+        self.__query = self.__query.where(prop, "<=", self.__validate_value(prop, value))
 
-    def contains(self, property, value):
+    def contains(self, prop, value):
         """
-        A query condition where `value in property`
+        A query condition where `value in prop`
 
         Args:
-             property (str): The name of a property to compare
+             prop (str): The name of a property to compare
              value (Any): The value to compare from the property
 
         Returns:
@@ -126,25 +126,25 @@ class Query(object):
             MalformedQueryError: If the property specified is not a ListField, or
                the query has more than one contains condition
         """
-        model_property = getattr(self.__entity, property)
+        entity_prop = getattr(self.__entity, prop)
 
-        # Don't do a contains condition in an invalid property
-        if not isinstance(model_property, ListProperty):
-            raise MalformedQueryError("Invalid property %s, query property for contains must be a list" % property)
+        # Don't do a contains condition in an invalid prop
+        if not isinstance(entity_prop, ListProperty):
+            raise MalformedQueryError("Invalid property %s, query property for contains must be a list" % prop)
 
         # Make sure there's only on `array_contains` condition
         self.__array_contains_queries += 1
         if self.__array_contains_queries > 1:
             raise MalformedQueryError("Only one `contains` clause is allowed per query")
-        self.__query = self.__query.where(property, "array_contains", value)
+        self.__query = self.__query.where(prop, "array_contains", value)
         return self
 
-    def order_by(self, property, direction="ASC"):
+    def order_by(self, prop, direction="ASC"):
         """
         Set an order for the query, accepts
 
         Args:
-            property (str): The property name to order by
+            prop (str): The property name to order by
             direction (str: "ASC" or "DESC"), optional:
 
         Returns:
@@ -153,7 +153,7 @@ class Query(object):
         if direction is not "ASC" and direction is not "DESC":
             raise MalformedQueryError("order_by direction can only be ASC, or DESC")
         direction = FSQuery.ASCENDING if direction is "ASC" else FSQuery.DESCENDING
-        self.__query = self.__query.order_by(property, direction=direction)
+        self.__query = self.__query.order_by(prop, direction=direction)
         return self
 
     def __fetch(self):
@@ -168,7 +168,7 @@ class Query(object):
         Get the results of the query as a list
 
         Returns:
-            list (Model): A list of models for the found results
+            list (`firestore.db.Entity`): A list of entities for the found results
         """
         return [entity for entity in self]
 
