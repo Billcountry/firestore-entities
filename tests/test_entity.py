@@ -24,13 +24,13 @@ class Conversation(Entity):
     def send_message(self, user, text):
         if user not in self.users:
             raise Exception("User must be in a conversation to send a message")
-        message = MessageLog(sender=user, message=text)
+        message = MessageLog(sender=user.email, message=text)
         message.put()
 
 
 class MessageLog(Entity):
     """Actual messages between users in a conversation"""
-    sender = db.ReferenceProperty(User, required=True)
+    sender = db.TextProperty(required=True)
     message = db.TextProperty()
     date_sent = db.DateTimeProperty(auto_add_now=True)
 
@@ -61,9 +61,9 @@ class EntitiesTestCases(unittest.TestCase):
                 conversation.send_message(self.jane, message)
             else:
                 conversation.send_message(self.john, message)
-        janes_messages = MessageLog.query()  #.equal("sender", self.jane)
-        print(janes_messages.fetch())
-        self.assertEqual(True, False)
+        query = MessageLog.query().equal("sender", self.jane.email)
+        messages = query.fetch()
+        self.assertEqual(len(messages), 25)
 
     def test_reference_property(self):
         # A model must be saved to referenced
