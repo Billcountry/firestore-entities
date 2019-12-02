@@ -16,7 +16,8 @@ links-as-notes: true
     
 # Module `firestore` {#firestore}
 
-
+Implementation of models concept on top of Google cloud firestore.
+Firestore entities try to make interaction with firestore as simple as possible for the developer.
 
 
 
@@ -802,9 +803,9 @@ Save the models data to Firestore
 > `class Query(entity, offset, limit)`
 
 
-A  query object is returned when you call :class:`~.mantle.firestore.db.Entity`.query().
-You can iterate over the query to get the results of your query one by one. Each item is an instance of a
-:class:`Model`
+A  query object is returned when you call `firestore.db.Entity.query()`.
+You can iterate over the query to get the results of your query one by one. Each item is an instance of
+`firestore.db.Entity`
 
 Initialize a query
 
@@ -840,15 +841,15 @@ Initialize a query
 
 
     
-> `def contains(self, property, value)`
+> `def contains(self, prop, value)`
 
 
-A query condition where `value in property`
+A query condition where `value in prop`
 
 
 ###### Args
 
-**`property`** :&ensp;`str`
+**`prop`** :&ensp;`str`
 :   The name of a property to compare
 
 
@@ -878,15 +879,15 @@ A query condition where `value in property`
 
 
     
-> `def equal(self, property, value)`
+> `def equal(self, prop, value)`
 
 
-A query condition where property == value
+A query condition where prop == value
 
 
 ###### Args
 
-**`property`** :&ensp;`str`
+**`prop`** :&ensp;`str`
 :   The name of a property to compare
 
 
@@ -916,9 +917,7 @@ Get the results of the query as a list
 
 ###### Returns
 
-**`list`** :&ensp;`Model`
-:   A list of models for the found results
-
+list (`firestore.db.Entity`): A list of entities for the found results
 
 
     
@@ -927,15 +926,15 @@ Get the results of the query as a list
 
 
     
-> `def greater_than(self, property, value)`
+> `def greater_than(self, prop, value)`
 
 
-A query condition where property > value
+A query condition where prop > value
 
 
 ###### Args
 
-**`property`** :&ensp;`str`
+**`prop`** :&ensp;`str`
 :   The name of a property to compare
 
 
@@ -957,15 +956,15 @@ A query condition where property > value
 
 
     
-> `def greater_than_or_equal(self, property, value)`
+> `def greater_than_or_equal(self, prop, value)`
 
 
-A query condition where property >= value
+A query condition where prop >= value
 
 
 ###### Args
 
-**`property`** :&ensp;`str`
+**`prop`** :&ensp;`str`
 :   The name of a property to compare
 
 
@@ -987,15 +986,15 @@ A query condition where property >= value
 
 
     
-> `def less_than(self, property, value)`
+> `def less_than(self, prop, value)`
 
 
-A query condition where property < value
+A query condition where prop < value
 
 
 ###### Args
 
-**`property`** :&ensp;`str`
+**`prop`** :&ensp;`str`
 :   The name of a property to compare
 
 
@@ -1017,15 +1016,15 @@ A query condition where property < value
 
 
     
-> `def less_than_or_equal(self, property, value)`
+> `def less_than_or_equal(self, prop, value)`
 
 
-A query condition where property <= value
+A query condition where prop <= value
 
 
 ###### Args
 
-**`property`** :&ensp;`str`
+**`prop`** :&ensp;`str`
 :   The name of a property to compare
 
 
@@ -1047,7 +1046,7 @@ A query condition where property <= value
 
 
     
-> `def order_by(self, property, direction='ASC')`
+> `def order_by(self, prop, direction='ASC')`
 
 
 Set an order for the query, accepts
@@ -1055,7 +1054,7 @@ Set an order for the query, accepts
 
 ###### Args
 
-**`property`** :&ensp;`str`
+**`prop`** :&ensp;`str`
 :   The property name to order by
 
 
