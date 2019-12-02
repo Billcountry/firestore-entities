@@ -5,3 +5,5 @@ __pycache__
 .coverage
 mantle_firestore.egg-info
 dist
+coverage.xml
+setuptools
