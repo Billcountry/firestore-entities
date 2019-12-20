@@ -49,7 +49,7 @@ jobs:
       - run:
           name: run tests
           command: |
-            base64 -d <<<$SERVICE_KEY >service-key.json
+            printf "import os\nprint(os.environ['SERVICE_KEY'])" | python
             . venv/bin/activate
             coverage run tests/run.py
             codecov
