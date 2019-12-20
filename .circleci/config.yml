@@ -49,6 +49,7 @@ jobs:
       - run:
           name: run tests
           command: |
+            echo $SERVICE_KEY | base64 -d>service-key.json
             . venv/bin/activate
             coverage run tests/run.py
             codecov

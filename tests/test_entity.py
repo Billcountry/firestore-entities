@@ -50,6 +50,16 @@ class EntitiesTestCases(unittest.TestCase):
         self.john = User(name=Jane.name, email=Jane.email, password=Jane.password)
         self.jane = User(name=John.name, email=John.email, password=John.password)
 
+    def tearDown(self):
+        # Always clear the database
+        from google.cloud.firestore import Client
+        client = Client()
+        collections = client.collections()
+        for collection in collections:
+            documents = collection.list_documents()
+            for doc in documents:
+                doc.delete()
+
     def test_query(self):
         self.jane.put()
         self.john.put()
