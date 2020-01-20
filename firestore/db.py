@@ -33,7 +33,7 @@ class Property(object):
             data_types: Type/Types to check against
 
         Returns:
-            Any
+            user_value: A type checked user value or the default value
         """
         if self.required and self.default is None and user_value is None:
             raise InvalidValueError(self, user_value)
@@ -70,23 +70,31 @@ class StringProperty(Property):
         super(StringProperty, self).__init__(default=default, required=required)
         self.length = length
 
-    def __get_base_value__(self, user_value):
-        user_value = self.__type_check__(user_value, str)
-        if user_value is not None and len(user_value) > self.length:
-            raise InvalidValueError(self, user_value)
-        return user_value
+    def __get__(self, instance, owner):
+        """
+        Returns:
+            str: The string value of the field
+        """
+        return self.__base_value__
 
-    def __get_user_value__(self, base_value):
-        return base_value
+    def __set__(self, instance, value: str):
+        value = self.__type_check__(value, str)
+        if value is not None and len(value) > self.length:
+            raise InvalidValueError(self, value)
+        self.__base_value__ = value
 
 
 class IntegerProperty(Property):
     """A Property whose value is a Python int or long"""
-    def __get_base_value__(self, user_value):
-        return self.__type_check__(user_value, int)
+    def __get__(self, instance, owner):
+        """
+        Returns:
+            int: The value of the field
+        """
+        return self.__base_value__
 
-    def __get_user_value__(self, base_value):
-        return base_value
+    def __set__(self, instance, value):
+        self.__base_value__ = self.__type_check__(value, int)
 
 
 class FloatingPointNumberProperty(Property):
@@ -94,21 +102,28 @@ class FloatingPointNumberProperty(Property):
 
     Note: int and long are also allowed.
     """
-    def __get_base_value__(self, user_value: float):
-        user_value = self.__type_check__(user_value, (int, float))
-        return user_value
+    def __get__(self, instance, owner):
+        """
+        Returns:
+            int: The value of the field
+        """
+        return self.__base_value__
 
-    def __get_user_value__(self, base_value):
-        return base_value
+    def __set__(self, instance, value):
+        self.__base_value__ = self.__type_check__(value, (int, float))
 
 
 class BlobProperty(Property):
     """A Property whose value is a byte string. It may be compressed."""
-    def __get_base_value__(self, user_value):
-        return self.__type_check__(user_value, (bytes, bytearray))
+    def __get__(self, instance, owner):
+        """
+        Returns:
+            bytes: The value of the field
+        """
+        return self.__base_value__
 
-    def __get_user_value__(self, base_value):
-        return base_value
+    def __set__(self, instance, value):
+        self.__base_value__ = self.__type_check__(value, bytes)
 
 
 class ListProperty(Property):
@@ -117,13 +132,21 @@ class ListProperty(Property):
         super(ListProperty, self).__init__(default=[])
         self.property_type = property_type
 
-    def __get_base_value__(self, user_value: list):
-        user_value = self.__type_check__(user_value, (list))
-        user_value = [self.property_type.__get_base_value__(value) for value in user_value]
-        return user_value
+    def __get__(self, instance, owner):
+        """
+        Returns:
+            list: The value of the field
+        """
+        return self.__base_value__
 
-    def __get_user_value__(self, base_value):
-        return base_value
+    def __set__(self, instance, value):
+        values = self.__type_check__(value, list)
+        new_values = []
+        for val in values:
+            # Set and allow to raise if value is not valid
+            self.property_type = val
+            new_values.append(self.property_type)
+        self.__base_value__ = new_values
 
 
 class ReferenceProperty(Property):
@@ -134,19 +157,24 @@ class ReferenceProperty(Property):
         super(ReferenceProperty, self).__init__(required=required)
         self.entity = entity
 
-    def __get_base_value__(self, user_value):
-        user_value = self.__type_check__(user_value, (self.entity))
-        if not user_value:
-            return user_value
-        if not user_value.id:
-            raise ReferencePropertyError("A reference must be put first before it can be referenced")
-        return user_value.__document__()
-
-    def __get_user_value__(self, base_value):
-        if not base_value:
+    def __get__(self, instance, owner):
+        """
+        Returns:
+            Entity: The value of the field
+        """
+        if not self.__base_value__:
             return None
-        user_data = self.entity.__get_user_data__(base_value.get().to_dict())
-        return self.entity(id=base_value.id, **user_data)
+        user_data = self.entity.__get_user_data__(self.__base_value__.get().to_dict())
+        return self.entity(id=self.__base_value__.id, **user_data)
+
+    def __set__(self, instance, value):
+        value = self.__type_check__(value, self.entity)
+        if not value:
+            self.__base_value__ = None
+            return
+        if not value.id:
+            raise ReferencePropertyError("A reference must be put first before it can be referenced")
+        self.__base_value__ = value.__document__()
 
 
 class JsonProperty(Property):
@@ -155,25 +183,33 @@ class JsonProperty(Property):
     def __init__(self, required=False):
         super(JsonProperty, self).__init__(required=required, default={})
 
-    def __get_base_value__(self, user_value):
-        if isinstance(user_value, str):
-            try:
-                user_value = json.loads(user_value)
-            except json.JSONDecodeError:
-                raise InvalidPropertyError(self, "Dict property must be valid JSON")
-        return self.__type_check__(user_value, dict)
+    def __get__(self, instance, owner):
+        """
+        Returns:
+            dict: The value of the field
+        """
+        return self.__base_value__
 
-    def __get_user_value__(self, base_value):
-        return base_value
+    def __set__(self, instance, value):
+        if isinstance(value, str):
+            try:
+                value = json.loads(value)
+            except json.JSONDecodeError:
+                raise InvalidPropertyError(self, "JsonProperty must be valid JSON")
+        self.__base_value__ = self.__type_check__(value, dict)
 
 
 class BooleanProperty(Property):
     """A Property whose value is a Python bool."""
-    def __get_base_value__(self, user_value):
-        return self.__type_check__(user_value, bool)
+    def __get__(self, instance, owner):
+        """
+        Returns:
+            bool: The value of the field
+        """
+        return self.__base_value__
 
-    def __get_user_value__(self, base_value):
-        return base_value
+    def __set__(self, instance, value):
+        self.__base_value__ = self.__type_check__(value, bool)
 
 
 class DateTimeProperty(Property):
@@ -192,16 +228,24 @@ class DateTimeProperty(Property):
         super(DateTimeProperty, self).__init__(default=default, required=required)
         self.auto_now = auto_now
 
-    def __get_base_value__(self, user_value):
-        # Return server timestamp as the value
-        if user_value == SERVER_TIMESTAMP or self.auto_now:
-            return SERVER_TIMESTAMP
-        if user_value is None and self.default == SERVER_TIMESTAMP:
-            return SERVER_TIMESTAMP
-        return self.__type_check__(user_value, datetime)
+    def __get__(self, instance, owner):
+        """
+        Returns:
+            datetime: The value of the field
+        """
+        if self.__base_value__ == SERVER_TIMESTAMP:
+            return datetime.now()
+        return self.__base_value__
 
-    def __get_user_value__(self, base_value):
-        return base_value
+    def __set__(self, instance, value):
+        # Return server timestamp as the value
+        if value == SERVER_TIMESTAMP or self.auto_now:
+            self.__base_value__ = SERVER_TIMESTAMP
+            return
+        if value is None and self.default == SERVER_TIMESTAMP:
+            self.__base_value__ = SERVER_TIMESTAMP
+            return
+        self.__base_value__ = self.__type_check__(value, datetime)
 
 
 class DateProperty(Property):
@@ -213,22 +257,27 @@ class DateProperty(Property):
         auto_add_now (bool): Set to the current date when a record is created
     """
     def __init__(self, default=None, required=False, auto_add_now=False):
+        """
+        Returns:
+            date: The value of the field
+        """
         if not default and auto_add_now:
             default = SERVER_TIMESTAMP
         super(DateProperty, self).__init__(default=default, required=required)
 
-    def __get_base_value__(self, user_value):
-        # Return server timestamp as the value
-        if user_value is None and self.default == SERVER_TIMESTAMP:
-            return SERVER_TIMESTAMP
-        if isinstance(user_value, datetime):
-            return user_value.date()
-        return self.__type_check__(user_value, date)
+    def __get__(self, instance, owner):
+        if self.__base_value__ == SERVER_TIMESTAMP:
+            return datetime.now().date()
+        return self.__base_value__
 
-    def __get_user_value__(self, base_value):
-        if isinstance(base_value, datetime):
-            return base_value.date()
-        return base_value
+    def __set__(self, instance, value):
+        # Return server timestamp as the value
+        if value is None and self.default == SERVER_TIMESTAMP:
+            self.__base_value__ = SERVER_TIMESTAMP
+        if isinstance(value, datetime):
+            self.__base_value__ = value.date()
+            return
+        return self.__type_check__(value, date)
 
 
 class PickledProperty(Property):
@@ -236,11 +285,14 @@ class PickledProperty(Property):
     def __int__(self, required=False):
         super(PickledProperty, self).__init__(default=None, required=required)
 
-    def __get_base_value__(self, user_value):
-        return pickle.dumps(user_value)
+    def __get__(self, instance, owner):
+        if not self.__base_value__:
+            return
+        return pickle.loads(self.__base_value__)
 
-    def __get_user_value__(self, base_value):
-        return pickle.loads(base_value)
+    def __set__(self, instance, value):
+        if value:
+            self.__base_value__ = pickle.dumps(value)
 
 
 class InvalidValueError(ValueError):
