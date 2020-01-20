@@ -23,26 +23,7 @@ class Property(object):
         self.default = default
         self.required = required
         self.name = None
-
-    def __get_user_value__(self, base_value):
-        """
-        Convert value from database to a value usable by the user
-        Args:
-            base_value: The current value from db
-
-        Returns:
-            user_value expected to be of the specified type
-        """
-        raise NotImplementedError
-
-    def __get_base_value__(self, user_value):
-        """
-        Convert value to database acceptable format
-        Args
-        :param user_value: Current user_value
-        :return: base_value
-        """
-        raise NotImplementedError
+        self.__base_value__ = default
 
     def __type_check__(self, user_value, data_types):
         """
