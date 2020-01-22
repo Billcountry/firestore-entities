@@ -1,5 +1,5 @@
 from google.cloud.firestore import Client
-from firestore.db import InvalidPropertyError, Property
+from firestore.db import Property
 from firestore.query import Query
 
 
@@ -24,19 +24,16 @@ class Entity(object):
 
     def __init__(self, **data):
         if type(self) is Entity:
-            raise Exception("You must extend Model")
-        self.__setup_properties()
+            raise Exception("You must extend Entity")
         self.__model_name = type(self).__name__
         client = __get_client__()
         self.__collection = client.collection(self.__collection_path())
         self.id = None
+        self.__firestore_data__ = {}
         if "id" in data:
             self.id = data.pop("id")
         for key, value in data.items():
-            if key in self.__properties:
-                setattr(self, key, value)
-            else:
-                raise InvalidPropertyError(key, self.__model_name)
+            setattr(self, key, value)
 
     @classmethod
     def __collection_path(cls):
@@ -51,26 +48,6 @@ class Entity(object):
     def __str__(self):
         return "<Model %s>" % self.__model_name
 
-    def __setup_properties(self):
-        # Get defined properties, equate them to their defaults
-        self.__properties = dict()
-        for attribute in dir(self):
-            if attribute.startswith("_"):
-                continue
-            value = getattr(self, attribute)
-            if isinstance(value, Property):
-                value.name = attribute
-                self.__properties[attribute] = value
-                setattr(self, attribute, value.default)
-
-    def __prepare(self):
-        # Find current property values and validate them
-        values = dict()
-        for key, prop in self.__properties.items():
-            value = getattr(self, key)
-            values[key] = prop.__get_base_value__(value)
-        return values
-
     def put(self):
         """
         Save the models data to Firestore
@@ -78,11 +55,16 @@ class Entity(object):
         Raises:
             InvalidValueError: Raised if the value of a property is invalid, e.g. A required property that's None
         """
-        data = self.__prepare()
+        props = self.__get_properties()
+        for key in props:
+            if key not in self.__firestore_data__:
+                # Value not set yet. Try to set to none
+                setattr(self, key, None)
+
         if self.id:
-            self.__collection.document(self.id).set(data)
+            self.__collection.document(self.id).set(self.__firestore_data__)
             return
-        _time, new_ref = self.__collection.add(data)
+        _time, new_ref = self.__collection.add(self.__firestore_data__)
         self.id = new_ref.id
 
     def delete(self):
@@ -90,18 +72,18 @@ class Entity(object):
         if self.id:
             self.__collection.document(self.id).delete()
 
-    @classmethod
-    def __get_user_data__(cls, base_data):
-        user_data = dict()
-        for name in dir(cls):
-            prop = getattr(cls, name)
-            if not isinstance(prop, Property):
-                continue
-            if name in base_data:
-                user_data[name] = prop.__get_user_value__(base_data.get(name))
-            else:
-                user_data[name] = prop.default
-        return user_data
+    def __get_properties(self):
+        props = []
+        for key, value in self.__class__.__dict__.items():
+            try:
+                if issubclass(getattr(self, value), Property):
+                    props.append(key)
+            except TypeError:
+                return False
+        return props
+
+    def __set_database_values__(self, document: dict):
+        self.__firestore_data__ = document
 
     @classmethod
     def get(cls, _id):
@@ -117,11 +99,12 @@ class Entity(object):
             None: If the id provided doesn't exist
         """
         document = __get_client__().collection(cls.__collection_path()).document(_id)
-        data = document.get()
-        if not data.exists:
+        doc = document.get()
+        if not doc.exists:
             return None
-        user_data = cls.__get_user_data__(data.to_dict())
-        return cls(id=_id, **user_data)
+        entity = cls(id=_id)
+        entity.__firestore_data__ = doc.to_dict()
+        return entity
 
     @classmethod
     def query(cls, offset=0, limit=0):
