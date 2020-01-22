@@ -1,6 +1,6 @@
 import unittest
 from firestore import SERVER_TIMESTAMP
-from firestore import db
+from firestore import db, Entity
 import json
 from datetime import datetime, date
 from mockfirestore import MockFirestore
@@ -9,7 +9,19 @@ import pickle
 mock = MockFirestore()
 
 
+class TestEntity(Entity):
+    datetime_property = db.DateTimeProperty()
+    date_property = db.DateProperty(auto_add_now=True)
+    text_property = db.TextProperty(default="test", required=True)
+    string_property = db.StringProperty(length=10)
+    string_list = db.StringProperty(repeated=True, length=5)
+    dict_property = db.DictProperty()
+
+
 class TestProperties(unittest.TestCase):
+    def setUp(self):
+        self.entity = TestEntity()
+
     def test_text_property(self):
         text_property = db.TextProperty(default="test", required=True)
         self.assertEqual(text_property.__get_base_value__("roast"), "roast")
@@ -63,17 +75,22 @@ class TestProperties(unittest.TestCase):
         self.assertRaises(db.InvalidValueError, json_property.__get_base_value__, [1, 2, 3])
 
     def test_datetime_property(self):
-        dt_property = db.DateTimeProperty(auto_add_now=True)
         now = datetime.now()
-        self.assertEqual(dt_property.__get_base_value__(now), now)
+        self.dt_property = now
+        self.assertEqual(self.dt_property, now)
         # Confirm that default is set to server timestamp
-        self.assertEqual(dt_property.__get_base_value__(None), SERVER_TIMESTAMP)
+        print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXx")
+        print(self.dt_property)
+        self.dt_property = None
+        print(self.dt_property)
+        self.assertEqual(self.dt_property.__base_value__, SERVER_TIMESTAMP)
         # A string is not a date time object
-        self.assertRaises(db.InvalidValueError, dt_property.__get_base_value__, "12-may-2019")
-        self.assertRaises(db.InvalidValueError, dt_property.__get_base_value__, now.date())
-        dt_property = db.DateTimeProperty(auto_now=True)
-        # This value is always updated to current time stamp on every update
-        self.assertEqual(dt_property.__get_base_value__(now), SERVER_TIMESTAMP)
+        self.assertRaises(db.InvalidValueError, setattr, "dt_property", "12-may-2019")
+        self.assertRaises(db.InvalidValueError, setattr, "dt_property", now.date())
+        # dt_property = db.DateTimeProperty(auto_now=True)
+        # # This value is always updated to current time stamp on every update
+        #
+        # self.assertEqual(dt_property.__base_value__, SERVER_TIMESTAMP)
 
     def test_date_property(self):
         dt_property = db.DateProperty(auto_add_now=True)
