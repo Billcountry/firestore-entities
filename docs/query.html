@@ -23,7 +23,7 @@
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">from google.cloud.firestore import Query as FSQuery
-from firestore.db import MalformedQueryError, ListProperty
+from firestore.db import MalformedQueryError
 
 
 class Query(object):
@@ -41,7 +41,6 @@ class Query(object):
             offset: The position to begin the query results
             limit: Maximum number of results to return
         &#34;&#34;&#34;
-        print(entity)
         from firestore.entity import __get_client__
         self.__query = __get_client__().collection(entity.__name__)
         if offset:
@@ -54,8 +53,7 @@ class Query(object):
         self.__range_filter_queries = {}
 
     def __validate_value(self, property_name, value):
-        prop = getattr(self.__entity, property_name)
-        return prop.__get_base_value__(value)
+        return self.__entity.__dict__.get(property_name).validate(value)
 
     def __add_range_filter(self, prop):
         self.__range_filter_queries[prop] = True
@@ -150,11 +148,6 @@ class Query(object):
             MalformedQueryError: If the property specified is not a ListField, or
                the query has more than one contains condition
         &#34;&#34;&#34;
-        entity_prop = getattr(self.__entity, prop)
-
-        # Don&#39;t do a contains condition in an invalid prop
-        if not isinstance(entity_prop, ListProperty):
-            raise MalformedQueryError(&#34;Invalid property %s, query property for contains must be a list&#34; % prop)
 
         # Make sure there&#39;s only on `array_contains` condition
         self.__array_contains_queries += 1
@@ -174,9 +167,9 @@ class Query(object):
         Returns:
              Query: A query object with order applied
         &#34;&#34;&#34;
-        if direction is not &#34;ASC&#34; and direction is not &#34;DESC&#34;:
+        if direction != &#34;ASC&#34; and direction != &#34;DESC&#34;:
             raise MalformedQueryError(&#34;order_by direction can only be ASC, or DESC&#34;)
-        direction = FSQuery.ASCENDING if direction is &#34;ASC&#34; else FSQuery.DESCENDING
+        direction = FSQuery.ASCENDING if direction == &#34;ASC&#34; else FSQuery.DESCENDING
         self.__query = self.__query.order_by(prop, direction=direction)
         return self
 
@@ -201,8 +194,9 @@ class Query(object):
         if not self.__fetched:
             self.__fetch()
         doc = self.__docs.__next__()
-        user_data = self.__entity.__get_user_data__(doc.to_dict())
-        return self.__entity(id=doc.id, **user_data)</code></pre>
+        entity = self.__entity(id=doc.id)
+        entity.__firestore_data__ = doc.to_dict()
+        return entity</code></pre>
 </details>
 </section>
 <section>
@@ -250,7 +244,6 @@ You can iterate over the query to get the results of your query one by one. Each
             offset: The position to begin the query results
             limit: Maximum number of results to return
         &#34;&#34;&#34;
-        print(entity)
         from firestore.entity import __get_client__
         self.__query = __get_client__().collection(entity.__name__)
         if offset:
@@ -263,8 +256,7 @@ You can iterate over the query to get the results of your query one by one. Each
         self.__range_filter_queries = {}
 
     def __validate_value(self, property_name, value):
-        prop = getattr(self.__entity, property_name)
-        return prop.__get_base_value__(value)
+        return self.__entity.__dict__.get(property_name).validate(value)
 
     def __add_range_filter(self, prop):
         self.__range_filter_queries[prop] = True
@@ -359,11 +351,6 @@ You can iterate over the query to get the results of your query one by one. Each
             MalformedQueryError: If the property specified is not a ListField, or
                the query has more than one contains condition
         &#34;&#34;&#34;
-        entity_prop = getattr(self.__entity, prop)
-
-        # Don&#39;t do a contains condition in an invalid prop
-        if not isinstance(entity_prop, ListProperty):
-            raise MalformedQueryError(&#34;Invalid property %s, query property for contains must be a list&#34; % prop)
 
         # Make sure there&#39;s only on `array_contains` condition
         self.__array_contains_queries += 1
@@ -383,9 +370,9 @@ You can iterate over the query to get the results of your query one by one. Each
         Returns:
              Query: A query object with order applied
         &#34;&#34;&#34;
-        if direction is not &#34;ASC&#34; and direction is not &#34;DESC&#34;:
+        if direction != &#34;ASC&#34; and direction != &#34;DESC&#34;:
             raise MalformedQueryError(&#34;order_by direction can only be ASC, or DESC&#34;)
-        direction = FSQuery.ASCENDING if direction is &#34;ASC&#34; else FSQuery.DESCENDING
+        direction = FSQuery.ASCENDING if direction == &#34;ASC&#34; else FSQuery.DESCENDING
         self.__query = self.__query.order_by(prop, direction=direction)
         return self
 
@@ -410,8 +397,9 @@ You can iterate over the query to get the results of your query one by one. Each
         if not self.__fetched:
             self.__fetch()
         doc = self.__docs.__next__()
-        user_data = self.__entity.__get_user_data__(doc.to_dict())
-        return self.__entity(id=doc.id, **user_data)</code></pre>
+        entity = self.__entity(id=doc.id)
+        entity.__firestore_data__ = doc.to_dict()
+        return entity</code></pre>
 </details>
 <h3>Methods</h3>
 <dl>
@@ -455,11 +443,6 @@ the query has more than one contains condition</dd>
         MalformedQueryError: If the property specified is not a ListField, or
            the query has more than one contains condition
     &#34;&#34;&#34;
-    entity_prop = getattr(self.__entity, prop)
-
-    # Don&#39;t do a contains condition in an invalid prop
-    if not isinstance(entity_prop, ListProperty):
-        raise MalformedQueryError(&#34;Invalid property %s, query property for contains must be a list&#34; % prop)
 
     # Make sure there&#39;s only on `array_contains` condition
     self.__array_contains_queries += 1
@@ -687,9 +670,9 @@ the query has more than one contains condition</dd>
     Returns:
          Query: A query object with order applied
     &#34;&#34;&#34;
-    if direction is not &#34;ASC&#34; and direction is not &#34;DESC&#34;:
+    if direction != &#34;ASC&#34; and direction != &#34;DESC&#34;:
         raise MalformedQueryError(&#34;order_by direction can only be ASC, or DESC&#34;)
-    direction = FSQuery.ASCENDING if direction is &#34;ASC&#34; else FSQuery.DESCENDING
+    direction = FSQuery.ASCENDING if direction == &#34;ASC&#34; else FSQuery.DESCENDING
     self.__query = self.__query.order_by(prop, direction=direction)
     return self</code></pre>
 </details>
