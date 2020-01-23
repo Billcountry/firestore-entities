@@ -8,7 +8,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="firestore-entities",
-    version="0.1.1",
+    version="0.2.0",
     author="Billcountry Mwaniki",
     author_email="me@billcountry.tech",
     description="Implementation of entities concept on top of Google cloud firestore",
