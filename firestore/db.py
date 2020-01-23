@@ -176,13 +176,6 @@ class DictProperty(Property):
 
 class BooleanProperty(Property):
     """A Property whose value is a Python bool."""
-    def __get__(self, instance, owner):
-        """
-        Returns:
-            bool: The value of the field
-        """
-        return self.__base_value__
-
     def validate(self, value):
         self.__base_value__ = self.__type_check__(value, bool)
 

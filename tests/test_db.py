@@ -15,7 +15,11 @@ class TestEntity(Entity):
     text_property = db.TextProperty(default="test", required=True)
     string_property = db.StringProperty(length=10, required=True)
     string_list = db.StringProperty(repeated=True, length=5)
+    integer_property = db.IntegerProperty()
     dict_property = db.DictProperty()
+    boolean_property = db.BooleanProperty()
+    blob_property = db.BlobProperty()
+    float_property = db.FloatingPointNumberProperty()
 
 
 class TestProperties(unittest.TestCase):
@@ -25,14 +29,23 @@ class TestProperties(unittest.TestCase):
     def db_value(self, field):
         return self.entity.__firestore_data__.get(field)
 
-    def test_text_property(self):
-        self.entity.text_property = "roast"
-        self.assertEqual(self.db_value("text_property"), "roast")
+    def test_simple_properties(self):
+        props_map = [
+            ("text_property", "roast", 123),
+            ("integer_property", 23, 1.23),
+            ("boolean_property", True, 16),
+            ("blob_property", bytes("Some bytes"), "A string"),
+            ("float_property", 0.124, "12"),
+            ("float_property", 1, "12"),
+        ]
+        for prop, valid, invalid in props_map:
+            setattr(self.entity, prop, valid)
+            self.assertEqual(self.db_value(prop), valid)
+            # Rejects invalid values
+            self.assertRaises(db.InvalidValueError, setattr, self.entity, prop, invalid)
         # The default value is set on an empty property
         self.entity.text_property = None
         self.assertEqual(self.db_value("text_property"), "test")
-        #  String property should only accept strings
-        self.assertRaises(db.InvalidValueError, setattr, self.entity, "text_property", 123)
     
     def test_string_property(self):
         self.entity.string_property = "roast"
@@ -49,32 +62,6 @@ class TestProperties(unittest.TestCase):
         # Should reject other data types
         self.assertRaises(db.InvalidValueError, setattr, self.entity, "string_list", [1230].extend(string_list))
 
-    def test_integer_property(self):
-        integer_property = db.IntegerProperty()
-        self.assertEqual(integer_property.__get_base_value__(1), 1)
-        self.assertEqual(integer_property.__get_base_value__(0), 0)
-        # Float is not a valid value of an integer property
-        self.assertRaises(db.InvalidValueError, integer_property.__get_base_value__, 1.36)
-        # String is not a valid integer
-        self.assertRaises(db.InvalidValueError, integer_property.__get_base_value__, "0")
-        # None required property defaults to None
-        self.assertIsNone(integer_property.__get_base_value__(None))
-
-    def test_float_property(self):
-        float_property = db.FloatingPointNumberProperty()
-        # Should accept both float and integer values
-        self.assertEqual(float_property.__get_base_value__(0), 0)
-        self.assertEqual(float_property.__get_base_value__(1), 1)
-        self.assertEqual(float_property.__get_base_value__(0.6667), 0.6667)
-        self.assertEqual(float_property.__get_base_value__(3.142), 3.142)
-        self.assertRaises(db.InvalidValueError, float_property.__get_base_value__, "10234")
-
-    def test_list_property(self):
-        list_property = db.ListProperty(property_type=db.IntegerProperty())
-        self.assertEqual(list_property.__get_base_value__([1, 2, 3, 4]), [1, 2, 3, 4])
-        # An invalid data type is not accepted as part of the child propertys
-        self.assertRaises(db.InvalidValueError, list_property.__get_base_value__, [1, 2, ""])
-
     def test_json_property(self):
         json_property = db.JsonProperty()
         valid_dict = dict(name="John doe", age=24)
@@ -89,10 +76,7 @@ class TestProperties(unittest.TestCase):
         self.dt_property = now
         self.assertEqual(self.dt_property, now)
         # Confirm that default is set to server timestamp
-        print("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXx")
-        print(self.dt_property)
         self.dt_property = None
-        print(self.dt_property)
         self.assertEqual(self.dt_property.__base_value__, SERVER_TIMESTAMP)
         # A string is not a date time object
         self.assertRaises(db.InvalidValueError, setattr, "dt_property", "12-may-2019")
@@ -122,14 +106,6 @@ class TestProperties(unittest.TestCase):
         self.assertRaises(db.InvalidValueError, bool_property.__get_base_value__, None)
         bool_property = db.BooleanProperty()
         self.assertIsNone(bool_property.__get_base_value__(None))
-
-    def test_blob_property(self):
-        some_bytes = bytes(b"bavnkvnkjwenegkv,erngvanavnwisnkversnvaern")
-        blob_property = db.BlobProperty(default=some_bytes)
-        other_bytes = bytes(b"qwertytuyioutryewwertyrytuyterwqwewqrwetry")
-        self.assertEqual(blob_property.__get_base_value__(None), some_bytes)
-        self.assertEqual(blob_property.__get_base_value__(other_bytes), other_bytes)
-        self.assertRaises(db.InvalidValueError, blob_property.__get_base_value__, "some_string")
 
     def test_pickled_property(self):
         testing = TestPickle(name="testing")
