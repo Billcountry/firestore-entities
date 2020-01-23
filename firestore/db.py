@@ -95,7 +95,7 @@ class StringProperty(Property):
 
     Args:
         default: Default value for this property
-        length (int): The maximum length of this property
+        length (int=255): The maximum length of this property
         required (bool): Enforce whether this value can be empty
         repeated (bool): Stores multiple values as a list, Overrides default with []
     """

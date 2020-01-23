@@ -35,9 +35,19 @@ class TestProperties(unittest.TestCase):
         self.assertRaises(db.InvalidValueError, setattr, self.entity, "text_property", 123)
     
     def test_string_property(self):
-        string_property = db.StringProperty(length=10)
-        self.assertEqual(string_property.__get_base_value__("roast"), "roast")
-        self.assertRaises(db.InvalidValueError, string_property.__get_base_value__, "qwerrtyyuiop[]")
+        self.entity.string_property = "roast"
+        self.assertEqual(self.db_value("string_property"), "roast")
+        self.assertRaises(db.InvalidValueError, setattr, self.entity, "string_property", "rejects lengths>10")
+        # Required without a default. Should reject None
+        self.assertRaises(db.InvalidValueError, setattr, self.entity, "string_property", None)
+        # Repeated
+        string_list = ["TST", "PSP", "DOD"]
+        self.entity.string_list = string_list
+        self.assertEqual(self.db_value("string_list"), string_list)
+        # Should reject values>length 5
+        self.assertRaises(db.InvalidValueError, setattr, self.entity, "string_list", ["1234567"].extend(string_list))
+        # Should reject other data types
+        self.assertRaises(db.InvalidValueError, setattr, self.entity, "string_list", [1230].extend(string_list))
 
     def test_integer_property(self):
         integer_property = db.IntegerProperty()
