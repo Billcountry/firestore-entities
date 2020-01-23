@@ -31,7 +31,6 @@ class Property(object):
         self.repeated = repeated
 
     def __set_name__(self, owner, name):
-        print(self.name)
         self.name = name
 
     def __set__(self, instance, value):
@@ -132,7 +131,7 @@ class BlobProperty(Property):
 
 
 class ReferenceProperty(Property):
-    def __init__(self, entity, required=False, repeated=True):
+    def __init__(self, entity, required=False, repeated=False):
         from firestore import Entity
         if not issubclass(entity, Entity):
             raise ReferencePropertyError("A reference property must reference another entity")
@@ -177,7 +176,7 @@ class DictProperty(Property):
 class BooleanProperty(Property):
     """A Property whose value is a Python bool."""
     def validate(self, value):
-        self.__base_value__ = self.__type_check__(value, bool)
+        return self.__type_check__(value, bool)
 
 
 class DateTimeProperty(Property):
@@ -197,7 +196,6 @@ class DateTimeProperty(Property):
         self.auto_now = auto_now
 
     def user_value(self, value):
-        print("Getting....")
         """
         Returns:
             datetime: The value of the field
@@ -207,7 +205,6 @@ class DateTimeProperty(Property):
         return value
 
     def validate(self, value):
-        print("Setting value", value)
         # Return server timestamp as the value
         if value == SERVER_TIMESTAMP or self.auto_now:
             return SERVER_TIMESTAMP
@@ -235,7 +232,9 @@ class DateProperty(Property):
 
     def user_value(self, value):
         if value == SERVER_TIMESTAMP:
-            return datetime.now().date()
+            value = datetime.now().date()
+        if isinstance(value, datetime):
+            return value.date()
         return value
 
     def validate(self, value):

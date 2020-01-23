@@ -1,7 +1,6 @@
 import unittest
 from firestore import SERVER_TIMESTAMP
 from firestore import db, Entity
-import json
 from datetime import datetime, date
 from mockfirestore import MockFirestore
 import pickle
@@ -10,7 +9,8 @@ mock = MockFirestore()
 
 
 class TestEntity(Entity):
-    datetime_property = db.DateTimeProperty()
+    datetime_property = db.DateTimeProperty(auto_add_now=True)
+    always_now_property = db.DateTimeProperty(auto_now=True)
     date_property = db.DateProperty(auto_add_now=True)
     text_property = db.TextProperty(default="test", required=True)
     string_property = db.StringProperty(length=10, required=True)
@@ -20,6 +20,7 @@ class TestEntity(Entity):
     boolean_property = db.BooleanProperty()
     blob_property = db.BlobProperty()
     float_property = db.FloatingPointNumberProperty()
+    pickled_property = db.PickledProperty()
 
 
 class TestProperties(unittest.TestCase):
@@ -34,7 +35,7 @@ class TestProperties(unittest.TestCase):
             ("text_property", "roast", 123),
             ("integer_property", 23, 1.23),
             ("boolean_property", True, 16),
-            ("blob_property", bytes("Some bytes"), "A string"),
+            ("blob_property", bytes("Some bytes", encoding="utf8"), "A string"),
             ("float_property", 0.124, "12"),
             ("float_property", 1, "12"),
         ]
@@ -58,9 +59,11 @@ class TestProperties(unittest.TestCase):
         self.entity.string_list = string_list
         self.assertEqual(self.db_value("string_list"), string_list)
         # Should reject values>length 5
-        self.assertRaises(db.InvalidValueError, setattr, self.entity, "string_list", ["1234567"].extend(string_list))
+        invalid_list = ["1234567", "TST", "PSP", "DOD"]
+        self.assertRaises(db.InvalidValueError, setattr, self.entity, "string_list", invalid_list)
         # Should reject other data types
-        self.assertRaises(db.InvalidValueError, setattr, self.entity, "string_list", [1230].extend(string_list))
+        invalid_list = [124, "TST", "PSP", "DOD"]
+        self.assertRaises(db.InvalidValueError, setattr, self.entity, "string_list", invalid_list)
 
     def test_dict_property(self):
         valid_dict = dict(name="John doe", age=24)
@@ -73,47 +76,38 @@ class TestProperties(unittest.TestCase):
         self.assertRaises(db.InvalidValueError, setattr, self.entity, "dict_property", [1, 2, 3])
 
     def test_datetime_property(self):
+        self.entity.datetime_property = None
+        # Defaults to server time stamp
+        self.assertEqual(self.db_value("datetime_property"), SERVER_TIMESTAMP)
         now = datetime.now()
-        self.dt_property = now
-        self.assertEqual(self.dt_property, now)
-        # Confirm that default is set to server timestamp
-        self.dt_property = None
-        self.assertEqual(self.dt_property.__base_value__, SERVER_TIMESTAMP)
+        self.entity.datetime_property = now
+        # Setting a different date updates to the date
+        self.assertEqual(self.db_value("datetime_property"), now)
+        # For auto now fields the value is always Server timestamp
+        self.entity.always_now_property = now
+        self.assertEqual(self.db_value("always_now_property"), SERVER_TIMESTAMP)
         # A string is not a date time object
-        self.assertRaises(db.InvalidValueError, setattr, "dt_property", "12-may-2019")
-        self.assertRaises(db.InvalidValueError, setattr, "dt_property", now.date())
-        # dt_property = db.DateTimeProperty(auto_now=True)
-        # # This value is always updated to current time stamp on every update
-        #
-        # self.assertEqual(dt_property.__base_value__, SERVER_TIMESTAMP)
+        self.assertRaises(db.InvalidValueError, setattr, self.entity, "datetime_property", "12-may-2019")
+        self.assertRaises(db.InvalidValueError, setattr, self.entity, "datetime_property", now.date())
 
     def test_date_property(self):
-        dt_property = db.DateProperty(auto_add_now=True)
         now = datetime.now()
         today = date(year=now.year, month=now.month, day=now.day)
-        self.assertEqual(dt_property.__get_base_value__(today), today)
-        self.assertEqual(dt_property.__get_base_value__(now), now.date())
-        # Confirm that default is set to server timestamp
-        self.assertEqual(dt_property.__get_base_value__(None), SERVER_TIMESTAMP)
+        self.entity.date_property = None
+        self.assertEqual(self.db_value("date_property"), SERVER_TIMESTAMP)
+        self.entity.date_property = today
+        self.assertEqual(self.db_value("date_property"), today)
+        # Setting a datetime is converted to a date
+        self.entity.date_property = now
+        self.assertEqual(self.db_value("date_property"), today)
         # A string is not a date time object
-        self.assertRaises(db.InvalidValueError, dt_property.__get_base_value__, "12-may-2019")
-
-    def test_boolean_property(self):
-        bool_property = db.BooleanProperty(required=True)
-        self.assertTrue(bool_property.__get_base_value__(True))
-        self.assertFalse(bool_property.__get_base_value__(False))
-        self.assertRaises(db.InvalidValueError, bool_property.__get_base_value__, "some string")
-        # None is not a valid boolean value
-        self.assertRaises(db.InvalidValueError, bool_property.__get_base_value__, None)
-        bool_property = db.BooleanProperty()
-        self.assertIsNone(bool_property.__get_base_value__(None))
+        self.assertRaises(db.InvalidValueError, setattr, self.entity, "date_property", "12-may-2019")
 
     def test_pickled_property(self):
         testing = TestPickle(name="testing")
-        pickled_property = db.PickledProperty()
         pickled_string = pickle.dumps(testing)
-        self.assertEqual(pickled_property.__get_base_value__(testing), pickled_string)
-        self.assertEqual(pickled_property.__get_user_value__(pickled_string).name, testing.name)
+        self.entity.pickled_property = testing
+        self.assertEqual(self.db_value("pickled_property"), pickled_string)
 
 
 class TestPickle:

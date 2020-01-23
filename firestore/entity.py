@@ -46,7 +46,9 @@ class Entity(object):
         return self.__collection.document(self.id)
 
     def __str__(self):
-        return "<Model %s>" % self.__model_name
+        if self.id:
+            return "<%s id='%s'>" % (self.__model_name, self.id)
+        return "<Entity %s>" % self.__model_name
 
     def put(self):
         """
@@ -76,10 +78,10 @@ class Entity(object):
         props = []
         for key, value in self.__class__.__dict__.items():
             try:
-                if issubclass(getattr(self, value), Property):
+                if issubclass(value, Property):
                     props.append(key)
             except TypeError:
-                return False
+                pass
         return props
 
     def __set_database_values__(self, document: dict):

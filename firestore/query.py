@@ -17,7 +17,6 @@ class Query(object):
             offset: The position to begin the query results
             limit: Maximum number of results to return
         """
-        print(entity)
         from firestore.entity import __get_client__
         self.__query = __get_client__().collection(entity.__name__)
         if offset:
@@ -30,8 +29,7 @@ class Query(object):
         self.__range_filter_queries = {}
 
     def __validate_value(self, property_name, value):
-        prop = getattr(self.__entity, property_name)
-        return prop.__get_base_value__(value)
+        return self.__entity.__dict__.get(property_name).validate(value)
 
     def __add_range_filter(self, prop):
         self.__range_filter_queries[prop] = True

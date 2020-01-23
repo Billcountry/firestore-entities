@@ -17,12 +17,13 @@ class User(Entity):
 
 class Conversation(Entity):
     """Conversations between users"""
-    users = db.ListProperty(db.ReferenceProperty(entity=User, required=True))
+    owner = db.ReferenceProperty(entity=User, required=True)
+    users = db.ReferenceProperty(entity=User, required=True, repeated=True)
     start_time = db.DateTimeProperty(auto_add_now=True)
     last_update = db.DateTimeProperty(auto_now=True)
 
     def send_message(self, user, text):
-        if user not in self.users:
+        if not any([user.id == db_user.id for db_user in self.users]):
             raise Exception("User must be in a conversation to send a message")
         message = MessageLog(sender=user.email, message=text)
         message.put()
@@ -53,7 +54,7 @@ class EntitiesTestCases(unittest.TestCase):
     def test_query(self):
         self.jane.put()
         self.john.put()
-        conversation = Conversation(users=[self.john, self.jane])
+        conversation = Conversation(owner=self.jane, users=[self.john, self.jane])
         conversation.put()
         for i in range(50):
             message = "Lorem ipsum %s" % i
@@ -67,10 +68,11 @@ class EntitiesTestCases(unittest.TestCase):
 
     def test_reference_property(self):
         # A model must be saved to referenced
-        ref_property = db.ReferenceProperty(User)
-        self.assertRaises(db.ReferencePropertyError, ref_property.__get_base_value__, self.john)
+        conv = Conversation()
+        self.assertRaises(db.ReferencePropertyError, setattr, conv, "owner", self.john)
         self.john.put()
-        self.assertEqual(ref_property.__get_base_value__(self.john).id, self.john.__document__().id)
+        conv.owner = self.john
+        self.assertEqual(conv.__firestore_data__.get("owner").id, self.john.id)
 
     def test_put_and_get(self):
         self.jane.put()
