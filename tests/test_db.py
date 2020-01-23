@@ -13,7 +13,7 @@ class TestEntity(Entity):
     datetime_property = db.DateTimeProperty()
     date_property = db.DateProperty(auto_add_now=True)
     text_property = db.TextProperty(default="test", required=True)
-    string_property = db.StringProperty(length=10)
+    string_property = db.StringProperty(length=10, required=True)
     string_list = db.StringProperty(repeated=True, length=5)
     dict_property = db.DictProperty()
 
@@ -22,17 +22,17 @@ class TestProperties(unittest.TestCase):
     def setUp(self):
         self.entity = TestEntity()
 
+    def db_value(self, field):
+        return self.entity.__firestore_data__.get(field)
+
     def test_text_property(self):
-        text_property = db.TextProperty(default="test", required=True)
-        self.assertEqual(text_property.__get_base_value__("roast"), "roast")
+        self.entity.text_property = "roast"
+        self.assertEqual(self.db_value("text_property"), "roast")
         # The default value is set on an empty property
-        self.assertEqual(text_property.__get_base_value__(None), "test")
+        self.entity.text_property = None
+        self.assertEqual(self.db_value("text_property"), "test")
         #  String property should only accept strings
-        self.assertRaises(db.InvalidValueError, text_property.__get_base_value__, 123)
-        # Create a property without a default value
-        text_property = db.TextProperty(required=True)
-        # This is a required property, None is not a valid value
-        self.assertRaises(db.InvalidValueError, text_property.__get_base_value__, None)
+        self.assertRaises(db.InvalidValueError, setattr, self.entity, "text_property", 123)
     
     def test_string_property(self):
         string_property = db.StringProperty(length=10)
