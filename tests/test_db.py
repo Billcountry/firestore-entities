@@ -62,14 +62,15 @@ class TestProperties(unittest.TestCase):
         # Should reject other data types
         self.assertRaises(db.InvalidValueError, setattr, self.entity, "string_list", [1230].extend(string_list))
 
-    def test_json_property(self):
-        json_property = db.JsonProperty()
+    def test_dict_property(self):
         valid_dict = dict(name="John doe", age=24)
+        self.entity.dict_property = valid_dict
         # A dict, a list, or a valid json string are valid values
-        self.assertEqual(json_property.__get_base_value__(valid_dict), valid_dict)
-        self.assertEqual(json_property.__get_base_value__(json.dumps(valid_dict)), valid_dict)
+        self.assertEqual(self.db_value("dict_property"), valid_dict)
+        self.entity.dict_property = '{"name": "John doe", "age": 24}'
+        self.assertEqual(self.db_value("dict_property"), valid_dict)
         # A list is not a valid input of dict property
-        self.assertRaises(db.InvalidValueError, json_property.__get_base_value__, [1, 2, 3])
+        self.assertRaises(db.InvalidValueError, setattr, self.entity, "dict_property", [1, 2, 3])
 
     def test_datetime_property(self):
         now = datetime.now()
