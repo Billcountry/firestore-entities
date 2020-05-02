@@ -37,37 +37,46 @@ class Property(object):
     &#34;&#34;&#34;
     A class describing a typed, persisted attribute of a database entity
     &#34;&#34;&#34;
-    def __init__(self, default=None, required=False):
+    def __init__(self, default=None, required=False, repeated=False):
         &#34;&#34;&#34;
         Args:
             default: The default value of the property
             required: Enforce the property value to be provided
+            repeated (bool): Stores multiple values as a list, Overrides default with []
         &#34;&#34;&#34;
         if type(self) is Property:
             raise Exception(&#34;You must extend Property&#34;)
+        if repeated:
+            if default is not None:
+                raise Exception(&#34;`default` is not allowed for a repeated property.&#34;)
+            default = []
         self.default = default
         self.required = required
         self.name = None
+        self.repeated = repeated
 
-    def __get_user_value__(self, base_value):
-        &#34;&#34;&#34;
-        Convert value from database to a value usable by the user
-        Args:
-            base_value: The current value from db
+    def __set_name__(self, owner, name):
+        self.name = name
 
-        Returns:
-            user_value expected to be of the specified type
-        &#34;&#34;&#34;
-        raise NotImplementedError
+    def __set__(self, instance, value):
+        if value is None:
+            instance.__firestore_data__[self.name] = None
+        if self.repeated:
+            value = self.__type_check__(value, list)
+            if value:
+                value = [self.validate(val) for val in value]
+        else:
+            value = self.validate(value)
+        instance.__firestore_data__[self.name] = value
 
-    def __get_base_value__(self, user_value):
-        &#34;&#34;&#34;
-        Convert value to database acceptable format
-        Args
-        :param user_value: Current user_value
-        :return: base_value
-        &#34;&#34;&#34;
-        raise NotImplementedError
+    def __get__(self, instance, owner):
+        value = instance.__firestore_data__.get(self.name)
+        if value:
+            if self.repeated:
+                value = [self.user_value(val) for val in value]
+            else:
+                value = self.user_value(value)
+        return value
 
     def __type_check__(self, user_value, data_types):
         &#34;&#34;&#34;
@@ -77,7 +86,7 @@ class Property(object):
             data_types: Type/Types to check against
 
         Returns:
-            Any
+            user_value: A type checked user value or the default value
         &#34;&#34;&#34;
         if self.required and self.default is None and user_value is None:
             raise InvalidValueError(self, user_value)
@@ -89,16 +98,19 @@ class Property(object):
             raise InvalidValueError(self, user_value)
         return user_value
 
+    def validate(self, value):
+        raise NotImplementedError(&#34;A property must implement validate&#34;)
+
+    def user_value(self, value):
+        return value
+
 
 class TextProperty(Property):
     &#34;&#34;&#34;An Property whose value is a text string of unlimited length.
     I&#39;ts not advisable to index this property
     &#34;&#34;&#34;
-    def __get_base_value__(self, user_value):
-        return self.__type_check__(user_value, str)
-
-    def __get_user_value__(self, base_value):
-        return base_value
+    def validate(self, value):
+        return self.__type_check__(value, str)
 
 
 class StringProperty(Property):
@@ -107,30 +119,25 @@ class StringProperty(Property):
 
     Args:
         default: Default value for this property
-        length (int): The maximum length of this property
+        length (int=255): The maximum length of this property
         required (bool): Enforce whether this value can be empty
+        repeated (bool): Stores multiple values as a list, Overrides default with []
     &#34;&#34;&#34;
-    def __init__(self, default=None, length=255, required=False):
-        super(StringProperty, self).__init__(default=default, required=required)
+    def __init__(self, default=None, length=255, required=False, repeated=False):
+        super(StringProperty, self).__init__(default=default, required=required, repeated=repeated)
         self.length = length
 
-    def __get_base_value__(self, user_value):
-        user_value = self.__type_check__(user_value, str)
-        if user_value is not None and len(user_value) &gt; self.length:
-            raise InvalidValueError(self, user_value)
-        return user_value
-
-    def __get_user_value__(self, base_value):
-        return base_value
+    def validate(self, value):
+        value = self.__type_check__(value, str)
+        if value is not None and len(value) &gt; self.length:
+            raise InvalidValueError(self, value)
+        return value
 
 
 class IntegerProperty(Property):
     &#34;&#34;&#34;A Property whose value is a Python int or long&#34;&#34;&#34;
-    def __get_base_value__(self, user_value):
-        return self.__type_check__(user_value, int)
-
-    def __get_user_value__(self, base_value):
-        return base_value
+    def validate(self, value):
+        return self.__type_check__(value, int)
 
 
 class FloatingPointNumberProperty(Property):
@@ -138,86 +145,63 @@ class FloatingPointNumberProperty(Property):
 
     Note: int and long are also allowed.
     &#34;&#34;&#34;
-    def __get_base_value__(self, user_value: float):
-        user_value = self.__type_check__(user_value, (int, float))
-        return user_value
-
-    def __get_user_value__(self, base_value):
-        return base_value
+    def validate(self, value):
+        return self.__type_check__(value, (int, float))
 
 
 class BlobProperty(Property):
     &#34;&#34;&#34;A Property whose value is a byte string. It may be compressed.&#34;&#34;&#34;
-    def __get_base_value__(self, user_value):
-        return self.__type_check__(user_value, (bytes, bytearray))
-
-    def __get_user_value__(self, base_value):
-        return base_value
-
-
-class ListProperty(Property):
-    &#34;&#34;&#34;A List property&#34;&#34;&#34;
-    def __init__(self, property_type: Property):
-        super(ListProperty, self).__init__(default=[])
-        self.property_type = property_type
-
-    def __get_base_value__(self, user_value: list):
-        user_value = self.__type_check__(user_value, (list))
-        user_value = [self.property_type.__get_base_value__(value) for value in user_value]
-        return user_value
-
-    def __get_user_value__(self, base_value):
-        return base_value
+    def validate(self, value):
+        return self.__type_check__(value, bytes)
 
 
 class ReferenceProperty(Property):
-    def __init__(self, entity, required=False):
+    def __init__(self, entity, required=False, repeated=False):
         from firestore import Entity
         if not issubclass(entity, Entity):
-            raise ReferencePropertyError(&#34;A reference property must reference another model&#34;)
-        super(ReferenceProperty, self).__init__(required=required)
+            raise ReferencePropertyError(&#34;A reference property must reference another entity&#34;)
+        super(ReferenceProperty, self).__init__(required=required, repeated=repeated)
         self.entity = entity
 
-    def __get_base_value__(self, user_value):
-        user_value = self.__type_check__(user_value, (self.entity))
-        if not user_value:
-            return user_value
-        if not user_value.id:
-            raise ReferencePropertyError(&#34;A reference must be put first before it can be referenced&#34;)
-        return user_value.__document__()
-
-    def __get_user_value__(self, base_value):
-        if not base_value:
+    def user_value(self, document):
+        &#34;&#34;&#34;
+        Returns:
+            Entity: The value of the field
+        &#34;&#34;&#34;
+        if not document:
             return None
-        user_data = self.entity.__get_user_data__(base_value.get().to_dict())
-        return self.entity(id=base_value.id, **user_data)
+        entity = self.entity(id=document.id)
+        entity.__firestore_data__ = document.get().to_dict()
+        return entity
+
+    def validate(self, value):
+        value = self.__type_check__(value, self.entity)
+        if not value:
+            return None
+        if not value.id:
+            raise ReferencePropertyError(&#34;A reference must be put first before it can be referenced&#34;)
+        return value.__document__()
 
 
-class JsonProperty(Property):
+class DictProperty(Property):
     &#34;&#34;&#34;A property whose value is any Json-encodable Python object.
     &#34;&#34;&#34;
-    def __init__(self, required=False):
-        super(JsonProperty, self).__init__(required=required, default={})
+    def __init__(self, required=False, repeated=False):
+        super(DictProperty, self).__init__(required=required, default={}, repeated=repeated)
 
-    def __get_base_value__(self, user_value):
-        if isinstance(user_value, str):
+    def validate(self, value):
+        if isinstance(value, str):
             try:
-                user_value = json.loads(user_value)
+                value = json.loads(value)
             except json.JSONDecodeError:
-                raise InvalidPropertyError(self, &#34;Dict property must be valid JSON&#34;)
-        return self.__type_check__(user_value, dict)
-
-    def __get_user_value__(self, base_value):
-        return base_value
+                raise InvalidPropertyError(self, &#34;JsonProperty must be valid JSON&#34;)
+        return self.__type_check__(value, dict)
 
 
 class BooleanProperty(Property):
     &#34;&#34;&#34;A Property whose value is a Python bool.&#34;&#34;&#34;
-    def __get_base_value__(self, user_value):
-        return self.__type_check__(user_value, bool)
-
-    def __get_user_value__(self, base_value):
-        return base_value
+    def validate(self, value):
+        return self.__type_check__(value, bool)
 
 
 class DateTimeProperty(Property):
@@ -230,22 +214,28 @@ class DateTimeProperty(Property):
         auto_now (bool): Set to the current time every time the model is updated
         auto_add_now (bool): Set to the current time when a record is created
     &#34;&#34;&#34;
-    def __init__(self, default=None, required=False, auto_now=False, auto_add_now=False):
+    def __init__(self, default=None, required=False, auto_now=False, auto_add_now=False, repeated=False):
         if not default and auto_add_now:
             default = SERVER_TIMESTAMP
-        super(DateTimeProperty, self).__init__(default=default, required=required)
+        super(DateTimeProperty, self).__init__(default=default, required=required, repeated=repeated)
         self.auto_now = auto_now
 
-    def __get_base_value__(self, user_value):
-        # Return server timestamp as the value
-        if user_value == SERVER_TIMESTAMP or self.auto_now:
-            return SERVER_TIMESTAMP
-        if user_value is None and self.default == SERVER_TIMESTAMP:
-            return SERVER_TIMESTAMP
-        return self.__type_check__(user_value, datetime)
+    def user_value(self, value):
+        &#34;&#34;&#34;
+        Returns:
+            datetime: The value of the field
+        &#34;&#34;&#34;
+        if value == SERVER_TIMESTAMP:
+            return datetime.now()
+        return value
 
-    def __get_user_value__(self, base_value):
-        return base_value
+    def validate(self, value):
+        # Return server timestamp as the value
+        if value == SERVER_TIMESTAMP or self.auto_now:
+            return SERVER_TIMESTAMP
+        if value is None and self.default == SERVER_TIMESTAMP:
+            return SERVER_TIMESTAMP
+        return self.__type_check__(value, datetime)
 
 
 class DateProperty(Property):
@@ -256,42 +246,51 @@ class DateProperty(Property):
         required (bool): Enforce that this property can&#39;t be submitted when empty
         auto_add_now (bool): Set to the current date when a record is created
     &#34;&#34;&#34;
-    def __init__(self, default=None, required=False, auto_add_now=False):
+    def __init__(self, default=None, required=False, auto_add_now=False, repeated=False):
+        &#34;&#34;&#34;
+        Returns:
+            date: The value of the field
+        &#34;&#34;&#34;
         if not default and auto_add_now:
             default = SERVER_TIMESTAMP
-        super(DateProperty, self).__init__(default=default, required=required)
+        super(DateProperty, self).__init__(default=default, required=required, repeated=repeated)
 
-    def __get_base_value__(self, user_value):
+    def user_value(self, value):
+        if value == SERVER_TIMESTAMP:
+            value = datetime.now().date()
+        if isinstance(value, datetime):
+            return value.date()
+        return value
+
+    def validate(self, value):
         # Return server timestamp as the value
-        if user_value is None and self.default == SERVER_TIMESTAMP:
+        if value is None and self.default == SERVER_TIMESTAMP:
             return SERVER_TIMESTAMP
-        if isinstance(user_value, datetime):
-            return user_value.date()
-        return self.__type_check__(user_value, date)
-
-    def __get_user_value__(self, base_value):
-        if isinstance(base_value, datetime):
-            return base_value.date()
-        return base_value
+        if isinstance(value, datetime):
+            return value.date()
+        return self.__type_check__(value, date)
 
 
 class PickledProperty(Property):
     &#34;&#34;&#34;A Property whose value is any picklable Python object.&#34;&#34;&#34;
-    def __int__(self, required=False):
-        super(PickledProperty, self).__init__(default=None, required=required)
+    def __int__(self, required=False, repeated=False):
+        super(PickledProperty, self).__init__(default=None, required=required, repeated=repeated)
 
-    def __get_base_value__(self, user_value):
-        return pickle.dumps(user_value)
+    def user_value(self, value):
+        if not value:
+            return None
+        return pickle.loads(value)
 
-    def __get_user_value__(self, base_value):
-        return pickle.loads(base_value)
+    def validate(self, value):
+        if value:
+            return pickle.dumps(value)
 
 
 class InvalidValueError(ValueError):
     &#34;&#34;&#34;Raised if the value of a property does not fit the property type&#34;&#34;&#34;
 
-    def __init__(self, property, value):
-        self.property = property
+    def __init__(self, _property, value):
+        self.property = _property
         self.value = value
 
     def __str__(self):
@@ -340,7 +339,7 @@ class ReferencePropertyError(Exception):
 <dl>
 <dt id="firestore.db.BlobProperty"><code class="flex name class">
 <span>class <span class="ident">BlobProperty</span></span>
-<span>(</span><span>default=None, required=False)</span>
+<span>(</span><span>default=None, required=False, repeated=False)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>A Property whose value is a byte string. It may be compressed.</p>
@@ -350,25 +349,38 @@ class ReferencePropertyError(Exception):
 <dd>The default value of the property</dd>
 <dt><strong><code>required</code></strong></dt>
 <dd>Enforce the property value to be provided</dd>
+<dt><strong><code>repeated</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Stores multiple values as a list, Overrides default with []</dd>
 </dl></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">class BlobProperty(Property):
     &#34;&#34;&#34;A Property whose value is a byte string. It may be compressed.&#34;&#34;&#34;
-    def __get_base_value__(self, user_value):
-        return self.__type_check__(user_value, (bytes, bytearray))
-
-    def __get_user_value__(self, base_value):
-        return base_value</code></pre>
+    def validate(self, value):
+        return self.__type_check__(value, bytes)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="firestore.db.Property" href="#firestore.db.Property">Property</a></li>
 </ul>
+<h3>Methods</h3>
+<dl>
+<dt id="firestore.db.BlobProperty.validate"><code class="name flex">
+<span>def <span class="ident">validate</span></span>(<span>self, value)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def validate(self, value):
+    return self.__type_check__(value, bytes)</code></pre>
+</details>
+</dd>
+</dl>
 </dd>
 <dt id="firestore.db.BooleanProperty"><code class="flex name class">
 <span>class <span class="ident">BooleanProperty</span></span>
-<span>(</span><span>default=None, required=False)</span>
+<span>(</span><span>default=None, required=False, repeated=False)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>A Property whose value is a Python bool.</p>
@@ -378,25 +390,38 @@ class ReferencePropertyError(Exception):
 <dd>The default value of the property</dd>
 <dt><strong><code>required</code></strong></dt>
 <dd>Enforce the property value to be provided</dd>
+<dt><strong><code>repeated</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Stores multiple values as a list, Overrides default with []</dd>
 </dl></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">class BooleanProperty(Property):
     &#34;&#34;&#34;A Property whose value is a Python bool.&#34;&#34;&#34;
-    def __get_base_value__(self, user_value):
-        return self.__type_check__(user_value, bool)
-
-    def __get_user_value__(self, base_value):
-        return base_value</code></pre>
+    def validate(self, value):
+        return self.__type_check__(value, bool)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="firestore.db.Property" href="#firestore.db.Property">Property</a></li>
 </ul>
+<h3>Methods</h3>
+<dl>
+<dt id="firestore.db.BooleanProperty.validate"><code class="name flex">
+<span>def <span class="ident">validate</span></span>(<span>self, value)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def validate(self, value):
+    return self.__type_check__(value, bool)</code></pre>
+</details>
+</dd>
+</dl>
 </dd>
 <dt id="firestore.db.DateProperty"><code class="flex name class">
 <span>class <span class="ident">DateProperty</span></span>
-<span>(</span><span>default=None, required=False, auto_add_now=False)</span>
+<span>(</span><span>default=None, required=False, auto_add_now=False, repeated=False)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>A Property whose value is a date object.</p>
@@ -409,12 +434,10 @@ class ReferencePropertyError(Exception):
 <dt><strong><code>auto_add_now</code></strong> :&ensp;<code>bool</code></dt>
 <dd>Set to the current date when a record is created</dd>
 </dl>
-<h2 id="args_1">Args</h2>
+<h2 id="returns">Returns</h2>
 <dl>
-<dt><strong><code>default</code></strong></dt>
-<dd>The default value of the property</dd>
-<dt><strong><code>required</code></strong></dt>
-<dd>Enforce the property value to be provided</dd>
+<dt><strong><code>date</code></strong></dt>
+<dd>The value of the field</dd>
 </dl></section>
 <details class="source">
 <summary>Source code</summary>
@@ -426,32 +449,72 @@ class ReferencePropertyError(Exception):
         required (bool): Enforce that this property can&#39;t be submitted when empty
         auto_add_now (bool): Set to the current date when a record is created
     &#34;&#34;&#34;
-    def __init__(self, default=None, required=False, auto_add_now=False):
+    def __init__(self, default=None, required=False, auto_add_now=False, repeated=False):
+        &#34;&#34;&#34;
+        Returns:
+            date: The value of the field
+        &#34;&#34;&#34;
         if not default and auto_add_now:
             default = SERVER_TIMESTAMP
-        super(DateProperty, self).__init__(default=default, required=required)
+        super(DateProperty, self).__init__(default=default, required=required, repeated=repeated)
 
-    def __get_base_value__(self, user_value):
+    def user_value(self, value):
+        if value == SERVER_TIMESTAMP:
+            value = datetime.now().date()
+        if isinstance(value, datetime):
+            return value.date()
+        return value
+
+    def validate(self, value):
         # Return server timestamp as the value
-        if user_value is None and self.default == SERVER_TIMESTAMP:
+        if value is None and self.default == SERVER_TIMESTAMP:
             return SERVER_TIMESTAMP
-        if isinstance(user_value, datetime):
-            return user_value.date()
-        return self.__type_check__(user_value, date)
-
-    def __get_user_value__(self, base_value):
-        if isinstance(base_value, datetime):
-            return base_value.date()
-        return base_value</code></pre>
+        if isinstance(value, datetime):
+            return value.date()
+        return self.__type_check__(value, date)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="firestore.db.Property" href="#firestore.db.Property">Property</a></li>
 </ul>
+<h3>Methods</h3>
+<dl>
+<dt id="firestore.db.DateProperty.user_value"><code class="name flex">
+<span>def <span class="ident">user_value</span></span>(<span>self, value)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def user_value(self, value):
+    if value == SERVER_TIMESTAMP:
+        value = datetime.now().date()
+    if isinstance(value, datetime):
+        return value.date()
+    return value</code></pre>
+</details>
+</dd>
+<dt id="firestore.db.DateProperty.validate"><code class="name flex">
+<span>def <span class="ident">validate</span></span>(<span>self, value)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def validate(self, value):
+    # Return server timestamp as the value
+    if value is None and self.default == SERVER_TIMESTAMP:
+        return SERVER_TIMESTAMP
+    if isinstance(value, datetime):
+        return value.date()
+    return self.__type_check__(value, date)</code></pre>
+</details>
+</dd>
+</dl>
 </dd>
 <dt id="firestore.db.DateTimeProperty"><code class="flex name class">
 <span>class <span class="ident">DateTimeProperty</span></span>
-<span>(</span><span>default=None, required=False, auto_now=False, auto_add_now=False)</span>
+<span>(</span><span>default=None, required=False, auto_now=False, auto_add_now=False, repeated=False)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>A Property whose value is a datetime object.</p>
@@ -472,6 +535,8 @@ class ReferencePropertyError(Exception):
 <dd>The default value of the property</dd>
 <dt><strong><code>required</code></strong></dt>
 <dd>Enforce the property value to be provided</dd>
+<dt><strong><code>repeated</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Stores multiple values as a list, Overrides default with []</dd>
 </dl></section>
 <details class="source">
 <summary>Source code</summary>
@@ -485,31 +550,132 @@ class ReferencePropertyError(Exception):
         auto_now (bool): Set to the current time every time the model is updated
         auto_add_now (bool): Set to the current time when a record is created
     &#34;&#34;&#34;
-    def __init__(self, default=None, required=False, auto_now=False, auto_add_now=False):
+    def __init__(self, default=None, required=False, auto_now=False, auto_add_now=False, repeated=False):
         if not default and auto_add_now:
             default = SERVER_TIMESTAMP
-        super(DateTimeProperty, self).__init__(default=default, required=required)
+        super(DateTimeProperty, self).__init__(default=default, required=required, repeated=repeated)
         self.auto_now = auto_now
 
-    def __get_base_value__(self, user_value):
-        # Return server timestamp as the value
-        if user_value == SERVER_TIMESTAMP or self.auto_now:
-            return SERVER_TIMESTAMP
-        if user_value is None and self.default == SERVER_TIMESTAMP:
-            return SERVER_TIMESTAMP
-        return self.__type_check__(user_value, datetime)
+    def user_value(self, value):
+        &#34;&#34;&#34;
+        Returns:
+            datetime: The value of the field
+        &#34;&#34;&#34;
+        if value == SERVER_TIMESTAMP:
+            return datetime.now()
+        return value
 
-    def __get_user_value__(self, base_value):
-        return base_value</code></pre>
+    def validate(self, value):
+        # Return server timestamp as the value
+        if value == SERVER_TIMESTAMP or self.auto_now:
+            return SERVER_TIMESTAMP
+        if value is None and self.default == SERVER_TIMESTAMP:
+            return SERVER_TIMESTAMP
+        return self.__type_check__(value, datetime)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="firestore.db.Property" href="#firestore.db.Property">Property</a></li>
 </ul>
+<h3>Methods</h3>
+<dl>
+<dt id="firestore.db.DateTimeProperty.user_value"><code class="name flex">
+<span>def <span class="ident">user_value</span></span>(<span>self, value)</span>
+</code></dt>
+<dd>
+<section class="desc"><h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>datetime</code></strong></dt>
+<dd>The value of the field</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def user_value(self, value):
+    &#34;&#34;&#34;
+    Returns:
+        datetime: The value of the field
+    &#34;&#34;&#34;
+    if value == SERVER_TIMESTAMP:
+        return datetime.now()
+    return value</code></pre>
+</details>
+</dd>
+<dt id="firestore.db.DateTimeProperty.validate"><code class="name flex">
+<span>def <span class="ident">validate</span></span>(<span>self, value)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def validate(self, value):
+    # Return server timestamp as the value
+    if value == SERVER_TIMESTAMP or self.auto_now:
+        return SERVER_TIMESTAMP
+    if value is None and self.default == SERVER_TIMESTAMP:
+        return SERVER_TIMESTAMP
+    return self.__type_check__(value, datetime)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="firestore.db.DictProperty"><code class="flex name class">
+<span>class <span class="ident">DictProperty</span></span>
+<span>(</span><span>required=False, repeated=False)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>A property whose value is any Json-encodable Python object.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>default</code></strong></dt>
+<dd>The default value of the property</dd>
+<dt><strong><code>required</code></strong></dt>
+<dd>Enforce the property value to be provided</dd>
+<dt><strong><code>repeated</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Stores multiple values as a list, Overrides default with []</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">class DictProperty(Property):
+    &#34;&#34;&#34;A property whose value is any Json-encodable Python object.
+    &#34;&#34;&#34;
+    def __init__(self, required=False, repeated=False):
+        super(DictProperty, self).__init__(required=required, default={}, repeated=repeated)
+
+    def validate(self, value):
+        if isinstance(value, str):
+            try:
+                value = json.loads(value)
+            except json.JSONDecodeError:
+                raise InvalidPropertyError(self, &#34;JsonProperty must be valid JSON&#34;)
+        return self.__type_check__(value, dict)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="firestore.db.Property" href="#firestore.db.Property">Property</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="firestore.db.DictProperty.validate"><code class="name flex">
+<span>def <span class="ident">validate</span></span>(<span>self, value)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def validate(self, value):
+    if isinstance(value, str):
+        try:
+            value = json.loads(value)
+        except json.JSONDecodeError:
+            raise InvalidPropertyError(self, &#34;JsonProperty must be valid JSON&#34;)
+    return self.__type_check__(value, dict)</code></pre>
+</details>
+</dd>
+</dl>
 </dd>
 <dt id="firestore.db.FloatingPointNumberProperty"><code class="flex name class">
 <span>class <span class="ident">FloatingPointNumberProperty</span></span>
-<span>(</span><span>default=None, required=False)</span>
+<span>(</span><span>default=None, required=False, repeated=False)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>A Property whose value is a Python float.</p>
@@ -520,6 +686,8 @@ class ReferencePropertyError(Exception):
 <dd>The default value of the property</dd>
 <dt><strong><code>required</code></strong></dt>
 <dd>Enforce the property value to be provided</dd>
+<dt><strong><code>repeated</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Stores multiple values as a list, Overrides default with []</dd>
 </dl></section>
 <details class="source">
 <summary>Source code</summary>
@@ -528,21 +696,31 @@ class ReferencePropertyError(Exception):
 
     Note: int and long are also allowed.
     &#34;&#34;&#34;
-    def __get_base_value__(self, user_value: float):
-        user_value = self.__type_check__(user_value, (int, float))
-        return user_value
-
-    def __get_user_value__(self, base_value):
-        return base_value</code></pre>
+    def validate(self, value):
+        return self.__type_check__(value, (int, float))</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="firestore.db.Property" href="#firestore.db.Property">Property</a></li>
 </ul>
+<h3>Methods</h3>
+<dl>
+<dt id="firestore.db.FloatingPointNumberProperty.validate"><code class="name flex">
+<span>def <span class="ident">validate</span></span>(<span>self, value)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def validate(self, value):
+    return self.__type_check__(value, (int, float))</code></pre>
+</details>
+</dd>
+</dl>
 </dd>
 <dt id="firestore.db.IntegerProperty"><code class="flex name class">
 <span>class <span class="ident">IntegerProperty</span></span>
-<span>(</span><span>default=None, required=False)</span>
+<span>(</span><span>default=None, required=False, repeated=False)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>A Property whose value is a Python int or long</p>
@@ -552,21 +730,34 @@ class ReferencePropertyError(Exception):
 <dd>The default value of the property</dd>
 <dt><strong><code>required</code></strong></dt>
 <dd>Enforce the property value to be provided</dd>
+<dt><strong><code>repeated</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Stores multiple values as a list, Overrides default with []</dd>
 </dl></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">class IntegerProperty(Property):
     &#34;&#34;&#34;A Property whose value is a Python int or long&#34;&#34;&#34;
-    def __get_base_value__(self, user_value):
-        return self.__type_check__(user_value, int)
-
-    def __get_user_value__(self, base_value):
-        return base_value</code></pre>
+    def validate(self, value):
+        return self.__type_check__(value, int)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="firestore.db.Property" href="#firestore.db.Property">Property</a></li>
 </ul>
+<h3>Methods</h3>
+<dl>
+<dt id="firestore.db.IntegerProperty.validate"><code class="name flex">
+<span>def <span class="ident">validate</span></span>(<span>self, value)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def validate(self, value):
+    return self.__type_check__(value, int)</code></pre>
+</details>
+</dd>
+</dl>
 </dd>
 <dt id="firestore.db.InvalidPropertyError"><code class="flex name class">
 <span>class <span class="ident">InvalidPropertyError</span></span>
@@ -594,7 +785,7 @@ class ReferencePropertyError(Exception):
 </dd>
 <dt id="firestore.db.InvalidValueError"><code class="flex name class">
 <span>class <span class="ident">InvalidValueError</span></span>
-<span>(</span><span>property, value)</span>
+<span>(</span><span>_property, value)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>Raised if the value of a property does not fit the property type</p></section>
@@ -603,8 +794,8 @@ class ReferencePropertyError(Exception):
 <pre><code class="python">class InvalidValueError(ValueError):
     &#34;&#34;&#34;Raised if the value of a property does not fit the property type&#34;&#34;&#34;
 
-    def __init__(self, property, value):
-        self.property = property
+    def __init__(self, _property, value):
+        self.property = _property
         self.value = value
 
     def __str__(self):
@@ -616,77 +807,6 @@ class ReferencePropertyError(Exception):
 <li>builtins.ValueError</li>
 <li>builtins.Exception</li>
 <li>builtins.BaseException</li>
-</ul>
-</dd>
-<dt id="firestore.db.JsonProperty"><code class="flex name class">
-<span>class <span class="ident">JsonProperty</span></span>
-<span>(</span><span>required=False)</span>
-</code></dt>
-<dd>
-<section class="desc"><p>A property whose value is any Json-encodable Python object.</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>default</code></strong></dt>
-<dd>The default value of the property</dd>
-<dt><strong><code>required</code></strong></dt>
-<dd>Enforce the property value to be provided</dd>
-</dl></section>
-<details class="source">
-<summary>Source code</summary>
-<pre><code class="python">class JsonProperty(Property):
-    &#34;&#34;&#34;A property whose value is any Json-encodable Python object.
-    &#34;&#34;&#34;
-    def __init__(self, required=False):
-        super(JsonProperty, self).__init__(required=required, default={})
-
-    def __get_base_value__(self, user_value):
-        if isinstance(user_value, str):
-            try:
-                user_value = json.loads(user_value)
-            except json.JSONDecodeError:
-                raise InvalidPropertyError(self, &#34;Dict property must be valid JSON&#34;)
-        return self.__type_check__(user_value, dict)
-
-    def __get_user_value__(self, base_value):
-        return base_value</code></pre>
-</details>
-<h3>Ancestors</h3>
-<ul class="hlist">
-<li><a title="firestore.db.Property" href="#firestore.db.Property">Property</a></li>
-</ul>
-</dd>
-<dt id="firestore.db.ListProperty"><code class="flex name class">
-<span>class <span class="ident">ListProperty</span></span>
-<span>(</span><span>property_type)</span>
-</code></dt>
-<dd>
-<section class="desc"><p>A List property</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>default</code></strong></dt>
-<dd>The default value of the property</dd>
-<dt><strong><code>required</code></strong></dt>
-<dd>Enforce the property value to be provided</dd>
-</dl></section>
-<details class="source">
-<summary>Source code</summary>
-<pre><code class="python">class ListProperty(Property):
-    &#34;&#34;&#34;A List property&#34;&#34;&#34;
-    def __init__(self, property_type: Property):
-        super(ListProperty, self).__init__(default=[])
-        self.property_type = property_type
-
-    def __get_base_value__(self, user_value: list):
-        user_value = self.__type_check__(user_value, (list))
-        user_value = [self.property_type.__get_base_value__(value) for value in user_value]
-        return user_value
-
-    def __get_user_value__(self, base_value):
-        return base_value</code></pre>
-</details>
-<h3>Ancestors</h3>
-<ul class="hlist">
-<li><a title="firestore.db.Property" href="#firestore.db.Property">Property</a></li>
 </ul>
 </dd>
 <dt id="firestore.db.MalformedQueryError"><code class="flex name class">
@@ -714,7 +834,7 @@ class ReferencePropertyError(Exception):
 </dd>
 <dt id="firestore.db.PickledProperty"><code class="flex name class">
 <span>class <span class="ident">PickledProperty</span></span>
-<span>(</span><span>default=None, required=False)</span>
+<span>(</span><span>default=None, required=False, repeated=False)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>A Property whose value is any picklable Python object.</p>
@@ -724,28 +844,61 @@ class ReferencePropertyError(Exception):
 <dd>The default value of the property</dd>
 <dt><strong><code>required</code></strong></dt>
 <dd>Enforce the property value to be provided</dd>
+<dt><strong><code>repeated</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Stores multiple values as a list, Overrides default with []</dd>
 </dl></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">class PickledProperty(Property):
     &#34;&#34;&#34;A Property whose value is any picklable Python object.&#34;&#34;&#34;
-    def __int__(self, required=False):
-        super(PickledProperty, self).__init__(default=None, required=required)
+    def __int__(self, required=False, repeated=False):
+        super(PickledProperty, self).__init__(default=None, required=required, repeated=repeated)
 
-    def __get_base_value__(self, user_value):
-        return pickle.dumps(user_value)
+    def user_value(self, value):
+        if not value:
+            return None
+        return pickle.loads(value)
 
-    def __get_user_value__(self, base_value):
-        return pickle.loads(base_value)</code></pre>
+    def validate(self, value):
+        if value:
+            return pickle.dumps(value)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="firestore.db.Property" href="#firestore.db.Property">Property</a></li>
 </ul>
+<h3>Methods</h3>
+<dl>
+<dt id="firestore.db.PickledProperty.user_value"><code class="name flex">
+<span>def <span class="ident">user_value</span></span>(<span>self, value)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def user_value(self, value):
+    if not value:
+        return None
+    return pickle.loads(value)</code></pre>
+</details>
+</dd>
+<dt id="firestore.db.PickledProperty.validate"><code class="name flex">
+<span>def <span class="ident">validate</span></span>(<span>self, value)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def validate(self, value):
+    if value:
+        return pickle.dumps(value)</code></pre>
+</details>
+</dd>
+</dl>
 </dd>
 <dt id="firestore.db.Property"><code class="flex name class">
 <span>class <span class="ident">Property</span></span>
-<span>(</span><span>default=None, required=False)</span>
+<span>(</span><span>default=None, required=False, repeated=False)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>A class describing a typed, persisted attribute of a database entity</p>
@@ -755,6 +908,8 @@ class ReferencePropertyError(Exception):
 <dd>The default value of the property</dd>
 <dt><strong><code>required</code></strong></dt>
 <dd>Enforce the property value to be provided</dd>
+<dt><strong><code>repeated</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Stores multiple values as a list, Overrides default with []</dd>
 </dl></section>
 <details class="source">
 <summary>Source code</summary>
@@ -762,37 +917,46 @@ class ReferencePropertyError(Exception):
     &#34;&#34;&#34;
     A class describing a typed, persisted attribute of a database entity
     &#34;&#34;&#34;
-    def __init__(self, default=None, required=False):
+    def __init__(self, default=None, required=False, repeated=False):
         &#34;&#34;&#34;
         Args:
             default: The default value of the property
             required: Enforce the property value to be provided
+            repeated (bool): Stores multiple values as a list, Overrides default with []
         &#34;&#34;&#34;
         if type(self) is Property:
             raise Exception(&#34;You must extend Property&#34;)
+        if repeated:
+            if default is not None:
+                raise Exception(&#34;`default` is not allowed for a repeated property.&#34;)
+            default = []
         self.default = default
         self.required = required
         self.name = None
+        self.repeated = repeated
 
-    def __get_user_value__(self, base_value):
-        &#34;&#34;&#34;
-        Convert value from database to a value usable by the user
-        Args:
-            base_value: The current value from db
+    def __set_name__(self, owner, name):
+        self.name = name
 
-        Returns:
-            user_value expected to be of the specified type
-        &#34;&#34;&#34;
-        raise NotImplementedError
+    def __set__(self, instance, value):
+        if value is None:
+            instance.__firestore_data__[self.name] = None
+        if self.repeated:
+            value = self.__type_check__(value, list)
+            if value:
+                value = [self.validate(val) for val in value]
+        else:
+            value = self.validate(value)
+        instance.__firestore_data__[self.name] = value
 
-    def __get_base_value__(self, user_value):
-        &#34;&#34;&#34;
-        Convert value to database acceptable format
-        Args
-        :param user_value: Current user_value
-        :return: base_value
-        &#34;&#34;&#34;
-        raise NotImplementedError
+    def __get__(self, instance, owner):
+        value = instance.__firestore_data__.get(self.name)
+        if value:
+            if self.repeated:
+                value = [self.user_value(val) for val in value]
+            else:
+                value = self.user_value(value)
+        return value
 
     def __type_check__(self, user_value, data_types):
         &#34;&#34;&#34;
@@ -802,7 +966,7 @@ class ReferencePropertyError(Exception):
             data_types: Type/Types to check against
 
         Returns:
-            Any
+            user_value: A type checked user value or the default value
         &#34;&#34;&#34;
         if self.required and self.default is None and user_value is None:
             raise InvalidValueError(self, user_value)
@@ -812,7 +976,13 @@ class ReferencePropertyError(Exception):
 
         if not isinstance(user_value, data_types) and user_value is not None:
             raise InvalidValueError(self, user_value)
-        return user_value</code></pre>
+        return user_value
+
+    def validate(self, value):
+        raise NotImplementedError(&#34;A property must implement validate&#34;)
+
+    def user_value(self, value):
+        return value</code></pre>
 </details>
 <h3>Subclasses</h3>
 <ul class="hlist">
@@ -821,18 +991,42 @@ class ReferencePropertyError(Exception):
 <li><a title="firestore.db.IntegerProperty" href="#firestore.db.IntegerProperty">IntegerProperty</a></li>
 <li><a title="firestore.db.FloatingPointNumberProperty" href="#firestore.db.FloatingPointNumberProperty">FloatingPointNumberProperty</a></li>
 <li><a title="firestore.db.BlobProperty" href="#firestore.db.BlobProperty">BlobProperty</a></li>
-<li><a title="firestore.db.ListProperty" href="#firestore.db.ListProperty">ListProperty</a></li>
 <li><a title="firestore.db.ReferenceProperty" href="#firestore.db.ReferenceProperty">ReferenceProperty</a></li>
-<li><a title="firestore.db.JsonProperty" href="#firestore.db.JsonProperty">JsonProperty</a></li>
+<li><a title="firestore.db.DictProperty" href="#firestore.db.DictProperty">DictProperty</a></li>
 <li><a title="firestore.db.BooleanProperty" href="#firestore.db.BooleanProperty">BooleanProperty</a></li>
 <li><a title="firestore.db.DateTimeProperty" href="#firestore.db.DateTimeProperty">DateTimeProperty</a></li>
 <li><a title="firestore.db.DateProperty" href="#firestore.db.DateProperty">DateProperty</a></li>
 <li><a title="firestore.db.PickledProperty" href="#firestore.db.PickledProperty">PickledProperty</a></li>
 </ul>
+<h3>Methods</h3>
+<dl>
+<dt id="firestore.db.Property.user_value"><code class="name flex">
+<span>def <span class="ident">user_value</span></span>(<span>self, value)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def user_value(self, value):
+    return value</code></pre>
+</details>
+</dd>
+<dt id="firestore.db.Property.validate"><code class="name flex">
+<span>def <span class="ident">validate</span></span>(<span>self, value)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def validate(self, value):
+    raise NotImplementedError(&#34;A property must implement validate&#34;)</code></pre>
+</details>
+</dd>
+</dl>
 </dd>
 <dt id="firestore.db.ReferenceProperty"><code class="flex name class">
 <span>class <span class="ident">ReferenceProperty</span></span>
-<span>(</span><span>entity, required=False)</span>
+<span>(</span><span>entity, required=False, repeated=False)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>A class describing a typed, persisted attribute of a database entity</p>
@@ -842,35 +1036,84 @@ class ReferencePropertyError(Exception):
 <dd>The default value of the property</dd>
 <dt><strong><code>required</code></strong></dt>
 <dd>Enforce the property value to be provided</dd>
+<dt><strong><code>repeated</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Stores multiple values as a list, Overrides default with []</dd>
 </dl></section>
 <details class="source">
 <summary>Source code</summary>
 <pre><code class="python">class ReferenceProperty(Property):
-    def __init__(self, entity, required=False):
+    def __init__(self, entity, required=False, repeated=False):
         from firestore import Entity
         if not issubclass(entity, Entity):
-            raise ReferencePropertyError(&#34;A reference property must reference another model&#34;)
-        super(ReferenceProperty, self).__init__(required=required)
+            raise ReferencePropertyError(&#34;A reference property must reference another entity&#34;)
+        super(ReferenceProperty, self).__init__(required=required, repeated=repeated)
         self.entity = entity
 
-    def __get_base_value__(self, user_value):
-        user_value = self.__type_check__(user_value, (self.entity))
-        if not user_value:
-            return user_value
-        if not user_value.id:
-            raise ReferencePropertyError(&#34;A reference must be put first before it can be referenced&#34;)
-        return user_value.__document__()
-
-    def __get_user_value__(self, base_value):
-        if not base_value:
+    def user_value(self, document):
+        &#34;&#34;&#34;
+        Returns:
+            Entity: The value of the field
+        &#34;&#34;&#34;
+        if not document:
             return None
-        user_data = self.entity.__get_user_data__(base_value.get().to_dict())
-        return self.entity(id=base_value.id, **user_data)</code></pre>
+        entity = self.entity(id=document.id)
+        entity.__firestore_data__ = document.get().to_dict()
+        return entity
+
+    def validate(self, value):
+        value = self.__type_check__(value, self.entity)
+        if not value:
+            return None
+        if not value.id:
+            raise ReferencePropertyError(&#34;A reference must be put first before it can be referenced&#34;)
+        return value.__document__()</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="firestore.db.Property" href="#firestore.db.Property">Property</a></li>
 </ul>
+<h3>Methods</h3>
+<dl>
+<dt id="firestore.db.ReferenceProperty.user_value"><code class="name flex">
+<span>def <span class="ident">user_value</span></span>(<span>self, document)</span>
+</code></dt>
+<dd>
+<section class="desc"><h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>Entity</code></strong></dt>
+<dd>The value of the field</dd>
+</dl></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def user_value(self, document):
+    &#34;&#34;&#34;
+    Returns:
+        Entity: The value of the field
+    &#34;&#34;&#34;
+    if not document:
+        return None
+    entity = self.entity(id=document.id)
+    entity.__firestore_data__ = document.get().to_dict()
+    return entity</code></pre>
+</details>
+</dd>
+<dt id="firestore.db.ReferenceProperty.validate"><code class="name flex">
+<span>def <span class="ident">validate</span></span>(<span>self, value)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def validate(self, value):
+    value = self.__type_check__(value, self.entity)
+    if not value:
+        return None
+    if not value.id:
+        raise ReferencePropertyError(&#34;A reference must be put first before it can be referenced&#34;)
+    return value.__document__()</code></pre>
+</details>
+</dd>
+</dl>
 </dd>
 <dt id="firestore.db.ReferencePropertyError"><code class="flex name class">
 <span>class <span class="ident">ReferencePropertyError</span></span>
@@ -896,7 +1139,7 @@ class ReferencePropertyError(Exception):
 </dd>
 <dt id="firestore.db.StringProperty"><code class="flex name class">
 <span>class <span class="ident">StringProperty</span></span>
-<span>(</span><span>default=None, length=255, required=False)</span>
+<span>(</span><span>default=None, length=255, required=False, repeated=False)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>An indexed Property whose value is a text string of limited length.</p>
@@ -904,10 +1147,12 @@ class ReferencePropertyError(Exception):
 <dl>
 <dt><strong><code>default</code></strong></dt>
 <dd>Default value for this property</dd>
-<dt><strong><code>length</code></strong> :&ensp;<code>int</code></dt>
+<dt><strong><code>length</code></strong> :&ensp;<code>int</code>=<code>255</code></dt>
 <dd>The maximum length of this property</dd>
 <dt><strong><code>required</code></strong> :&ensp;<code>bool</code></dt>
 <dd>Enforce whether this value can be empty</dd>
+<dt><strong><code>repeated</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Stores multiple values as a list, Overrides default with []</dd>
 </dl>
 <h2 id="args_1">Args</h2>
 <dl>
@@ -915,6 +1160,8 @@ class ReferencePropertyError(Exception):
 <dd>The default value of the property</dd>
 <dt><strong><code>required</code></strong></dt>
 <dd>Enforce the property value to be provided</dd>
+<dt><strong><code>repeated</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Stores multiple values as a list, Overrides default with []</dd>
 </dl></section>
 <details class="source">
 <summary>Source code</summary>
@@ -924,30 +1171,45 @@ class ReferencePropertyError(Exception):
 
     Args:
         default: Default value for this property
-        length (int): The maximum length of this property
+        length (int=255): The maximum length of this property
         required (bool): Enforce whether this value can be empty
+        repeated (bool): Stores multiple values as a list, Overrides default with []
     &#34;&#34;&#34;
-    def __init__(self, default=None, length=255, required=False):
-        super(StringProperty, self).__init__(default=default, required=required)
+    def __init__(self, default=None, length=255, required=False, repeated=False):
+        super(StringProperty, self).__init__(default=default, required=required, repeated=repeated)
         self.length = length
 
-    def __get_base_value__(self, user_value):
-        user_value = self.__type_check__(user_value, str)
-        if user_value is not None and len(user_value) &gt; self.length:
-            raise InvalidValueError(self, user_value)
-        return user_value
-
-    def __get_user_value__(self, base_value):
-        return base_value</code></pre>
+    def validate(self, value):
+        value = self.__type_check__(value, str)
+        if value is not None and len(value) &gt; self.length:
+            raise InvalidValueError(self, value)
+        return value</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="firestore.db.Property" href="#firestore.db.Property">Property</a></li>
 </ul>
+<h3>Methods</h3>
+<dl>
+<dt id="firestore.db.StringProperty.validate"><code class="name flex">
+<span>def <span class="ident">validate</span></span>(<span>self, value)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def validate(self, value):
+    value = self.__type_check__(value, str)
+    if value is not None and len(value) &gt; self.length:
+        raise InvalidValueError(self, value)
+    return value</code></pre>
+</details>
+</dd>
+</dl>
 </dd>
 <dt id="firestore.db.TextProperty"><code class="flex name class">
 <span>class <span class="ident">TextProperty</span></span>
-<span>(</span><span>default=None, required=False)</span>
+<span>(</span><span>default=None, required=False, repeated=False)</span>
 </code></dt>
 <dd>
 <section class="desc"><p>An Property whose value is a text string of unlimited length.
@@ -958,6 +1220,8 @@ I'ts not advisable to index this property</p>
 <dd>The default value of the property</dd>
 <dt><strong><code>required</code></strong></dt>
 <dd>Enforce the property value to be provided</dd>
+<dt><strong><code>repeated</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Stores multiple values as a list, Overrides default with []</dd>
 </dl></section>
 <details class="source">
 <summary>Source code</summary>
@@ -965,16 +1229,27 @@ I'ts not advisable to index this property</p>
     &#34;&#34;&#34;An Property whose value is a text string of unlimited length.
     I&#39;ts not advisable to index this property
     &#34;&#34;&#34;
-    def __get_base_value__(self, user_value):
-        return self.__type_check__(user_value, str)
-
-    def __get_user_value__(self, base_value):
-        return base_value</code></pre>
+    def validate(self, value):
+        return self.__type_check__(value, str)</code></pre>
 </details>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="firestore.db.Property" href="#firestore.db.Property">Property</a></li>
 </ul>
+<h3>Methods</h3>
+<dl>
+<dt id="firestore.db.TextProperty.validate"><code class="name flex">
+<span>def <span class="ident">validate</span></span>(<span>self, value)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>Source code</summary>
+<pre><code class="python">def validate(self, value):
+    return self.__type_check__(value, str)</code></pre>
+</details>
+</dd>
+</dl>
 </dd>
 </dl>
 </section>
@@ -994,21 +1269,47 @@ I'ts not advisable to index this property</p>
 <ul>
 <li>
 <h4><code><a title="firestore.db.BlobProperty" href="#firestore.db.BlobProperty">BlobProperty</a></code></h4>
+<ul class="">
+<li><code><a title="firestore.db.BlobProperty.validate" href="#firestore.db.BlobProperty.validate">validate</a></code></li>
+</ul>
 </li>
 <li>
 <h4><code><a title="firestore.db.BooleanProperty" href="#firestore.db.BooleanProperty">BooleanProperty</a></code></h4>
+<ul class="">
+<li><code><a title="firestore.db.BooleanProperty.validate" href="#firestore.db.BooleanProperty.validate">validate</a></code></li>
+</ul>
 </li>
 <li>
 <h4><code><a title="firestore.db.DateProperty" href="#firestore.db.DateProperty">DateProperty</a></code></h4>
+<ul class="">
+<li><code><a title="firestore.db.DateProperty.user_value" href="#firestore.db.DateProperty.user_value">user_value</a></code></li>
+<li><code><a title="firestore.db.DateProperty.validate" href="#firestore.db.DateProperty.validate">validate</a></code></li>
+</ul>
 </li>
 <li>
 <h4><code><a title="firestore.db.DateTimeProperty" href="#firestore.db.DateTimeProperty">DateTimeProperty</a></code></h4>
+<ul class="">
+<li><code><a title="firestore.db.DateTimeProperty.user_value" href="#firestore.db.DateTimeProperty.user_value">user_value</a></code></li>
+<li><code><a title="firestore.db.DateTimeProperty.validate" href="#firestore.db.DateTimeProperty.validate">validate</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="firestore.db.DictProperty" href="#firestore.db.DictProperty">DictProperty</a></code></h4>
+<ul class="">
+<li><code><a title="firestore.db.DictProperty.validate" href="#firestore.db.DictProperty.validate">validate</a></code></li>
+</ul>
 </li>
 <li>
 <h4><code><a title="firestore.db.FloatingPointNumberProperty" href="#firestore.db.FloatingPointNumberProperty">FloatingPointNumberProperty</a></code></h4>
+<ul class="">
+<li><code><a title="firestore.db.FloatingPointNumberProperty.validate" href="#firestore.db.FloatingPointNumberProperty.validate">validate</a></code></li>
+</ul>
 </li>
 <li>
 <h4><code><a title="firestore.db.IntegerProperty" href="#firestore.db.IntegerProperty">IntegerProperty</a></code></h4>
+<ul class="">
+<li><code><a title="firestore.db.IntegerProperty.validate" href="#firestore.db.IntegerProperty.validate">validate</a></code></li>
+</ul>
 </li>
 <li>
 <h4><code><a title="firestore.db.InvalidPropertyError" href="#firestore.db.InvalidPropertyError">InvalidPropertyError</a></code></h4>
@@ -1017,31 +1318,43 @@ I'ts not advisable to index this property</p>
 <h4><code><a title="firestore.db.InvalidValueError" href="#firestore.db.InvalidValueError">InvalidValueError</a></code></h4>
 </li>
 <li>
-<h4><code><a title="firestore.db.JsonProperty" href="#firestore.db.JsonProperty">JsonProperty</a></code></h4>
-</li>
-<li>
-<h4><code><a title="firestore.db.ListProperty" href="#firestore.db.ListProperty">ListProperty</a></code></h4>
-</li>
-<li>
 <h4><code><a title="firestore.db.MalformedQueryError" href="#firestore.db.MalformedQueryError">MalformedQueryError</a></code></h4>
 </li>
 <li>
 <h4><code><a title="firestore.db.PickledProperty" href="#firestore.db.PickledProperty">PickledProperty</a></code></h4>
+<ul class="">
+<li><code><a title="firestore.db.PickledProperty.user_value" href="#firestore.db.PickledProperty.user_value">user_value</a></code></li>
+<li><code><a title="firestore.db.PickledProperty.validate" href="#firestore.db.PickledProperty.validate">validate</a></code></li>
+</ul>
 </li>
 <li>
 <h4><code><a title="firestore.db.Property" href="#firestore.db.Property">Property</a></code></h4>
+<ul class="">
+<li><code><a title="firestore.db.Property.user_value" href="#firestore.db.Property.user_value">user_value</a></code></li>
+<li><code><a title="firestore.db.Property.validate" href="#firestore.db.Property.validate">validate</a></code></li>
+</ul>
 </li>
 <li>
 <h4><code><a title="firestore.db.ReferenceProperty" href="#firestore.db.ReferenceProperty">ReferenceProperty</a></code></h4>
+<ul class="">
+<li><code><a title="firestore.db.ReferenceProperty.user_value" href="#firestore.db.ReferenceProperty.user_value">user_value</a></code></li>
+<li><code><a title="firestore.db.ReferenceProperty.validate" href="#firestore.db.ReferenceProperty.validate">validate</a></code></li>
+</ul>
 </li>
 <li>
 <h4><code><a title="firestore.db.ReferencePropertyError" href="#firestore.db.ReferencePropertyError">ReferencePropertyError</a></code></h4>
 </li>
 <li>
 <h4><code><a title="firestore.db.StringProperty" href="#firestore.db.StringProperty">StringProperty</a></code></h4>
+<ul class="">
+<li><code><a title="firestore.db.StringProperty.validate" href="#firestore.db.StringProperty.validate">validate</a></code></li>
+</ul>
 </li>
 <li>
 <h4><code><a title="firestore.db.TextProperty" href="#firestore.db.TextProperty">TextProperty</a></code></h4>
+<ul class="">
+<li><code><a title="firestore.db.TextProperty.validate" href="#firestore.db.TextProperty.validate">validate</a></code></li>
+</ul>
 </li>
 </ul>
 </li>

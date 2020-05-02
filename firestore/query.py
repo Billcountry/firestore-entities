@@ -1,5 +1,5 @@
 from google.cloud.firestore import Query as FSQuery
-from firestore.db import MalformedQueryError, ListProperty
+from firestore.db import MalformedQueryError
 
 
 class Query(object):
@@ -17,7 +17,6 @@ class Query(object):
             offset: The position to begin the query results
             limit: Maximum number of results to return
         """
-        print(entity)
         from firestore.entity import __get_client__
         self.__query = __get_client__().collection(entity.__name__)
         if offset:
@@ -30,8 +29,7 @@ class Query(object):
         self.__range_filter_queries = {}
 
     def __validate_value(self, property_name, value):
-        prop = getattr(self.__entity, property_name)
-        return prop.__get_base_value__(value)
+        return self.__entity.__dict__.get(property_name).validate(value)
 
     def __add_range_filter(self, prop):
         self.__range_filter_queries[prop] = True
@@ -126,11 +124,6 @@ class Query(object):
             MalformedQueryError: If the property specified is not a ListField, or
                the query has more than one contains condition
         """
-        entity_prop = getattr(self.__entity, prop)
-
-        # Don't do a contains condition in an invalid prop
-        if not isinstance(entity_prop, ListProperty):
-            raise MalformedQueryError("Invalid property %s, query property for contains must be a list" % prop)
 
         # Make sure there's only on `array_contains` condition
         self.__array_contains_queries += 1
@@ -150,9 +143,9 @@ class Query(object):
         Returns:
              Query: A query object with order applied
         """
-        if direction is not "ASC" and direction is not "DESC":
+        if direction != "ASC" and direction != "DESC":
             raise MalformedQueryError("order_by direction can only be ASC, or DESC")
-        direction = FSQuery.ASCENDING if direction is "ASC" else FSQuery.DESCENDING
+        direction = FSQuery.ASCENDING if direction == "ASC" else FSQuery.DESCENDING
         self.__query = self.__query.order_by(prop, direction=direction)
         return self
 
@@ -177,5 +170,6 @@ class Query(object):
         if not self.__fetched:
             self.__fetch()
         doc = self.__docs.__next__()
-        user_data = self.__entity.__get_user_data__(doc.to_dict())
-        return self.__entity(id=doc.id, **user_data)
+        entity = self.__entity(id=doc.id)
+        entity.__firestore_data__ = doc.to_dict()
+        return entity

@@ -52,7 +52,7 @@ This is a collection of tools used by mantle Database packages, the include prop
 
 
 
-> `class BlobProperty(default=None, required=False)`
+> `class BlobProperty(default=None, required=False, repeated=False)`
 
 
 A Property whose value is a byte string. It may be compressed.
@@ -68,6 +68,10 @@ A Property whose value is a byte string. It may be compressed.
 :   Enforce the property value to be provided
 
 
+**`repeated`** :&ensp;`bool`
+:   Stores multiple values as a list, Overrides default with []
+
+
 
 
     
@@ -81,11 +85,27 @@ A Property whose value is a byte string. It may be compressed.
 
 
     
+#### Methods
+
+
+    
+##### Method `validate` {#firestore.db.BlobProperty.validate}
+
+
+
+    
+> `def validate(self, value)`
+
+
+
+
+
+    
 ### Class `BooleanProperty` {#firestore.db.BooleanProperty}
 
 
 
-> `class BooleanProperty(default=None, required=False)`
+> `class BooleanProperty(default=None, required=False, repeated=False)`
 
 
 A Property whose value is a Python bool.
@@ -101,6 +121,10 @@ A Property whose value is a Python bool.
 :   Enforce the property value to be provided
 
 
+**`repeated`** :&ensp;`bool`
+:   Stores multiple values as a list, Overrides default with []
+
+
 
 
     
@@ -114,11 +138,27 @@ A Property whose value is a Python bool.
 
 
     
+#### Methods
+
+
+    
+##### Method `validate` {#firestore.db.BooleanProperty.validate}
+
+
+
+    
+> `def validate(self, value)`
+
+
+
+
+
+    
 ### Class `DateProperty` {#firestore.db.DateProperty}
 
 
 
-> `class DateProperty(default=None, required=False, auto_add_now=False)`
+> `class DateProperty(default=None, required=False, auto_add_now=False, repeated=False)`
 
 
 A Property whose value is a date object.
@@ -139,14 +179,10 @@ A Property whose value is a date object.
 
 
 
-#### Args
+#### Returns
 
-**`default`**
-:   The default value of the property
-
-
-**`required`**
-:   Enforce the property value to be provided
+**`date`**
+:   The value of the field
 
 
 
@@ -162,11 +198,39 @@ A Property whose value is a date object.
 
 
     
+#### Methods
+
+
+    
+##### Method `user_value` {#firestore.db.DateProperty.user_value}
+
+
+
+    
+> `def user_value(self, value)`
+
+
+
+
+
+    
+##### Method `validate` {#firestore.db.DateProperty.validate}
+
+
+
+    
+> `def validate(self, value)`
+
+
+
+
+
+    
 ### Class `DateTimeProperty` {#firestore.db.DateTimeProperty}
 
 
 
-> `class DateTimeProperty(default=None, required=False, auto_now=False, auto_add_now=False)`
+> `class DateTimeProperty(default=None, required=False, auto_now=False, auto_add_now=False, repeated=False)`
 
 
 A Property whose value is a datetime object.
@@ -199,6 +263,10 @@ default (datetime)
 :   Enforce the property value to be provided
 
 
+**`repeated`** :&ensp;`bool`
+:   Stores multiple values as a list, Overrides default with []
+
+
 
 
     
@@ -212,11 +280,98 @@ default (datetime)
 
 
     
+#### Methods
+
+
+    
+##### Method `user_value` {#firestore.db.DateTimeProperty.user_value}
+
+
+
+    
+> `def user_value(self, value)`
+
+
+
+###### Returns
+
+**`datetime`**
+:   The value of the field
+
+
+
+    
+##### Method `validate` {#firestore.db.DateTimeProperty.validate}
+
+
+
+    
+> `def validate(self, value)`
+
+
+
+
+
+    
+### Class `DictProperty` {#firestore.db.DictProperty}
+
+
+
+> `class DictProperty(required=False, repeated=False)`
+
+
+A property whose value is any Json-encodable Python object.
+    
+
+
+#### Args
+
+**`default`**
+:   The default value of the property
+
+
+**`required`**
+:   Enforce the property value to be provided
+
+
+**`repeated`** :&ensp;`bool`
+:   Stores multiple values as a list, Overrides default with []
+
+
+
+
+    
+#### Ancestors (in MRO)
+
+* [firestore.db.Property](#firestore.db.Property)
+
+
+
+
+
+
+    
+#### Methods
+
+
+    
+##### Method `validate` {#firestore.db.DictProperty.validate}
+
+
+
+    
+> `def validate(self, value)`
+
+
+
+
+
+    
 ### Class `FloatingPointNumberProperty` {#firestore.db.FloatingPointNumberProperty}
 
 
 
-> `class FloatingPointNumberProperty(default=None, required=False)`
+> `class FloatingPointNumberProperty(default=None, required=False, repeated=False)`
 
 
 A Property whose value is a Python float.
@@ -234,6 +389,10 @@ Note: int and long are also allowed.
 :   Enforce the property value to be provided
 
 
+**`repeated`** :&ensp;`bool`
+:   Stores multiple values as a list, Overrides default with []
+
+
 
 
     
@@ -247,11 +406,27 @@ Note: int and long are also allowed.
 
 
     
+#### Methods
+
+
+    
+##### Method `validate` {#firestore.db.FloatingPointNumberProperty.validate}
+
+
+
+    
+> `def validate(self, value)`
+
+
+
+
+
+    
 ### Class `IntegerProperty` {#firestore.db.IntegerProperty}
 
 
 
-> `class IntegerProperty(default=None, required=False)`
+> `class IntegerProperty(default=None, required=False, repeated=False)`
 
 
 A Property whose value is a Python int or long
@@ -267,6 +442,10 @@ A Property whose value is a Python int or long
 :   Enforce the property value to be provided
 
 
+**`repeated`** :&ensp;`bool`
+:   Stores multiple values as a list, Overrides default with []
+
+
 
 
     
@@ -274,6 +453,22 @@ A Property whose value is a Python int or long
 
 * [firestore.db.Property](#firestore.db.Property)
 
+
+
+
+
+
+    
+#### Methods
+
+
+    
+##### Method `validate` {#firestore.db.IntegerProperty.validate}
+
+
+
+    
+> `def validate(self, value)`
 
 
 
@@ -307,7 +502,7 @@ Raised if a non-existent property is provided during the creation of a model
 
 
 
-> `class InvalidValueError(property, value)`
+> `class InvalidValueError(_property, value)`
 
 
 Raised if the value of a property does not fit the property type
@@ -320,73 +515,6 @@ Raised if the value of a property does not fit the property type
 * [builtins.ValueError](#builtins.ValueError)
 * [builtins.Exception](#builtins.Exception)
 * [builtins.BaseException](#builtins.BaseException)
-
-
-
-
-
-
-    
-### Class `JsonProperty` {#firestore.db.JsonProperty}
-
-
-
-> `class JsonProperty(required=False)`
-
-
-A property whose value is any Json-encodable Python object.
-    
-
-
-#### Args
-
-**`default`**
-:   The default value of the property
-
-
-**`required`**
-:   Enforce the property value to be provided
-
-
-
-
-    
-#### Ancestors (in MRO)
-
-* [firestore.db.Property](#firestore.db.Property)
-
-
-
-
-
-
-    
-### Class `ListProperty` {#firestore.db.ListProperty}
-
-
-
-> `class ListProperty(property_type)`
-
-
-A List property
-
-
-#### Args
-
-**`default`**
-:   The default value of the property
-
-
-**`required`**
-:   Enforce the property value to be provided
-
-
-
-
-    
-#### Ancestors (in MRO)
-
-* [firestore.db.Property](#firestore.db.Property)
 
 
 
@@ -421,7 +549,7 @@ Raised when the rules of a query are broken
 
 
 
-> `class PickledProperty(default=None, required=False)`
+> `class PickledProperty(default=None, required=False, repeated=False)`
 
 
 A Property whose value is any picklable Python object.
@@ -437,6 +565,10 @@ A Property whose value is any picklable Python object.
 :   Enforce the property value to be provided
 
 
+**`repeated`** :&ensp;`bool`
+:   Stores multiple values as a list, Overrides default with []
+
+
 
 
     
@@ -450,11 +582,39 @@ A Property whose value is any picklable Python object.
 
 
     
+#### Methods
+
+
+    
+##### Method `user_value` {#firestore.db.PickledProperty.user_value}
+
+
+
+    
+> `def user_value(self, value)`
+
+
+
+
+
+    
+##### Method `validate` {#firestore.db.PickledProperty.validate}
+
+
+
+    
+> `def validate(self, value)`
+
+
+
+
+
+    
 ### Class `Property` {#firestore.db.Property}
 
 
 
-> `class Property(default=None, required=False)`
+> `class Property(default=None, required=False, repeated=False)`
 
 
 A class describing a typed, persisted attribute of a database entity
@@ -468,6 +628,10 @@ A class describing a typed, persisted attribute of a database entity
 
 **`required`**
 :   Enforce the property value to be provided
+
+
+**`repeated`** :&ensp;`bool`
+:   Stores multiple values as a list, Overrides default with []
 
 
 
@@ -481,9 +645,8 @@ A class describing a typed, persisted attribute of a database entity
 * [firestore.db.IntegerProperty](#firestore.db.IntegerProperty)
 * [firestore.db.FloatingPointNumberProperty](#firestore.db.FloatingPointNumberProperty)
 * [firestore.db.BlobProperty](#firestore.db.BlobProperty)
-* [firestore.db.ListProperty](#firestore.db.ListProperty)
 * [firestore.db.ReferenceProperty](#firestore.db.ReferenceProperty)
-* [firestore.db.JsonProperty](#firestore.db.JsonProperty)
+* [firestore.db.DictProperty](#firestore.db.DictProperty)
 * [firestore.db.BooleanProperty](#firestore.db.BooleanProperty)
 * [firestore.db.DateTimeProperty](#firestore.db.DateTimeProperty)
 * [firestore.db.DateProperty](#firestore.db.DateProperty)
@@ -494,11 +657,39 @@ A class describing a typed, persisted attribute of a database entity
 
 
     
+#### Methods
+
+
+    
+##### Method `user_value` {#firestore.db.Property.user_value}
+
+
+
+    
+> `def user_value(self, value)`
+
+
+
+
+
+    
+##### Method `validate` {#firestore.db.Property.validate}
+
+
+
+    
+> `def validate(self, value)`
+
+
+
+
+
+    
 ### Class `ReferenceProperty` {#firestore.db.ReferenceProperty}
 
 
 
-> `class ReferenceProperty(entity, required=False)`
+> `class ReferenceProperty(entity, required=False, repeated=False)`
 
 
 A class describing a typed, persisted attribute of a database entity
@@ -514,6 +705,10 @@ A class describing a typed, persisted attribute of a database entity
 :   Enforce the property value to be provided
 
 
+**`repeated`** :&ensp;`bool`
+:   Stores multiple values as a list, Overrides default with []
+
+
 
 
     
@@ -521,6 +716,39 @@ A class describing a typed, persisted attribute of a database entity
 
 * [firestore.db.Property](#firestore.db.Property)
 
+
+
+
+
+
+    
+#### Methods
+
+
+    
+##### Method `user_value` {#firestore.db.ReferenceProperty.user_value}
+
+
+
+    
+> `def user_value(self, document)`
+
+
+
+###### Returns
+
+**`Entity`**
+:   The value of the field
+
+
+
+    
+##### Method `validate` {#firestore.db.ReferenceProperty.validate}
+
+
+
+    
+> `def validate(self, value)`
 
 
 
@@ -554,7 +782,7 @@ Raised when a reference property point's to a location the model can't resolve
 
 
 
-> `class StringProperty(default=None, length=255, required=False)`
+> `class StringProperty(default=None, length=255, required=False, repeated=False)`
 
 
 An indexed Property whose value is a text string of limited length.
@@ -566,12 +794,16 @@ An indexed Property whose value is a text string of limited length.
 :   Default value for this property
 
 
-**`length`** :&ensp;`int`
+**`length`** :&ensp;`int`=`255`
 :   The maximum length of this property
 
 
 **`required`** :&ensp;`bool`
 :   Enforce whether this value can be empty
+
+
+**`repeated`** :&ensp;`bool`
+:   Stores multiple values as a list, Overrides default with []
 
 
 
@@ -583,6 +815,10 @@ An indexed Property whose value is a text string of limited length.
 
 **`required`**
 :   Enforce the property value to be provided
+
+
+**`repeated`** :&ensp;`bool`
+:   Stores multiple values as a list, Overrides default with []
 
 
 
@@ -598,11 +834,27 @@ An indexed Property whose value is a text string of limited length.
 
 
     
+#### Methods
+
+
+    
+##### Method `validate` {#firestore.db.StringProperty.validate}
+
+
+
+    
+> `def validate(self, value)`
+
+
+
+
+
+    
 ### Class `TextProperty` {#firestore.db.TextProperty}
 
 
 
-> `class TextProperty(default=None, required=False)`
+> `class TextProperty(default=None, required=False, repeated=False)`
 
 
 An Property whose value is a text string of unlimited length.
@@ -619,6 +871,10 @@ I'ts not advisable to index this property
 :   Enforce the property value to be provided
 
 
+**`repeated`** :&ensp;`bool`
+:   Stores multiple values as a list, Overrides default with []
+
+
 
 
     
@@ -626,6 +882,22 @@ I'ts not advisable to index this property
 
 * [firestore.db.Property](#firestore.db.Property)
 
+
+
+
+
+
+    
+#### Methods
+
+
+    
+##### Method `validate` {#firestore.db.TextProperty.validate}
+
+
+
+    
+> `def validate(self, value)`
 
 
 
