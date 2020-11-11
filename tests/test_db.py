@@ -3,10 +3,7 @@ from firestore import SERVER_TIMESTAMP
 from firestore import db
 import json
 from datetime import datetime, date
-from mockfirestore import MockFirestore
 import pickle
-
-mock = MockFirestore()
 
 
 class TestProperties(unittest.TestCase):

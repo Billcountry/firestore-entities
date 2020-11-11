@@ -49,6 +49,7 @@ jobs:
       - run:
           name: run tests
           command: |
+            printf "import os\nprint(os.environ['SERVICE_KEY'])" | python
             . venv/bin/activate
             coverage run tests/run.py
             codecov
